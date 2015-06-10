@@ -1,0 +1,9 @@
+These are binaries from
+    http://tinycorelinux.net
+with the following patch applied:
+
+mkdir initrd
+( cd initrd ; zcat ../initrd.gz | sudo cpio -idm )
+sudo sed -i '/^# ttyS0$/s#^..##' initrd/etc/securetty 
+sudo sed -i '/^tty1:/s#tty1#ttyS0#g' initrd/etc/inittab
+( cd initrd ; find | sudo cpio -o -H newc ) | gzip -c > initrd.gz

@@ -29,7 +29,7 @@
 
 /*
  *
- * The vmnet support is ported from the Mirage OS project:
+ * The vmnet support is ported from the MirageOS project:
  *
  * https://github.com/mirage/ocaml-vmnet
  *

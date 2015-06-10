@@ -165,7 +165,7 @@ clock_ct_to_ts(struct clocktime *ct, struct timespec *ts)
 	if (ct->mon < 1 || ct->mon > 12 || ct->day < 1 ||
 	    ct->day > days_in_month(year, ct->mon) ||
 	    ct->hour > 23 ||  ct->min > 59 || ct->sec > 59 ||
-	    (sizeof(time_t) == 4 && year > 2037)) {	/* time_t overflow */
+	    (year > 2037 && sizeof(time_t) == 4)) {	/* time_t overflow */
 		return (EINVAL);
 	}
 

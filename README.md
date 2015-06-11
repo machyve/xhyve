@@ -15,7 +15,7 @@ Introduction: [http://www.pagetable.com/?p=831](http://www.pagetable.com/?p=831)
 Requirements
 ------------
 
-* OS X 10.10 Yosemite or later
+* OS X 10.10.3 Yosemite or later
 * A 2010 or later Mac
 
 Building

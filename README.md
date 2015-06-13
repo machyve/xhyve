@@ -152,7 +152,7 @@ xhyve shares most of the code with bhyve but is architecturally very different. 
 
 Issues
 ------
-Righ now, if you have (any version of) VirtualBox running and attempt to run
+Right now, if you have (any version of) VirtualBox running and attempt to run
 xhyve it will immediately crash your system as it triggers a kernel panic.
 This is not a xhyve issue *per se*, since it runs in userspace, but a
 VirtualBox one which just doesn't play nice with Hypervisor.framework.

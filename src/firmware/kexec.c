@@ -92,8 +92,8 @@ kexec_load_kernel(char *path, char *cmdline) {
 
 	if ((zp->setup_header.setup_sects == 0) ||    /* way way too old */
 		(zp->setup_header.boot_flag != 0xaa55) || /* no boot magic */
-		(zp->setup_header.header != HDRS) ||    /* way too old */
-		(zp->setup_header.version < 0x020c) ||    /* too old */
+		(zp->setup_header.header != HDRS) ||      /* way too old */
+		(zp->setup_header.version < 0x020a) ||    /* too old */
 		(!(zp->setup_header.loadflags & 1)) ||    /* no bzImage */
 		(sz < (((zp->setup_header.setup_sects + 1) * 512) +
 		(zp->setup_header.syssize * 16))))        /* too small */

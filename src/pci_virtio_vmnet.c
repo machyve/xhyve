@@ -69,6 +69,7 @@
 #include <xhyve/support/atomic.h>
 #include <xhyve/support/linker_set.h>
 #include <xhyve/support/md5.h>
+#include <xhyve/support/uuid.h>
 #include <xhyve/xhyve.h>
 #include <xhyve/pci_emul.h>
 #include <xhyve/mevent.h>
@@ -209,11 +210,21 @@ vmn_create(struct pci_vtnet_softc *sc)
 	dispatch_queue_t if_create_q;
 	dispatch_queue_t if_q;
 	struct vmnet_state *vms;
+	uint32_t uuid_status;
 
 	interface_desc = xpc_dictionary_create(NULL, NULL, 0);
 	xpc_dictionary_set_uint64(interface_desc, vmnet_operation_mode_key,
 		VMNET_SHARED_MODE);
-	uuid_generate_random(uuid);
+
+	if (guest_uuid_str != NULL) {
+		uuid_from_string(guest_uuid_str, &uuid, &uuid_status);
+		if (uuid_status != uuid_s_ok) {
+			return (NULL);
+		}
+	} else {
+		uuid_generate_random(uuid);
+	}
+
 	xpc_dictionary_set_uuid(interface_desc, vmnet_interface_id_key, uuid);
 	iface = NULL;
 	iface_status = 0;

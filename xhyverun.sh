@@ -11,5 +11,6 @@ MEM="-m 1G"
 #IMG_HDD="-s 4,virtio-blk,/somepath/somefile.img"
 PCI_DEV="-s 0:0,hostbridge -s 31,lpc"
 LPC_DEV="-l com1,stdio"
+#UUID="-U deadbeef-dead-dead-dead-deaddeafbeef"
 
-build/xhyve $MEM $SMP $PCI_DEV $LPC_DEV $NET $IMG_CD $IMG_HDD -f kexec,$KERNEL,$INITRD,"$CMDLINE"
+build/xhyve $MEM $SMP $PCI_DEV $LPC_DEV $NET $IMG_CD $IMG_HDD $UUID -f kexec,$KERNEL,$INITRD,"$CMDLINE"

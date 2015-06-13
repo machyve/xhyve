@@ -16,7 +16,7 @@ Requirements
 ------------
 
 * OS X 10.10.3 Yosemite or later
-* A 2010 or later Mac
+* a 2010 or later Mac (i.e. a CPU that supports EPT)
 
 Building
 --------

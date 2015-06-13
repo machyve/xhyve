@@ -150,6 +150,12 @@ xhyve shares most of the code with bhyve but is architecturally very different. 
 
 *bhyvectl*, *bhyveload* and *grub2-bhyve* are incompatible with a single process model and are dropped. As a stop-gap solution until we have a proper firmware xhyve supports the Linux [kexec protocol](http://www.kernel.org/doc/Documentation/x86/boot.txt), a very simple and straightforward way to bootstrap a Linux kernel. It takes a bzImage and optionally initrd image and kernel parameter string as input.
 
+Networking
+------
+If you want the same IP address across VM reboots, assign a UUID to a particular VM:
+
+    $ xhyve [-U uuid]
+
 Issues
 ------
 Right now, if you have (any version of) VirtualBox running and attempt to run

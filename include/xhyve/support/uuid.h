@@ -75,7 +75,7 @@ uuid_create_nil(uuid_t *u, uint32_t *status)
 	bzero(u, sizeof(*u));
 }
 
-static void
+static inline void
 uuid_enc_le(void *buf, uuid_t *uuid)
 {
 	uuid_internal_t *u = (uuid_internal_t *) ((void *) uuid);

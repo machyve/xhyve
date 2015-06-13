@@ -464,10 +464,15 @@ vmx_cleanup(void)
 static int
 vmx_init(void)
 {
-	int error;
-
-	if (hv_vm_create(HV_VM_DEFAULT)) {
-		xhyve_abort("hv_vm_create failed\n");
+	int error = hv_vm_create(HV_VM_DEFAULT);
+	if (error) {
+		if (error == HV_NO_DEVICE) {
+			printf("vmx_init: processor not supported by "
+			       "Hypervisor.framework\n");
+			return (error);
+		}
+		else
+			xhyve_abort("hv_vm_create failed\n");
 	}
 
 	/* Check support for primary processor-based VM-execution controls */

@@ -162,7 +162,7 @@ Right now, if you have (any version of) VirtualBox running and attempt to run
 xhyve it will immediately crash your system as it triggers a kernel panic.
 This is not a xhyve issue *per se*, since it runs in userspace, but a
 VirtualBox one which just doesn't play nice with Hypervisor.framework.
-(see issues [#5](mist64/xhyve#5) and [#9](mist64/xhyve#9) for the full context)
+(see issues [#5](https://github.com/mist64/xhyve/issues/5) and [#9](https://github.com/mist64/xhyve/issues/9) for the full context)
 
 TODO
 ----

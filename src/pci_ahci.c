@@ -131,12 +131,13 @@ struct ahci_ioreq {
 	int more;
 };
 
+#define AHCI_PORT_IDENT 20 + 1
 struct ahci_port {
 	struct blockif_ctxt *bctx;
 	struct pci_ahci_softc *pr_sc;
 	uint8_t *cmd_lst;
 	uint8_t *rfis;
-	char ident[20 + 1];
+	char ident[AHCI_PORT_IDENT];
 	int atapi;
 	int reset;
 	int waitforclear;
@@ -2320,7 +2321,7 @@ pci_ahci_init(struct pci_devinst *pi, char *opts, int atapi)
 	MD5Init(&mdctx);
 	MD5Update(&mdctx, opts, ((unsigned int) strlen(opts)));
 	MD5Final(digest, &mdctx);	
-	sprintf(sc->port[0].ident, "BHYVE-%02X%02X-%02X%02X-%02X%02X",
+	snprintf(sc->port[0].ident, AHCI_PORT_IDENT, "BHYVE-%02X%02X-%02X%02X-%02X%02X",
 	    digest[0], digest[1], digest[2], digest[3], digest[4], digest[5]);
 
 	/*

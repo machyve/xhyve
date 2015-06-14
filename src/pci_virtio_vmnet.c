@@ -199,7 +199,7 @@ struct vmnet_state {
 
 static void pci_vtnet_tap_callback(struct pci_vtnet_softc *sc);
 
-static struct vmnet_state *
+static int
 vmn_create(struct pci_vtnet_softc *sc)
 {
 	xpc_object_t interface_desc;
@@ -219,7 +219,7 @@ vmn_create(struct pci_vtnet_softc *sc)
 	if (guest_uuid_str != NULL) {
 		uuid_from_string(guest_uuid_str, &uuid, &uuid_status);
 		if (uuid_status != uuid_s_ok) {
-			return (NULL);
+			return (-1);
 		}
 	} else {
 		uuid_generate_random(uuid);
@@ -232,7 +232,7 @@ vmn_create(struct pci_vtnet_softc *sc)
 	vms = malloc(sizeof(struct vmnet_state));
 
 	if (!vms) {
-		return (NULL);
+		return (-1);
 	}
 
 	if_create_q = dispatch_queue_create("org.xhyve.vmnet.create",
@@ -273,10 +273,11 @@ vmn_create(struct pci_vtnet_softc *sc)
 		printf("virtio_net: Could not create vmnet interface, "
 			"permission denied or no entitlement?\n");
 		free(vms);
-		return (NULL);
+		return (-1);
 	}
 
 	vms->iface = iface;
+	sc->vms = vms;
 
 	if_q = dispatch_queue_create("org.xhyve.vmnet.iface_q", 0);
 
@@ -286,7 +287,7 @@ vmn_create(struct pci_vtnet_softc *sc)
 		pci_vtnet_tap_callback(sc);
 	});
 
-	return (vms);
+	return (0);
 }
 
 static ssize_t
@@ -716,11 +717,8 @@ pci_vtnet_init(struct pci_devinst *pi, UNUSED char *opts)
 	 * if specified
 	 */
 	mac_provided = 0;
-	sc->vms = NULL;
 
-	sc->vms = vmn_create(sc);
-
-	if (!sc->vms) {
+	if (vmn_create(sc) == -1) {
 		return (-1);
 	}
 

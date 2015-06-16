@@ -27,27 +27,6 @@
  * $FreeBSD$
  */
 
-/*
- *
- * The vmnet support is ported from the MirageOS project:
- *
- * https://github.com/mirage/ocaml-vmnet
- *
- *      Copyright (C) 2014 Anil Madhavapeddy <anil@recoil.org>
- *
- *      Permission to use, copy, modify, and distribute this software for any
- *      purpose with or without fee is hereby granted, provided that the above
- *      copyright notice and this permission notice appear in all copies.
- *
- *      THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- *      WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- *      MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- *      ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- *      WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- *      ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- *      OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- */
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -63,17 +42,16 @@
 #include <sys/uio.h>
 #include <sys/ioctl.h>
 #include <net/ethernet.h>
-#include <dispatch/dispatch.h>
-#include <vmnet/vmnet.h>
 #include <xhyve/support/misc.h>
 #include <xhyve/support/atomic.h>
 #include <xhyve/support/linker_set.h>
 #include <xhyve/support/md5.h>
-#include <xhyve/support/uuid.h>
 #include <xhyve/xhyve.h>
 #include <xhyve/pci_emul.h>
 #include <xhyve/mevent.h>
 #include <xhyve/virtio.h>
+
+#define USE_MEVENT 0
 
 #define VTNET_RINGSZ 1024
 #define VTNET_MAXSEGS 32
@@ -104,7 +82,7 @@
 	(VIRTIO_NET_F_MAC | VIRTIO_NET_F_MRG_RXBUF | VIRTIO_NET_F_STATUS | \
 	VIRTIO_F_NOTIFY_ON_EMPTY)
 
-// #define ETHER_IS_MULTICAST(addr) (*(addr) & 0x01) /* is address mcast/bcast? */
+#define ETHER_IS_MULTICAST(addr) (*(addr) & 0x01) /* is address mcast/bcast? */
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpacked"
@@ -145,6 +123,7 @@ struct virtio_net_rxhdr {
  */
 static int pci_vtnet_debug;
 #define DPRINTF(params) if (pci_vtnet_debug) printf params
+#define WPRINTF(params) printf params
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpadded"
@@ -155,7 +134,8 @@ struct pci_vtnet_softc {
 	struct virtio_softc vsc_vs;
 	struct vqueue_info vsc_queues[VTNET_MAXQ - 1];
 	pthread_mutex_t vsc_mtx;
-	struct vmnet_state *vms;
+	struct mevent *vsc_mevp;
+	int vsc_tapfd;
 	int vsc_rx_ready;
 	volatile int resetting;/* set and checked outside lock */
 	uint64_t vsc_features; /* negotiated features */
@@ -169,6 +149,7 @@ struct pci_vtnet_softc {
 	pthread_cond_t tx_cond;
 	int tx_in_progress;
 };
+#pragma clang diagnostic pop
 
 static void pci_vtnet_reset(void *);
 /* static void pci_vtnet_notify(void *, struct vqueue_info *); */
@@ -187,166 +168,6 @@ static struct virtio_consts vtnet_vi_consts = {
 	pci_vtnet_neg_features,	/* apply negotiated features */
 	VTNET_S_HOSTCAPS,	/* our capabilities */
 };
-
-struct vmnet_state {
-	interface_ref iface;
-	uint8_t mac[6];
-	unsigned int mtu;
-	unsigned int max_packet_size;
-};
-
-#pragma clang diagnostic pop
-
-static void pci_vtnet_tap_callback(struct pci_vtnet_softc *sc);
-
-static int
-vmn_create(struct pci_vtnet_softc *sc)
-{
-	xpc_object_t interface_desc;
-	uuid_t uuid;
-	__block interface_ref iface;
-	__block vmnet_return_t iface_status;
-	dispatch_semaphore_t iface_created;
-	dispatch_queue_t if_create_q;
-	dispatch_queue_t if_q;
-	struct vmnet_state *vms;
-	uint32_t uuid_status;
-
-	interface_desc = xpc_dictionary_create(NULL, NULL, 0);
-	xpc_dictionary_set_uint64(interface_desc, vmnet_operation_mode_key,
-		VMNET_SHARED_MODE);
-
-	if (guest_uuid_str != NULL) {
-		uuid_from_string(guest_uuid_str, &uuid, &uuid_status);
-		if (uuid_status != uuid_s_ok) {
-			return (-1);
-		}
-	} else {
-		uuid_generate_random(uuid);
-	}
-
-	xpc_dictionary_set_uuid(interface_desc, vmnet_interface_id_key, uuid);
-	iface = NULL;
-	iface_status = 0;
-
-	vms = malloc(sizeof(struct vmnet_state));
-
-	if (!vms) {
-		return (-1);
-	}
-
-	if_create_q = dispatch_queue_create("org.xhyve.vmnet.create",
-		DISPATCH_QUEUE_SERIAL);
-
-	iface_created = dispatch_semaphore_create(0);
-
-	iface = vmnet_start_interface(interface_desc, if_create_q,
-		^(vmnet_return_t status, xpc_object_t interface_param)
-	{
-		iface_status = status;
-		if (status != VMNET_SUCCESS || !interface_param) {
-			dispatch_semaphore_signal(iface_created);
-			return;
-		}
-
-		if (sscanf(xpc_dictionary_get_string(interface_param,
-			vmnet_mac_address_key),
-			"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
-			&vms->mac[0], &vms->mac[1], &vms->mac[2], &vms->mac[3],
-			&vms->mac[4], &vms->mac[5]) != 6)
-		{
-			assert(0);
-		}
-
-		vms->mtu = (unsigned)
-			xpc_dictionary_get_uint64(interface_param, vmnet_mtu_key);
-		vms->max_packet_size = (unsigned)
-			xpc_dictionary_get_uint64(interface_param,
-				vmnet_max_packet_size_key);
-		dispatch_semaphore_signal(iface_created);
-	});
-
-	dispatch_semaphore_wait(iface_created, DISPATCH_TIME_FOREVER);
-	dispatch_release(if_create_q);
-
-	if (iface == NULL || iface_status != VMNET_SUCCESS) {
-		printf("virtio_net: Could not create vmnet interface, "
-			"permission denied or no entitlement?\n");
-		free(vms);
-		return (-1);
-	}
-
-	vms->iface = iface;
-	sc->vms = vms;
-
-	if_q = dispatch_queue_create("org.xhyve.vmnet.iface_q", 0);
-
-	vmnet_interface_set_event_callback(iface, VMNET_INTERFACE_PACKETS_AVAILABLE,
-		if_q, ^(UNUSED interface_event_t event_id, UNUSED xpc_object_t event)
-	{
-		pci_vtnet_tap_callback(sc);
-	});
-
-	return (0);
-}
-
-static ssize_t
-vmn_read(struct vmnet_state *vms, struct iovec *iov, int n) {
-	vmnet_return_t r;
-	struct vmpktdesc v;
-	int pktcnt;
-	int i;
-
-	v.vm_pkt_size = 0;
-
-	for (i = 0; i < n; i++) {
-		v.vm_pkt_size += iov[i].iov_len;
-	}
-
-	assert(v.vm_pkt_size >= vms->max_packet_size);
-
-	v.vm_pkt_iov = iov;
-	v.vm_pkt_iovcnt = (uint32_t) n;
-	v.vm_flags = 0; /* TODO no clue what this is */
-
-	pktcnt = 1;
-
-	r = vmnet_read(vms->iface, &v, &pktcnt);
-
-	assert(r == VMNET_SUCCESS);
-
-	if (pktcnt < 1) {
-		return (-1);
-	}
-
-	return ((ssize_t) v.vm_pkt_size);
-}
-
-static void
-vmn_write(struct vmnet_state *vms, struct iovec *iov, int n) {
-	vmnet_return_t r;
-	struct vmpktdesc v;
-	int pktcnt;
-	int i;
-
-	v.vm_pkt_size = 0;
-
-	for (i = 0; i < n; i++) {
-		v.vm_pkt_size += iov[i].iov_len;
-	}
-
-	assert(v.vm_pkt_size <= vms->max_packet_size);
-
-	v.vm_pkt_iov = iov;
-	v.vm_pkt_iovcnt = (uint32_t) n;
-	v.vm_flags = 0; /* TODO no clue what this is */
-
-	pktcnt = 1;
-
-	r = vmnet_write(vms->iface, &v, &pktcnt);
-
-	assert(r == VMNET_SUCCESS);
-}
 
 /*
  * If the transmit thread is active then stall until it is done.
@@ -415,7 +236,7 @@ pci_vtnet_tap_tx(struct pci_vtnet_softc *sc, struct iovec *iov, int iovcnt,
 {
 	static char pad[60]; /* all zero bytes */
 
-	if (!sc->vms)
+	if (sc->vsc_tapfd == -1)
 		return;
 
 	/*
@@ -428,7 +249,7 @@ pci_vtnet_tap_tx(struct pci_vtnet_softc *sc, struct iovec *iov, int iovcnt,
 		iov[iovcnt].iov_len = (size_t) (60 - len);
 		iovcnt++;
 	}
-	vmn_write(sc->vms, iov, iovcnt);
+	(void) writev(sc->vsc_tapfd, iov, iovcnt);
 }
 
 /*
@@ -474,7 +295,7 @@ pci_vtnet_tap_rx(struct pci_vtnet_softc *sc)
 	/*
 	 * Should never be called without a valid tap fd
 	 */
-	assert(sc->vms);
+	assert(sc->vsc_tapfd != -1);
 
 	/*
 	 * But, will be called when the rx ring hasn't yet
@@ -484,9 +305,7 @@ pci_vtnet_tap_rx(struct pci_vtnet_softc *sc)
 		/*
 		 * Drop the packet and try later.
 		 */
-		iov[0].iov_base = dummybuf;
-		iov[0].iov_len = sizeof(dummybuf);
-		(void) vmn_read(sc->vms, iov, 1);
+		(void) read(sc->vsc_tapfd, dummybuf, sizeof(dummybuf));
 		return;
 	}
 
@@ -499,9 +318,7 @@ pci_vtnet_tap_rx(struct pci_vtnet_softc *sc)
 		 * Drop the packet and try later.  Interrupt on
 		 * empty, if that's negotiated.
 		 */
-		iov[0].iov_base = dummybuf;
-		iov[0].iov_len = sizeof(dummybuf);
-		(void) vmn_read(sc->vms, iov, 1);
+		(void) read(sc->vsc_tapfd, dummybuf, sizeof(dummybuf));
 		vq_endchains(vq, 1);
 		return;
 	}
@@ -520,7 +337,7 @@ pci_vtnet_tap_rx(struct pci_vtnet_softc *sc)
 		vrx = iov[0].iov_base;
 		riov = rx_iov_trim(iov, &n, sc->rx_vhdrlen);
 
-		len = (int) vmn_read(sc->vms, riov, n);
+		len = (int) readv(sc->vsc_tapfd, riov, n);
 
 		if (len < 0 && errno == EWOULDBLOCK) {
 			/*
@@ -555,9 +372,12 @@ pci_vtnet_tap_rx(struct pci_vtnet_softc *sc)
 	vq_endchains(vq, 1);
 }
 
+#if USE_MEVENT
 static void
-pci_vtnet_tap_callback(struct pci_vtnet_softc *sc)
+pci_vtnet_tap_callback(UNUSED int fd, UNUSED enum ev_type type, void *param)
 {
+	struct pci_vtnet_softc *sc = param;
+
 	pthread_mutex_lock(&sc->rx_mtx);
 	sc->rx_in_progress = 1;
 	pci_vtnet_tap_rx(sc);
@@ -565,6 +385,37 @@ pci_vtnet_tap_callback(struct pci_vtnet_softc *sc)
 	pthread_mutex_unlock(&sc->rx_mtx);
 
 }
+
+#else /* !USE_MEVENT */
+
+static void *
+pci_vtnet_tap_select_func(void *vsc) {
+	struct pci_vtnet_softc *sc;
+	fd_set rfd;
+
+	sc = vsc;
+
+	assert(sc);
+	assert(sc->vsc_tapfd != -1);
+
+	FD_ZERO(&rfd);
+	FD_SET(sc->vsc_tapfd, &rfd);
+
+	while (1) {
+		if (select((sc->vsc_tapfd + 1), &rfd, NULL, NULL, NULL) == -1) {
+			abort();
+		}
+
+		pthread_mutex_lock(&sc->rx_mtx);
+		sc->rx_in_progress = 1;
+		pci_vtnet_tap_rx(sc);
+		sc->rx_in_progress = 0;
+		pthread_mutex_unlock(&sc->rx_mtx);
+	}
+
+	return (NULL);
+}
+#endif
 
 static void
 pci_vtnet_ping_rxq(void *vsc, struct vqueue_info *vq)
@@ -686,15 +537,48 @@ pci_vtnet_tx_thread(void *param)
 static void
 pci_vtnet_ping_ctlq(void *vsc, struct vqueue_info *vq)
 {
+
 	DPRINTF(("vtnet: control qnotify!\n\r"));
 }
 #endif
 
 static int
-pci_vtnet_init(struct pci_devinst *pi, UNUSED char *opts)
+pci_vtnet_parsemac(char *mac_str, uint8_t *mac_addr)
 {
+        struct ether_addr *ea;
+        char *tmpstr;
+        char zero_addr[ETHER_ADDR_LEN] = { 0, 0, 0, 0, 0, 0 };
+
+        tmpstr = strsep(&mac_str,"=");
+       
+        if ((mac_str != NULL) && (!strcmp(tmpstr,"mac"))) {
+                ea = ether_aton(mac_str);
+
+                if (ea == NULL || ETHER_IS_MULTICAST(ea->octet) ||
+                    memcmp(ea->octet, zero_addr, ETHER_ADDR_LEN) == 0) {
+			fprintf(stderr, "Invalid MAC %s\n", mac_str);
+                        return (EINVAL);
+                } else
+                        memcpy(mac_addr, ea->octet, ETHER_ADDR_LEN);
+        }
+
+        return (0);
+}
+
+
+static int
+pci_vtnet_init(struct pci_devinst *pi, char *opts)
+{
+	MD5_CTX mdctx;
+	unsigned char digest[16];
+	char nstr[80];
 	struct pci_vtnet_softc *sc;
+	char *devname;
+	char *vtopts;
 	int mac_provided;
+#if !USE_MEVENT
+	pthread_t sthrd;
+#endif
 
 	sc = calloc(1, sizeof(struct pci_vtnet_softc));
 
@@ -717,17 +601,83 @@ pci_vtnet_init(struct pci_devinst *pi, UNUSED char *opts)
 	 * if specified
 	 */
 	mac_provided = 0;
+	sc->vsc_tapfd = -1;
+	if (opts != NULL) {
+		char tbuf[80];
+		int err;
 
-	if (vmn_create(sc) == -1) {
-		return (-1);
+		devname = vtopts = strdup(opts);
+		(void) strsep(&vtopts, ",");
+
+		if (vtopts != NULL) {
+			err = pci_vtnet_parsemac(vtopts, sc->vsc_config.mac);
+			if (err != 0) {
+				free(devname);
+				return (err);
+			}
+			mac_provided = 1;
+		}
+
+		strcpy(tbuf, "/dev/");
+		strlcat(tbuf, devname, sizeof(tbuf));
+
+		free(devname);
+
+		sc->vsc_tapfd = open(tbuf, O_RDWR);
+		if (sc->vsc_tapfd == -1) {
+			WPRINTF(("open of tap device %s failed\n", tbuf));
+		} else {
+			/*
+			 * Set non-blocking and register for read
+			 * notifications with the event loop
+			 */
+			int opt = 1;
+			if (ioctl(sc->vsc_tapfd, FIONBIO, &opt) < 0) {
+				WPRINTF(("tap device O_NONBLOCK failed\n"));
+				close(sc->vsc_tapfd);
+				sc->vsc_tapfd = -1;
+			}
+
+#if USE_MEVENT
+			sc->vsc_mevp = mevent_add(sc->vsc_tapfd,
+						  EVF_READ,
+						  pci_vtnet_tap_callback,
+						  sc);
+			if (sc->vsc_mevp == NULL) {
+				WPRINTF(("Could not register event\n"));
+				close(sc->vsc_tapfd);
+				sc->vsc_tapfd = -1;
+			}
+
+#else /* !USE_MEVENT */
+			if (pthread_create(&sthrd, NULL, pci_vtnet_tap_select_func, sc)) {
+				WPRINTF(("Could not create tap receive thread\n"));
+				close(sc->vsc_tapfd);
+				sc->vsc_tapfd = -1;
+			}
+#endif
+		}
 	}
 
-	sc->vsc_config.mac[0] = sc->vms->mac[0];
-	sc->vsc_config.mac[1] = sc->vms->mac[1];
-	sc->vsc_config.mac[2] = sc->vms->mac[2];
-	sc->vsc_config.mac[3] = sc->vms->mac[3];
-	sc->vsc_config.mac[4] = sc->vms->mac[4];
-	sc->vsc_config.mac[5] = sc->vms->mac[5];
+	/*
+	 * The default MAC address is the standard NetApp OUI of 00-a0-98,
+	 * followed by an MD5 of the PCI slot/func number and dev name
+	 */
+	if (!mac_provided) {
+		snprintf(nstr, sizeof(nstr), "%d-%d-%s", pi->pi_slot,
+		    pi->pi_func, vmname);
+
+		MD5Init(&mdctx);
+		MD5Update(&mdctx, nstr, ((unsigned int) strlen(nstr)));
+		MD5Final(digest, &mdctx);
+
+		sc->vsc_config.mac[0] = 0x00;
+		sc->vsc_config.mac[1] = 0xa0;
+		sc->vsc_config.mac[2] = 0x98;
+		sc->vsc_config.mac[3] = digest[0];
+		sc->vsc_config.mac[4] = digest[1];
+		sc->vsc_config.mac[5] = digest[2];
+	}
 
 	/* initialize config space */
 	pci_set_cfgdata16(pi, PCIR_DEVICE, VIRTIO_DEV_NET);
@@ -737,7 +687,7 @@ pci_vtnet_init(struct pci_devinst *pi, UNUSED char *opts)
 	pci_set_cfgdata16(pi, PCIR_SUBVEND_0, VIRTIO_VENDOR);
 
 	/* Link is up if we managed to open tap device. */
-	sc->vsc_config.status = 1;
+	sc->vsc_config.status = (opts == NULL || sc->vsc_tapfd >= 0);
 	
 	/* use BAR 1 to map MSI-X table and PBA, if we're using MSI-X */
 	if (vi_intr_init(&sc->vsc_vs, 1, fbsdrun_virtio_msix()))
@@ -811,10 +761,10 @@ pci_vtnet_neg_features(void *vsc, uint64_t negotiated_features)
 	}
 }
 
-static struct pci_devemu pci_de_vnet = {
-	.pe_emu = 	"virtio-net",
+static struct pci_devemu pci_de_vnet_tap = {
+	.pe_emu = 	"virtio-tap",
 	.pe_init =	pci_vtnet_init,
 	.pe_barwrite =	vi_pci_write,
 	.pe_barread =	vi_pci_read
 };
-PCI_EMUL_SET(pci_de_vnet);
+PCI_EMUL_SET(pci_de_vnet_tap);

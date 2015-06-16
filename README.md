@@ -156,6 +156,18 @@ If you want the same IP address across VM reboots, assign a UUID to a particular
 
     $ xhyve [-U uuid]
 
+**Optional:**
+
+If you need more advanced networking and already have a configured [TAP](http://tuntaposx.sourceforge.net) device you can use it with:
+
+	virtio-tap,tapX
+
+instead of:
+
+    virtio-net
+
+Where *X* is your tap device, i.e. */dev/tapX*.
+
 Issues
 ------
 Right now, if you have (any version of) VirtualBox running and attempt to run
@@ -178,12 +190,12 @@ TODO
   - some 32-bit guests are broken (support PAE paging in VMCS)
   - PCID guest support (performance)
 - block_if:
-  - OS X does not support preadv/pwritev, we need to serialize reads and writes for the time being until we find a better solution.
+  - OS X does not support preadv/pwritev, we need to serialize reads and writes for the time being until we find a better solution. (performance)
   - support block devices other than plain files
 - virtio_net:
-  - make it not require root
   - unify TAP and vmnet backends
-  - performance: send/receive more than a single packet at a time
+  - vmnet: make it not require root
+  - vmnet: send/receive more than a single packet at a time (performance)
 - ACPI tables don't work
   - bhyve creates ASL on the fly and then calls out to an ASL compiler (iasl) on
     every VM boot to create the DSDT:

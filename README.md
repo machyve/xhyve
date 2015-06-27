@@ -6,7 +6,7 @@
 About
 -----
 
-The *xhyve hypervisor* is a port of [bhyve](http://www.bhyve.org) to OS X. It is built on top of Hypervisor.framework in OS X 10.10 Yosemite and higher, runs entirely in userspace, and has no other dependencies. It can run vanilla Linux distributions and may gain support for other guest operating systems in the future.
+The *xhyve hypervisor* is a port of [bhyve](http://www.bhyve.org) to OS X. It is built on top of Hypervisor.framework in OS X 10.10 Yosemite and higher, runs entirely in userspace, and has no other dependencies. It can run FreeBSD and vanilla Linux distributions and may gain support for other guest operating systems in the future.
 
 License: BSD
 
@@ -184,12 +184,6 @@ TODO
   - make it not require root
   - unify TAP and vmnet backends
   - performance: send/receive more than a single packet at a time
-- ACPI tables don't work
-  - bhyve creates ASL on the fly and then calls out to an ASL compiler (iasl) on
-    every VM boot to create the DSDT:
-      - remove dependency on iasl by creating AML bytecode directly
-      - shouldn't be to hard since we we are only interested in a very small
-        subset of ASL
 - virtio_rnd:
   - is untested
 - remove explicit state transitions:

@@ -30,7 +30,7 @@ VMM_SRC := \
 	src/vmm/io/vrtc.c
 
 XHYVE_SRC := \
-	src/acpi.c \
+	src/acpitbl.c \
 	src/atkbdc.c \
 	src/block_if.c \
 	src/consport.c \
@@ -61,7 +61,8 @@ XHYVE_SRC := \
 	src/xmsr.c
 
 FIRMWARE_SRC := \
-	src/firmware/kexec.c
+	src/firmware/kexec.c \
+	src/firmware/fbsd.c
 
 SRC := \
 	$(VMM_SRC) \

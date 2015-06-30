@@ -93,7 +93,7 @@ void 	vmm_stat_free(void *vp);
  * 'buf' should be at least fit 'MAX_VMM_STAT_TYPES' entries
  */
 int	vmm_stat_copy(struct vm *vm, int vcpu, int *num_stats, uint64_t *buf);
-int	vmm_stat_desc_copy(int index, char *buf, int buflen);
+int	vmm_stat_desc_copy(int index, char *buf, size_t buflen);
 
 static void __inline
 vmm_stat_array_incr(struct vm *vm, int vcpu, struct vmm_stat_type *vst,

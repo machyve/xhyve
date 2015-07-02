@@ -1,0 +1,8 @@
+userboot.so is the FreeBSD user-mode bootloader
+
+So, this is a bit horrible but it works:
+
+  - userboot is compiled on FreeBSD with '-target x86_64-apple-darwin14' CFLAGS
+  - same for the dependencies of userboot (stand, ficl, zfs)
+  - you have to use the MachO linker set header (include/xhyve/support/linker_set.h)
+  - the resulting object files are linked on OS X with 'clang -dead_strip -shared -o userboot.so *.o *.So'

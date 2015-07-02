@@ -30,6 +30,9 @@
 
 #include <stdint.h>
 
+/* if set, create AML instead of ASL and calling out to iasl */
+#define ACPITBL_AML 1
+
 #define SCI_INT 9
 
 #define SMI_CMD 0xb2
@@ -49,4 +52,6 @@ void dsdt_fixed_irq(uint8_t irq);
 void dsdt_fixed_mem32(uint32_t base, uint32_t length);
 void dsdt_indent(int levels);
 void dsdt_unindent(int levels);
+void dsdt_fixup(int bus, uint16_t iobase, uint16_t iolimit, uint32_t membase32,
+	uint32_t memlimit32, uint64_t membase64, uint64_t memlimit64);
 void sci_init(void);

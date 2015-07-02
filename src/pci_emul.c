@@ -1217,6 +1217,32 @@ pci_pirq_prt_entry(UNUSED int bus, int slot, int pin, int pirq_pin,
  * A bhyve virtual machine has a flat PCI hierarchy with a root port
  * corresponding to each PCI bus.
  */
+#if ACPITBL_AML
+static void
+pci_bus_write_dsdt(int bus)
+{
+	struct businfo *bi;
+
+	/*
+	 * If there are no devices on this 'bus' then just return.
+	 */
+	if ((bi = pci_businfo[bus]) == NULL) {
+		/*
+		 * Bus 0 is special because it decodes the I/O ports used
+		 * for PCI config space access even if there are no devices
+		 * on it.
+		 */
+		if (bus != 0)
+			return;
+	}
+
+	dsdt_fixup(bus, bi->iobase, bi->iolimit, bi->membase32, bi->memlimit32,
+		bi->membase64, bi->memlimit64);
+
+	(void) pci_pirq_prt_entry;
+	(void) pci_apic_prt_entry;
+}
+#else
 static void
 pci_bus_write_dsdt(int bus)
 {
@@ -1365,7 +1391,19 @@ pci_bus_write_dsdt(int bus)
 done:
 	dsdt_line("  }");
 }
+#endif
 
+#if ACPITBL_AML
+void
+pci_write_dsdt(void)
+{
+	int bus;
+
+	for (bus = 0; bus < MAXBUSES; bus++) {
+		pci_bus_write_dsdt(bus);
+	}
+}
+#else
 void
 pci_write_dsdt(void)
 {
@@ -1385,6 +1423,7 @@ pci_write_dsdt(void)
 	dsdt_line("}");
 	dsdt_unindent(1);
 }
+#endif
 
 int
 pci_bus_configured(int bus)

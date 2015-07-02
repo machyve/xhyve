@@ -113,7 +113,7 @@ static struct bhyvestats {
 #pragma clang diagnostic ignored "-Wpadded"
 static struct mt_vmm_info {
 	pthread_t mt_thr;
-	int mt_vcpu;	
+	int mt_vcpu;
 } mt_vmm_info[VM_MAXCPU];
 #pragma clang diagnostic pop
 
@@ -141,6 +141,7 @@ usage(int code)
 		"       -s: <slot,driver,configinfo> PCI slot config\n"
 		"       -u: RTC keeps UTC time\n"
 		"       -U: uuid\n"
+		"       -v: show build version\n"
 		"       -w: ignore unimplemented MSRs\n"
 		"       -W: force virtio to use single-vector MSI\n"
 		"       -x: local apic is in x2APIC mode\n"
@@ -148,6 +149,17 @@ usage(int code)
 		progname, (int)strlen(progname), "");
 
 	exit(code);
+}
+
+__attribute__ ((noreturn)) static void
+show_version()
+{
+        fprintf(stderr, "%s: %s\n\n%s\n",progname, VERSION,
+		"xhyve is a port of FreeBSD's bhyve hypervisor to OS X that\n"
+		"works entirely in userspace and has no other dependencies.\n\n"
+		"Homepage: https://github.com/mist64/xhyve\n"
+		"License: BSD\n");
+		exit(0);
 }
 
 void
@@ -780,7 +792,7 @@ main(int argc, char *argv[])
 	rtc_localtime = 1;
 	fw = 0;
 
-	while ((c = getopt(argc, argv, "behuwxACHPWY:f:g:c:s:m:l:U:")) != -1) {
+	while ((c = getopt(argc, argv, "behvuwxACHPWY:f:g:c:s:m:l:U:")) != -1) {
 		switch (c) {
 		case 'A':
 			acpi = 1;
@@ -847,8 +859,10 @@ main(int argc, char *argv[])
 		case 'Y':
 			mptgen = 0;
 			break;
+		case 'v':
+			show_version();
 		case 'h':
-			usage(0);			
+			usage(0);
 		default:
 			usage(1);
 		}

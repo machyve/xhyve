@@ -1,3 +1,5 @@
+GIT_VERSION := $(shell git describe --abbrev=6 --dirty --always --tags)
+
 ifeq ($V, 1)
 	VERBOSE =
 else
@@ -72,6 +74,8 @@ SRC := \
 OBJ := $(SRC:src/%.c=build/%.o)
 DEP := $(OBJ:%.o=%.d)
 INC := -Iinclude
+
+CFLAGS += -DVERSION=\"$(GIT_VERSION)\"
 
 TARGET = build/xhyve
 

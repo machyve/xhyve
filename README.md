@@ -6,7 +6,7 @@
 About
 -----
 
-The *xhyve hypervisor* is a port of [bhyve](http://www.bhyve.org) to OS X. It is built on top of Hypervisor.framework in OS X 10.10 Yosemite and higher, runs entirely in userspace, and has no other dependencies. It can run vanilla Linux distributions and may gain support for other guest operating systems in the future.
+The *xhyve hypervisor* is a port of [bhyve](http://www.bhyve.org) to OS X. It is built on top of Hypervisor.framework in OS X 10.10 Yosemite and higher, runs entirely in userspace, and has no other dependencies. It can run FreeBSD and vanilla Linux distributions and may gain support for other guest operating systems in the future.
 
 License: BSD
 
@@ -180,31 +180,26 @@ TODO
 ----
 
 - vmm:
-  - enable APIC access page to speed up APIC emulation
-  - enable x2APIC MSRs (even faster)
+  - enable APIC access page to speed up APIC emulation (**performance**)
+  - enable x2APIC MSRs (even faster) (**performance**)
   - vmm_callout:
       - is a quick'n'dirty implementation of the FreeBSD kernel callout mechanism
       - seems to be racy
       - fix races or perhaps replace with something better
-      - use per vCPU timer event thread (performance)?
+      - use per vCPU timer event thread (**performance**)?
+      - use hardware VMX preemption timer instead of `pthread_cond_wait` (**performance**)
   - some 32-bit guests are broken (support PAE paging in VMCS)
-  - PCID guest support (performance)
+  - PCID guest support (**performance**)
 - block_if:
-  - OS X does not support preadv/pwritev, we need to serialize reads and writes for the time being until we find a better solution. (performance)
+  - OS X does not support `preadv`/`pwritev`, we need to serialize reads and writes for the time being until we find a better solution. (**performance**)
   - support block devices other than plain files
 - virtio_net:
   - unify TAP and vmnet backends
   - vmnet: make it not require root
-  - vmnet: send/receive more than a single packet at a time (performance)
-- ACPI tables don't work
-  - bhyve creates ASL on the fly and then calls out to an ASL compiler (iasl) on
-    every VM boot to create the DSDT:
-      - remove dependency on iasl by creating AML bytecode directly
-      - shouldn't be to hard since we we are only interested in a very small
-        subset of ASL
+  - vmnet: send/receive more than a single packet at a time (**performance**)
 - virtio_rnd:
   - is untested
 - remove explicit state transitions:
-  - since only the owning task/thread can modify the VM/vCPUs a lot of the synchronization might be unnecessary
+  - since only the owning task/thread can modify the VM/vCPUs a lot of the synchronization might be unnecessary (**performance**)
 - performance, performance and performance
 - remove vestigial code, cleanup

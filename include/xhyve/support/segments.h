@@ -54,23 +54,26 @@
 #define LSEL(s,r) (((s)<<3) | SEL_LDT | r) /* a local selector */
 #define GSEL(s,r) (((s)<<3) | r) /* a global selector */
 
-// /*
-//  * User segment descriptors (%cs, %ds etc for i386 apps. 64 bit wide)
-//  * For long-mode apps, %cs only has the conforming bit in sd_type, the sd_dpl,
-//  * sd_p, sd_l and sd_def32 which must be zero).  %ds only has sd_p.
-//  */
-// struct segment_descriptor {
-// 	unsigned sd_lolimit:16;		/* segment extent (lsb) */
-// 	unsigned sd_lobase:24;		/* segment base address (lsb) */
-// 	unsigned sd_type:5;		/* segment type */
-// 	unsigned sd_dpl:2;		/* segment descriptor priority level */
-// 	unsigned sd_p:1;		/* segment descriptor present */
-// 	unsigned sd_hilimit:4;		/* segment extent (msb) */
-// 	unsigned sd_xx:2;		/* unused */
-// 	unsigned sd_def32:1;		/* default 32 vs 16 bit size */
-// 	unsigned sd_gran:1;		/* limit granularity (byte/page units)*/
-// 	unsigned sd_hibase:8;		/* segment base address  (msb) */
-// } __packed;
+/*
+ * User segment descriptors (%cs, %ds etc for i386 apps. 64 bit wide)
+ * For long-mode apps, %cs only has the conforming bit in sd_type, the sd_dpl,
+ * sd_p, sd_l and sd_def32 which must be zero).  %ds only has sd_p.
+ */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpacked"
+struct segment_descriptor {
+	unsigned sd_lolimit:16;		/* segment extent (lsb) */
+	unsigned sd_lobase:24;		/* segment base address (lsb) */
+	unsigned sd_type:5;		/* segment type */
+	unsigned sd_dpl:2;		/* segment descriptor priority level */
+	unsigned sd_p:1;		/* segment descriptor present */
+	unsigned sd_hilimit:4;		/* segment extent (msb) */
+	unsigned sd_xx:2;		/* unused */
+	unsigned sd_def32:1;		/* default 32 vs 16 bit size */
+	unsigned sd_gran:1;		/* limit granularity (byte/page units)*/
+	unsigned sd_hibase:8;		/* segment base address  (msb) */
+} __packed;
+#pragma clang diagnostic pop
 
 struct user_segment_descriptor {
 	uint64_t sd_lolimit:16; /* segment extent (lsb) */
@@ -167,16 +170,16 @@ struct user_segment_descriptor {
 // 	/* memory segment types */
 // #define	SDT_MEMRO	16	 memory read only 
 // #define	SDT_MEMROA	17	/* memory read only accessed */
-// #define	SDT_MEMRW	18	/* memory read write */
-// #define	SDT_MEMRWA	19	/* memory read write accessed */
+#define SDT_MEMRW 18 /* memory read write */
+#define SDT_MEMRWA 19 /* memory read write accessed */
 // #define	SDT_MEMROD	20	/* memory read only expand dwn limit */
 // #define	SDT_MEMRODA	21	/* memory read only expand dwn limit accessed */
 // #define	SDT_MEMRWD	22	/* memory read write expand dwn limit */
 // #define	SDT_MEMRWDA	23	/* memory read write expand dwn limit accessed*/
 // #define	SDT_MEME	24	/* memory execute only */
 // #define	SDT_MEMEA	25	/* memory execute only accessed */
-// #define	SDT_MEMER	26	/* memory execute read */
-// #define	SDT_MEMERA	27	/* memory execute read accessed */
+#define SDT_MEMER 26 /* memory execute read */
+#define SDT_MEMERA 27 /* memory execute read accessed */
 // #define	SDT_MEMEC	28	/* memory execute only conforming */
 // #define	SDT_MEMEAC	29	/* memory execute only accessed conforming */
 // #define	SDT_MEMERC	30	/* memory execute read conforming */

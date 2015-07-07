@@ -112,7 +112,7 @@ vmm_stat_free(void *vp)
 }
 
 int
-vmm_stat_desc_copy(int index, char *buf, int bufsize)
+vmm_stat_desc_copy(int index, char *buf, size_t bufsize)
 {
 	int i;
 	struct vmm_stat_type *vst;

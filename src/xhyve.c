@@ -66,6 +66,7 @@
 #include <xhyve/rtc.h>
 
 #include <xhyve/firmware/kexec.h>
+#include <xhyve/firmware/fbsd.h>
 
 #define GUEST_NIO_PORT 0x488 /* guest upcalls via i/o port */
 
@@ -112,9 +113,11 @@ static struct bhyvestats {
 #pragma clang diagnostic ignored "-Wpadded"
 static struct mt_vmm_info {
 	pthread_t mt_thr;
-	int mt_vcpu;	
+	int mt_vcpu;
 } mt_vmm_info[VM_MAXCPU];
 #pragma clang diagnostic pop
+
+static uint64_t (*fw_func)(void);
 
 __attribute__ ((noreturn)) static void
 usage(int code)
@@ -138,6 +141,7 @@ usage(int code)
 		"       -s: <slot,driver,configinfo> PCI slot config\n"
 		"       -u: RTC keeps UTC time\n"
 		"       -U: uuid\n"
+		"       -v: show build version\n"
 		"       -w: ignore unimplemented MSRs\n"
 		"       -W: force virtio to use single-vector MSI\n"
 		"       -x: local apic is in x2APIC mode\n"
@@ -145,6 +149,17 @@ usage(int code)
 		progname, (int)strlen(progname), "");
 
 	exit(code);
+}
+
+__attribute__ ((noreturn)) static void
+show_version()
+{
+        fprintf(stderr, "%s: %s\n\n%s\n",progname, VERSION,
+		"xhyve is a port of FreeBSD's bhyve hypervisor to OS X that\n"
+		"works entirely in userspace and has no other dependencies.\n\n"
+		"Homepage: https://github.com/mist64/xhyve\n"
+		"License: BSD\n");
+		exit(0);
 }
 
 void
@@ -237,7 +252,7 @@ vcpu_thread(void *param)
 	assert(error == 0);
 
 	if (vcpu == BSP) {
-		rip_entry = kexec();
+		rip_entry = fw_func();
 	} else {
 		rip_entry = vmexit[vcpu].rip;
 		spinup_ap_realmode(vcpu, &rip_entry);
@@ -703,45 +718,57 @@ parse_memsize(const char *opt, size_t *ret_memsize)
 
 static int
 firmware_parse(const char *opt) {
-	char *fw, *kernel, *initrd, *cmdline, *cp;
+	char *fw, *opt1, *opt2, *opt3, *cp;
 
 	fw = strdup(opt);
 
-	if (strncmp(fw, "kexec", strlen("kexec")) != 0) {
-		goto fail;
-	}
-
-	if ((cp = strchr(fw, ',')) != NULL) {
-		*cp = '\0';
-		kernel = cp + 1;
+	if (strncmp(fw, "kexec", strlen("kexec")) == 0) {
+		fw_func = kexec;
+	} else if (strncmp(fw, "fbsd", strlen("fbsd")) == 0) {
+		fw_func = fbsd_load;
 	} else {
 		goto fail;
 	}
 
-	if ((cp = strchr(kernel, ',')) != NULL) {
-		*cp = '\0';
-		initrd = cp + 1;
+		if ((cp = strchr(fw, ',')) != NULL) {
+			*cp = '\0';
+			opt1 = cp + 1;
+		} else {
+			goto fail;
+		}
+
+		if ((cp = strchr(opt1, ',')) != NULL) {
+			*cp = '\0';
+			opt2 = cp + 1;
+		} else {
+			goto fail;
+		}
+
+		if ((cp = strchr(opt2, ',')) != NULL) {
+			*cp = '\0';
+			opt3 = cp + 1;
+		} else {
+			goto fail;
+		}
+
+		opt2 = strlen(opt2) ? opt2 : NULL;
+		opt3 = strlen(opt3) ? opt3 : NULL;
+
+	if (fw_func == kexec) {
+		kexec_init(opt1, opt2, opt3);
+	} else if (fw_func == fbsd_load) {
+		/* FIXME: let user set boot-loader serial device */
+		fbsd_init(opt1, opt2, opt3, NULL);
 	} else {
 		goto fail;
 	}
-
-	if ((cp = strchr(initrd, ',')) != NULL) {
-		*cp = '\0';
-		cmdline = cp + 1;
-	} else {
-		goto fail;
-	}
-
-	initrd = strlen(initrd) ? initrd : NULL;
-	cmdline = strlen(cmdline) ? cmdline : NULL;
-
-	kexec_init(kernel, initrd, cmdline);
 
 	return 0;
 
 fail:
 	fprintf(stderr, "Invalid firmare argument\n"
-		"    -f kexec,'kernel','initrd','\"cmdline\"'\n");
+		"    -f kexec,'kernel','initrd','\"cmdline\"'\n"
+		"    -f fbsd,'userboot','boot volume','\"kernel env\"'\n");
 
 	return -1;
 }
@@ -765,7 +792,7 @@ main(int argc, char *argv[])
 	rtc_localtime = 1;
 	fw = 0;
 
-	while ((c = getopt(argc, argv, "behuwxACHPWY:f:g:c:s:m:l:U:")) != -1) {
+	while ((c = getopt(argc, argv, "behvuwxACHPWY:f:g:c:s:m:l:U:")) != -1) {
 		switch (c) {
 		case 'A':
 			acpi = 1;
@@ -832,8 +859,10 @@ main(int argc, char *argv[])
 		case 'Y':
 			mptgen = 0;
 			break;
+		case 'v':
+			show_version();
 		case 'h':
-			usage(0);			
+			usage(0);
 		default:
 			usage(1);
 		}
@@ -908,7 +937,6 @@ main(int argc, char *argv[])
 		error = acpi_build(guest_ncpus);
 		assert(error == 0);
 	}
-	
 
 	rip = 0;
 

@@ -156,6 +156,18 @@ If you want the same IP address across VM reboots, assign a UUID to a particular
 
     $ xhyve [-U uuid]
 
+**Optional:**
+
+If you need more advanced networking and already have a configured [TAP](http://tuntaposx.sourceforge.net) device you can use it with:
+
+	virtio-tap,tapX
+
+instead of:
+
+    virtio-net
+
+Where *X* is your tap device, i.e. */dev/tapX*.
+
 Issues
 ------
 If you are, or were, running any version of VirtualBox, prior to 5.0, and
@@ -174,25 +186,26 @@ TODO
 ----
 
 - vmm:
-  - enable APIC access page to speed up APIC emulation
-  - enable x2APIC MSRs (even faster)
+  - enable APIC access page to speed up APIC emulation (**performance**)
+  - enable x2APIC MSRs (even faster) (**performance**)
   - vmm_callout:
       - is a quick'n'dirty implementation of the FreeBSD kernel callout mechanism
       - seems to be racy
       - fix races or perhaps replace with something better
-      - use per vCPU timer event thread (performance)?
+      - use per vCPU timer event thread (**performance**)?
+      - use hardware VMX preemption timer instead of `pthread_cond_wait` (**performance**)
   - some 32-bit guests are broken (support PAE paging in VMCS)
-  - PCID guest support (performance)
+  - PCID guest support (**performance**)
 - block_if:
-  - OS X does not support preadv/pwritev, we need to serialize reads and writes for the time being until we find a better solution.
+  - OS X does not support `preadv`/`pwritev`, we need to serialize reads and writes for the time being until we find a better solution. (**performance**)
   - support block devices other than plain files
 - virtio_net:
-  - make it not require root
   - unify TAP and vmnet backends
-  - performance: send/receive more than a single packet at a time
+  - vmnet: make it not require root
+  - vmnet: send/receive more than a single packet at a time (**performance**)
 - virtio_rnd:
   - is untested
 - remove explicit state transitions:
-  - since only the owning task/thread can modify the VM/vCPUs a lot of the synchronization might be unnecessary
+  - since only the owning task/thread can modify the VM/vCPUs a lot of the synchronization might be unnecessary (**performance**)
 - performance, performance and performance
 - remove vestigial code, cleanup

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <stdint.h>
-#include <pthread.h>
 #include <time.h>
 #include <sys/time.h>
+#include <dispatch/dispatch.h>
 
 #define SBT_1S  ((sbintime_t)1 << 32)
 #define SBT_1M  (SBT_1S * 60)
@@ -82,9 +82,7 @@ static inline sbintime_t sbinuptime(void) {
 }
 
 struct callout {
-  pthread_cond_t wait;
-  struct callout *prev;
-  struct callout *next;
+  dispatch_source_t timer;
   uint64_t timeout;
   void *argument;
   void (*callout)(void *);

@@ -93,7 +93,6 @@ struct callout {
 #define C_ABSOLUTE 0x0200 /* event time is absolute */
 #define CALLOUT_ACTIVE 0x0002 /* callout is currently active */
 #define CALLOUT_PENDING 0x0004 /* callout is waiting for timeout */
-#define CALLOUT_MPSAFE 0x0008 /* callout handler is mp safe */
 #define CALLOUT_RETURNUNLOCKED 0x0010 /* handler returns with mtx unlocked */
 #define CALLOUT_COMPLETED 0x0020 /* callout thread finished */
 #define CALLOUT_WAITING 0x0040 /* thread waiting for callout to finish */

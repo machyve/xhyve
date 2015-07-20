@@ -124,8 +124,7 @@ void callout_init(struct callout *c, int mpsafe) {
 int callout_stop_safe(struct callout *c, int drain) {
   int result = 0;
 
-  if ((drain) && (callout_pending(c) || (callout_active(c) && !callout_completed(c))))
-  {
+  if ((drain) && (callout_pending(c) || (callout_active(c) && !callout_completed(c)))) {
     if (c->flags & CALLOUT_WAITING) {
       abort();
     }
@@ -154,21 +153,22 @@ int callout_stop_safe(struct callout *c, int drain) {
 }
 
 int callout_reset_sbt(struct callout *c, sbintime_t sbt,
-  UNUSED sbintime_t precision, void (*ftn)(void *), void *arg, int flags)
-{
+  UNUSED sbintime_t precision, void (*ftn)(void *), void *arg, int flags) {
   int result;
 
-  if (!((flags == 0) || (flags == C_ABSOLUTE)) || (c->flags !=0)) {
+  if (!((flags == 0) || (flags == C_ABSOLUTE)) || (c->flags != 0)) {
     /* FIXME */
     //printf("XHYVE: callout_reset_sbt 0x%08x 0x%08x\r\n", flags, c->flags);
     //abort();
   }
 
-  c->timeout = abs_to_nanos(sbt2mat(sbt));
+  c->timeout = sbt2mat(sbt);
 
   if (flags == C_ABSOLUTE) {
-    c->timeout -= abs_to_nanos(mach_absolute_time());
+    c->timeout -= mach_absolute_time();
   }
+
+  c->timeout = abs_to_nanos(c->timeout);
 
   result = callout_stop_safe(c, 0);
 
@@ -191,7 +191,7 @@ void callout_system_init(void) {
 
   mach_timebase_info(&timebase_info);
 
-  queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-  
+  queue = dispatch_queue_create(NULL, DISPATCH_QUEUE_SERIAL);
+
   initialized = true;
 }

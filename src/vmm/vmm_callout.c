@@ -34,34 +34,38 @@
 #include <mach/mach_time.h>
 #include <dispatch/dispatch.h>
 
-#include <xhyve/support/misc.h>
 #include <xhyve/vmm/vmm_callout.h>
 
 static mach_timebase_info_data_t timebase_info;
 static dispatch_queue_t queue;
 static bool initialized = false;
+int tc_precexp;
 
-static inline uint64_t nanos_to_abs(uint64_t nanos) {
+static inline uint64_t nanos_to_mat(uint64_t nanos) {
   return (nanos * timebase_info.denom) / timebase_info.numer;
 }
 
-static inline uint64_t abs_to_nanos(uint64_t abs) {
+static inline uint64_t mat_to_nanos(uint64_t abs) {
   return (abs * timebase_info.numer) / timebase_info.denom;
 }
 
-static inline uint64_t sbt2mat(sbintime_t sbt) {
+static inline uint64_t sbt_to_nanos(sbintime_t sbt) {
   uint64_t s, ns;
-  
+
   s = (((uint64_t) sbt) >> 32);
   ns = (((uint64_t) 1000000000) * (uint32_t) sbt) >> 32;
-  
-  return (nanos_to_abs((s * 1000000000) + ns));
+
+  return (s * 1000000000) + ns;
+}
+
+static inline uint64_t sbt_to_mat(sbintime_t sbt) {
+  return nanos_to_mat(sbt_to_nanos(sbt));
 }
 
 void binuptime(struct bintime *bt) {
   uint64_t ns;
   
-  ns = abs_to_nanos(mach_absolute_time());
+  ns = mat_to_nanos(mach_absolute_time());
 
   bt->sec = (ns / 1000000000);
   bt->frac = (((ns % 1000000000) * (((uint64_t) 1 << 63) / 500000000)));
@@ -70,7 +74,7 @@ void binuptime(struct bintime *bt) {
 void getmicrotime(struct timeval *tv) {
   uint64_t ns, sns;
 
-  ns = abs_to_nanos(mach_absolute_time());
+  ns = mat_to_nanos(mach_absolute_time());
 
   sns = (ns / 1000000000);
   tv->tv_sec = (long) sns;
@@ -152,8 +156,8 @@ int callout_stop_safe(struct callout *c, int drain) {
   return result;
 }
 
-int callout_reset_sbt(struct callout *c, sbintime_t sbt,
-  UNUSED sbintime_t precision, void (*ftn)(void *), void *arg, int flags) {
+int callout_reset_sbt(struct callout *c, sbintime_t sbt, sbintime_t precision,
+                      void (*ftn)(void *), void *arg, int flags) {
   int result;
 
   if (!((flags == 0) || (flags == C_ABSOLUTE)) || (c->flags != 0)) {
@@ -162,13 +166,13 @@ int callout_reset_sbt(struct callout *c, sbintime_t sbt,
     //abort();
   }
 
-  c->timeout = sbt2mat(sbt);
+  c->timeout = sbt_to_mat(sbt);
 
-  if (flags == C_ABSOLUTE) {
-    c->timeout -= mach_absolute_time();
+  if (flags != C_ABSOLUTE) {
+    c->timeout += mach_absolute_time();
   }
 
-  c->timeout = abs_to_nanos(c->timeout);
+  c->precision = sbt_to_nanos(precision);
 
   result = callout_stop_safe(c, 0);
 
@@ -176,8 +180,7 @@ int callout_reset_sbt(struct callout *c, sbintime_t sbt,
   c->argument = arg;
   c->flags |= (CALLOUT_PENDING | CALLOUT_ACTIVE);
 
-  dispatch_time_t start = dispatch_time(DISPATCH_TIME_NOW, (int64_t) c->timeout);
-  dispatch_source_set_timer(c->timer, start, DISPATCH_TIME_FOREVER, 0);
+  dispatch_source_set_timer(c->timer, c->timeout, DISPATCH_TIME_FOREVER, c->precision);
   dispatch_resume(c->timer);
   c->queued = 1;
 
@@ -192,6 +195,8 @@ void callout_system_init(void) {
   mach_timebase_info(&timebase_info);
 
   queue = dispatch_queue_create(NULL, DISPATCH_QUEUE_SERIAL);
+
+  tc_precexp = 4; // by default in sys/kern/kern_tc.c
 
   initialized = true;
 }

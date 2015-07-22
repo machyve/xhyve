@@ -155,11 +155,12 @@ static void
 pit_timer_start_cntr0(struct vatpit *vatpit)
 {
 	struct channel *c;
-	sbintime_t now, delta;
+	sbintime_t now, delta, precision;
 
 	c = &vatpit->channel[0];
 	if (c->initial != 0) {
 		delta = c->initial * vatpit->freq_sbt;
+		precision = delta >> tc_precexp;
 		c->callout_sbt = c->callout_sbt + delta;
 
 		/*
@@ -172,7 +173,7 @@ pit_timer_start_cntr0(struct vatpit *vatpit)
 			c->callout_sbt = now + delta;
 
 		callout_reset_sbt(&c->callout, c->callout_sbt,
-		    0, vatpit_callout_handler, &c->callout_arg,
+		    precision, vatpit_callout_handler, &c->callout_arg,
 		    C_ABSOLUTE);
 	}
 }

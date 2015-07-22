@@ -70,6 +70,7 @@ static inline void bintime_sub(struct bintime *_bt, const struct bintime *_bt2)
     ((a)->frac cmp (b)->frac) : \
     ((a)->sec cmp (b)->sec))
 
+extern int tc_precexp;
 
 void binuptime(struct bintime *bt);
 void getmicrotime(struct timeval *tv);
@@ -84,6 +85,7 @@ static inline sbintime_t sbinuptime(void) {
 struct callout {
   dispatch_source_t timer;
   uint64_t timeout;
+  uint64_t precision;
   void *argument;
   void (*callout)(void *);
   int flags;

@@ -325,7 +325,7 @@ vhpet_stop_timer(struct vhpet *vhpet, int n, sbintime_t now)
 static void
 vhpet_start_timer(struct vhpet *vhpet, int n, uint32_t counter, sbintime_t now)
 {
-	sbintime_t delta;
+	sbintime_t delta, precision;
 
 	if (vhpet->timer[n].comprate != 0)
 		vhpet_adjust_compval(vhpet, n, counter);
@@ -339,9 +339,10 @@ vhpet_start_timer(struct vhpet *vhpet, int n, uint32_t counter, sbintime_t now)
 	}
 
 	delta = (vhpet->timer[n].compval - counter) * vhpet->freq_sbt;
+	precision = delta >> tc_precexp;
 	vhpet->timer[n].callout_sbt = now + delta;
 	callout_reset_sbt(&vhpet->timer[n].callout, vhpet->timer[n].callout_sbt,
-	    0, vhpet_handler, &vhpet->timer[n].arg, C_ABSOLUTE);
+	    precision, vhpet_handler, &vhpet->timer[n].arg, C_ABSOLUTE);
 }
 
 static void

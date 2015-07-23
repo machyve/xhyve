@@ -88,7 +88,6 @@ static void dispatcher(void* data) {
     abort();
   }
 
-  /* dispatch */
   c->flags &= ~CALLOUT_PENDING;
 
   c->callout(c->argument);
@@ -106,9 +105,9 @@ static void dispatcher(void* data) {
   if (c->queued) {
     /* if the callout hasn't been rescheduled, remove it */
     if (((c->flags & CALLOUT_PENDING) == 0) || (c->flags & CALLOUT_WAITING)) {
-      c->flags |= CALLOUT_COMPLETED;
       dispatch_suspend(c->timer);
       c->queued = 0;
+      c->flags |= CALLOUT_COMPLETED;
     }
   }
 }
@@ -128,21 +127,28 @@ void callout_init(struct callout *c, int mpsafe) {
 int callout_stop_safe(struct callout *c, int drain) {
   int result = 0;
 
-  if ((drain) && (callout_pending(c) || (callout_active(c) && !callout_completed(c)))) {
-    if (c->flags & CALLOUT_WAITING) {
-      abort();
+  if (drain) {
+    if ((callout_pending(c) || (callout_active(c) && !callout_completed(c)))) {
+      if (c->flags & CALLOUT_WAITING) {
+        abort();
+      }
+
+      /* wait for callout */
+      c->flags |= CALLOUT_WAITING;
+
+      while (!callout_completed(c)) {
+        // FIXME
+        //pthread_cond_wait(&c->wait, NULL);
+      }
+
+      c->flags &= ~CALLOUT_WAITING;
+      result = 1;
     }
 
-    /* wait for callout */
-    c->flags |= CALLOUT_WAITING;
-
-    while (!callout_completed(c)) {
-      // FIXME
-      //pthread_cond_wait(&c->wait, NULL);
-    }
-
-    c->flags &= ~CALLOUT_WAITING;
-    result = 1;
+    /* According to the FreeBSD manpages, callout_drain has to be called prior to
+       releasing the storage for the callout structure, thus it's a good place to 
+       release the dispatch_source. NOTE: this makes the structure unusable! */
+    dispatch_release(c->timer);
   }
 
   if (c->queued) {

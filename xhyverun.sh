@@ -3,7 +3,7 @@
 # Linux
 KERNEL="test/vmlinuz"
 INITRD="test/initrd.gz"
-CMDLINE="earlyprintk=serial console=ttyS0 acpi=off"
+CMDLINE="earlyprintk=serial console=ttyS0"
 
 # FreeBSD
 #USERBOOT="test/userboot.so"
@@ -17,10 +17,11 @@ MEM="-m 1G"
 #IMG_HDD="-s 4,virtio-blk,/somepath/somefile.img"
 PCI_DEV="-s 0:0,hostbridge -s 31,lpc"
 LPC_DEV="-l com1,stdio"
+ACPI="-A"
 #UUID="-U deadbeef-dead-dead-dead-deaddeafbeef"
 
 # Linux
-build/xhyve $MEM $SMP $PCI_DEV $LPC_DEV $NET $IMG_CD $IMG_HDD $UUID -f kexec,$KERNEL,$INITRD,"$CMDLINE"
+build/xhyve $ACPI $MEM $SMP $PCI_DEV $LPC_DEV $NET $IMG_CD $IMG_HDD $UUID -f kexec,$KERNEL,$INITRD,"$CMDLINE"
 
 # FreeBSD
-#build/xhyve -A $MEM $SMP $PCI_DEV $LPC_DEV $NET $IMG_CD $IMG_HDD $UUID -f fbsd,$USERBOOT,$BOOTVOLUME,"$KERNELENV"
+#build/xhyve $ACPI $MEM $SMP $PCI_DEV $LPC_DEV $NET $IMG_CD $IMG_HDD $UUID -f fbsd,$USERBOOT,$BOOTVOLUME,"$KERNELENV"

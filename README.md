@@ -21,7 +21,7 @@ Requirements
 Installation
 ------------
 
-If you have home brew, then simply:
+If you have homebrew, then simply:
 
     $ brew update
     $ brew install xhyve

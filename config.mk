@@ -6,9 +6,6 @@
 # [XHYVE_CONFIG_STATS]  VMM event profiler                                    #
 ###############################################################################
 
-DEFINES := \
-  -DXHYVE_CONFIG_ASSERT
-
 ###############################################################################
 # Toolchain                                                                   #
 ###############################################################################
@@ -19,8 +16,22 @@ LD := clang
 STRIP := strip
 DSYM := dsymutil
 
+# Default to /usr/sbin/iasl for historic reasons
+IASL ?= $(shell which iasl)
+ifeq ($(IASL),)
+IASL = /usr/sbin/iasl
+endif
+
 ENV := \
   LANG=en_US.US-ASCII
+
+###############################################################################
+# DEFINES                                                                     #
+###############################################################################
+
+DEFINES := \
+	-DXHYVE_CONFIG_ASSERT \
+	-DBHYVE_ASL_COMPILER=$(IASL)
 
 ###############################################################################
 # CFLAGS                                                                      #

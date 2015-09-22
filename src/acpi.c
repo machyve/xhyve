@@ -82,7 +82,6 @@
 
 #define	BHYVE_ASL_TEMPLATE	"bhyve.XXXXXXX"
 #define BHYVE_ASL_SUFFIX	".aml"
-#define BHYVE_ASL_COMPILER	"/usr/sbin/iasl"
 
 static int basl_keep_temps;
 static int basl_verbose_iasl;
@@ -445,7 +444,7 @@ basl_fwrite_fadt(FILE *fp)
 	EFPRINTF(fp, "[0008]\t\tAddress : 00000000%08X\n",
 	    PM1A_EVT_ADDR);
 	EFPRINTF(fp, "\n");
-	
+
 	EFPRINTF(fp,
 	    "[0012]\t\tPM1B Event Block : [Generic Address Structure]\n");
 	EFPRINTF(fp, "[0001]\t\tSpace ID : 01 [SystemIO]\n");
@@ -650,7 +649,7 @@ basl_fwrite_facs(FILE *fp)
 	EFFLUSH(fp);
 
 	return (0);
-	
+
 err_exit:
 	return (errno);
 }
@@ -853,7 +852,7 @@ basl_load(int fd, uint64_t off)
 
 	if (fstat(fd, &sb) < 0)
 		return (errno);
-		
+
 	gaddr = paddr_guest2host(basl_acpi_base + off, ((size_t) sb.st_size));
 	if (gaddr == NULL)
 		return (EFAULT);
@@ -889,7 +888,7 @@ basl_compile(int (*fwrite_section)(FILE *), uint64_t offset)
 			fmt = basl_verbose_iasl ?
 				"%s -p %s %s" :
 				"/bin/sh -c \"%s -p %s %s\" 1> /dev/null";
-				
+
 			snprintf(iaslbuf, sizeof(iaslbuf),
 				 fmt,
 				 BHYVE_ASL_COMPILER,
@@ -919,9 +918,9 @@ basl_make_templates(void)
 	int len;
 
 	err = 0;
-	
+
 	/*
-	 * 
+	 *
 	 */
 	if ((tmpdir = getenv("BHYVE_TMPDIR")) == NULL || *tmpdir == '\0' ||
 	    (tmpdir = getenv("TMPDIR")) == NULL || *tmpdir == '\0') {

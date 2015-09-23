@@ -666,7 +666,7 @@ uart_set_backend(struct uart_softc *sc, const char *opts)
 			return retval;
 		}
 
-		fprintf(stdout, "Hook up a terminal emulator to %s in order too access your VM\n", ptyname);
+		fprintf(stdout, "Hook up a terminal emulator to %s in order to access your VM\n", ptyname);
 		sc->tty.fd = ptyfd;
 		sc->tty.name = ptyname;
 		sc->tty.opened = true;

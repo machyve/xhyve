@@ -48,7 +48,7 @@
 
 static int listen_fd, conn_fd;
 
-static struct sockaddr_in sin;
+static struct sockaddr_in saddrin;
 
 static int
 dbg_handler(UNUSED int vcpu, int in, UNUSED int port, int bytes, uint32_t *eax,
@@ -123,12 +123,12 @@ init_dbgport(int sport)
 		exit(1);
 	}
 
-	sin.sin_len = sizeof(sin);
-	sin.sin_family = AF_INET;
-	sin.sin_addr.s_addr = htonl(INADDR_ANY);
-	sin.sin_port = htons(sport);
+	saddrin.sin_len = sizeof(saddrin);
+	saddrin.sin_family = AF_INET;
+	saddrin.sin_addr.s_addr = htonl(INADDR_ANY);
+	saddrin.sin_port = htons(sport);
 
-	if (bind(listen_fd, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+	if (bind(listen_fd, (struct sockaddr *)&saddrin, sizeof(saddrin)) < 0) {
 		perror("bind");
 		exit(1);
 	}

@@ -90,7 +90,11 @@ static void dispatcher(void* data) {
 
   c->flags &= ~CALLOUT_PENDING;
 
+  dispatch_group_enter(c->group);
+
   c->callout(c->argument);
+
+  dispatch_group_leave(c->group);
 
   /* note: after the handler has been invoked the callout structure can look
    *       much differently, the handler may have rescheduled the callout or
@@ -119,6 +123,7 @@ void callout_init(struct callout *c, int mpsafe) {
 
   memset(c, 0, sizeof(struct callout));
 
+  c->group = dispatch_group_create();
   c->timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
   dispatch_set_context(c->timer, c);
   dispatch_source_set_event_handler_f(c->timer, dispatcher);
@@ -136,10 +141,7 @@ int callout_stop_safe(struct callout *c, int drain) {
       /* wait for callout */
       c->flags |= CALLOUT_WAITING;
 
-      while (!callout_completed(c)) {
-        // FIXME
-        //pthread_cond_wait(&c->wait, NULL);
-      }
+      dispatch_group_wait(c->group, DISPATCH_TIME_FOREVER);
 
       c->flags &= ~CALLOUT_WAITING;
       result = 1;
@@ -148,6 +150,7 @@ int callout_stop_safe(struct callout *c, int drain) {
     /* According to the FreeBSD manpages, callout_drain has to be called prior to
        releasing the storage for the callout structure, thus it's a good place to 
        release the dispatch_source. NOTE: this makes the structure unusable! */
+    dispatch_release(c->group);
     dispatch_release(c->timer);
   }
 

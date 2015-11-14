@@ -83,6 +83,7 @@ static inline sbintime_t sbinuptime(void) {
 }
 
 struct callout {
+  dispatch_group_t group;
   dispatch_source_t timer;
   uint64_t timeout;
   uint64_t precision;

@@ -94,8 +94,6 @@ static void dispatcher(void* data) {
 
   c->callout(c->argument);
 
-  dispatch_group_leave(c->group);
-
   /* note: after the handler has been invoked the callout structure can look
    *       much differently, the handler may have rescheduled the callout or
    *       even freed it.
@@ -114,6 +112,8 @@ static void dispatcher(void* data) {
       c->flags |= CALLOUT_COMPLETED;
     }
   }
+
+  dispatch_group_leave(c->group);
 }
 
 void callout_init(struct callout *c, int mpsafe) {

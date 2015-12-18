@@ -802,29 +802,33 @@ setup_pidfile()
 
 	error = sprintf(pid_str, "%d", pid);
 	if (error < 0)
-		return -1;
+		goto fail;
 
 	f = open(pidfile, O_CREAT|O_EXCL|O_WRONLY, 0644);
 	if (f < 0)
-		return -2;
+		goto fail;
 
 	error = atexit(remove_pidfile);
 	if (error < 0) {
 		close(f);
 		remove_pidfile();
-		return -3;
+		goto fail;
 	}
 
 	if (0 > (write(f, (void*)pid_str, strlen(pid_str)))) {
 		close(f);
-		return -4;
+		goto fail;
 	}
 
 	error = close(f);
 	if (error < 0)
-		return -5;
+		goto fail;
 
 	return 0;
+
+fail:
+	fprintf(stderr, "Failed to set up pidfile\n");
+	return -1;
 }
 
 int

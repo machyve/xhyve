@@ -160,7 +160,7 @@ show_version()
         fprintf(stderr, "%s: %s\n\n%s\n",progname, VERSION,
 		"xhyve is a port of FreeBSD's bhyve hypervisor to OS X that\n"
 		"works entirely in userspace and has no other dependencies.\n\n"
-		"Homepage: https://github.com/mist64/xhyve\n"
+		"Homepage: http://www.xhyve.xyz\n"
 		"License: BSD\n");
 		exit(0);
 }

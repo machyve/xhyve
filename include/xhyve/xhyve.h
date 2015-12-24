@@ -41,6 +41,7 @@
 #define	VMEXIT_ABORT (-1)
 
 extern int guest_ncpus;
+extern int print_mac;
 extern char *guest_uuid_str;
 extern char *vmname;
 

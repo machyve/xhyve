@@ -79,6 +79,7 @@ extern int vmexit_task_switch(struct vm_exit *, int *vcpu);
 char *vmname = "vm";
 
 int guest_ncpus;
+int print_mac;
 char *guest_uuid_str;
 static char *pidfile;
 
@@ -126,7 +127,7 @@ usage(int code)
 {
 
         fprintf(stderr,
-                "Usage: %s [-behuwxACHPWY] [-c vcpus] [-F <pidfile>] [-g <gdb port>] [-l <lpc>]\n"
+                "Usage: %s [-behuwxMACHPWY] [-c vcpus] [-F <pidfile>] [-g <gdb port>] [-l <lpc>]\n"
 		"       %*s [-m mem] [-p vcpu:hostcpu] [-s <pci>] [-U uuid] -f <fw>\n"
 		"       -A: create ACPI tables\n"
 		"       -c: # cpus (default 1)\n"
@@ -139,6 +140,7 @@ usage(int code)
 		"       -H: vmexit from the guest on hlt\n"
 		"       -l: LPC device configuration. Ex: -l com1,stdio -l com2,autopty -l com2,/dev/myownpty\n"
 		"       -m: memory size in MB, may be suffixed with one of K, M, G or T\n"
+		"       -M: print MAC address and exit if using vmnet\n"
 		"       -p: pin 'vcpu' to 'hostcpu'\n"
 		"       -P: vmexit from the guest on pause\n"
 		"       -s: <slot,driver,configinfo> PCI slot config\n"
@@ -845,12 +847,13 @@ main(int argc, char *argv[])
 	progname = basename(argv[0]);
 	gdb_port = 0;
 	guest_ncpus = 1;
+	print_mac = 0;
 	memsize = 256 * MB;
 	mptgen = 1;
 	rtc_localtime = 1;
 	fw = 0;
 
-	while ((c = getopt(argc, argv, "behvuwxACHPWY:f:F:g:c:s:m:l:U:")) != -1) {
+	while ((c = getopt(argc, argv, "behvuwxMACHPWY:f:F:g:c:s:m:l:U:")) != -1) {
 		switch (c) {
 		case 'A':
 			acpi = 1;
@@ -892,6 +895,9 @@ main(int argc, char *argv[])
 			error = parse_memsize(optarg, &memsize);
 			if (error)
 				errx(EX_USAGE, "invalid memsize '%s'", optarg);
+			break;
+		case 'M':
+			print_mac = 1;
 			break;
 		case 'H':
 			guest_vmexit_on_hlt = 1;

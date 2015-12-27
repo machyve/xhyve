@@ -766,7 +766,7 @@ firmware_parse(const char *opt) {
 	return 0;
 
 fail:
-	fprintf(stderr, "Invalid firmare argument\n"
+	fprintf(stderr, "Invalid firmware argument\n"
 		"    -f kexec,'kernel','initrd','\"cmdline\"'\n"
 		"    -f fbsd,'userboot','boot volume','\"kernel env\"'\n");
 

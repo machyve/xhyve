@@ -170,14 +170,14 @@ Where *X* is your tap device, i.e. */dev/tapX*.
 
 Issues
 ------
-If you are, or were, running any version of VirtualBox, prior to 5.0, and
-attempt to run xhyve your system will immediately crash as a kernel panic is
-triggered. This is due to a VirtualBox bug (that got fixed in VirtualBox 5.0)
-as VirtualBox wasn't playing nice with OSX's Hypervisor.framework used by
-xhyve.
+If you are, or were, running any version of VirtualBox, prior to 4.3.30 or 5.0,
+and attempt to run xhyve your system will immediately crash as a kernel panic is
+triggered. This is due to a VirtualBox bug (that got fixed in newest VirtualBox
+versions) as VirtualBox wasn't playing nice with OSX's Hypervisor.framework used
+by xhyve.
 
-To get around this you either have to update to VirtualBox 5 (which got this
-fixed definitively) or, if you for some reason are unable to update, to reboot
+To get around this you either have to update to newest VirtualBox 4.3 or 5.0 or,
+if you for some reason are unable to update, to reboot
 your Mac after using VirtualBox and before attempting to use xhyve.
 (see issues [#5](https://github.com/mist64/xhyve/issues/5) and
 [#9](https://github.com/mist64/xhyve/issues/9) for the full context)

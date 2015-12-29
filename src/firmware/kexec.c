@@ -152,7 +152,14 @@ kexec_load_kernel(char *path, char *cmdline) {
 	zp->e820_map[1].addr = 0x0000000000100000;
 	zp->e820_map[1].size = (memory.size - 0x0000000000100000);
 	zp->e820_map[1].type = 1;
-	zp->e820_entries = 2;
+	if (xh_vm_get_highmem_size() == 0) {
+		zp->e820_entries = 2;
+	} else {
+		zp->e820_map[2].addr = 0x0000000100000000;
+		zp->e820_map[2].size = xh_vm_get_highmem_size();
+		zp->e820_map[2].type = 1;
+		zp->e820_entries = 3;
+	}
 
 	kernel.base = kernel_start;
 	kernel.size = kernel_init_size;

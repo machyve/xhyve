@@ -62,12 +62,18 @@ struct vm_object;
 struct vm_guest_paging;
 struct pmap;
 
+struct vm_eventinfo {
+	void	*rptr;		/* rendezvous cookie */
+	int	*sptr;		/* suspend cookie */
+	int	*iptr;		/* reqidle cookie */
+};
+
 typedef int (*vmm_init_func_t)(void);
 typedef int (*vmm_cleanup_func_t)(void);
 typedef void *(*vmi_vm_init_func_t)(struct vm *vm);
 typedef int (*vmi_vcpu_init_func_t)(void *vmi, int vcpu);
 typedef int (*vmi_run_func_t)(void *vmi, int vcpu, register_t rip,
-	void *rendezvous_cookie, void *suspend_cookie);
+	struct vm_eventinfo *info);
 typedef void (*vmi_vm_cleanup_func_t)(void *vmi);
 typedef void (*vmi_vcpu_cleanup_func_t)(void *vmi, int vcpu);
 typedef int (*vmi_get_register_t)(void *vmi, int vcpu, int num,
@@ -145,6 +151,7 @@ int vm_activate_cpu(struct vm *vm, int vcpu);
 struct vm_exit *vm_exitinfo(struct vm *vm, int vcpuid);
 void vm_exit_suspended(struct vm *vm, int vcpuid, uint64_t rip);
 void vm_exit_rendezvous(struct vm *vm, int vcpuid, uint64_t rip);
+void vm_exit_reqidle(struct vm *vm, int vcpuid, uint64_t rip);
 
 /*
  * Rendezvous all vcpus specified in 'dest' and execute 'func(arg)'.
@@ -167,17 +174,21 @@ cpuset_t vm_active_cpus(struct vm *vm);
 cpuset_t vm_suspended_cpus(struct vm *vm);
 
 static __inline int
-vcpu_rendezvous_pending(void *rendezvous_cookie)
+vcpu_rendezvous_pending(struct vm_eventinfo *info)
 {
-
-	return (*(uintptr_t *)rendezvous_cookie != 0);
+	return (*((uintptr_t *)(info->rptr)) != 0);
 }
 
 static __inline int
-vcpu_suspended(void *suspend_cookie)
+vcpu_suspended(struct vm_eventinfo *info)
 {
+	return (*info->sptr);
+}
 
-	return (*(int *)suspend_cookie);
+static __inline int
+vcpu_reqidle(struct vm_eventinfo *info)
+{
+	return (*info->iptr);
 }
 
 enum vcpu_state {
@@ -256,7 +267,7 @@ struct vm_copyinfo {
 /*
  * Set up 'copyinfo[]' to copy to/from guest linear address space starting
  * at 'gla' and 'len' bytes long. The 'prot' should be set to PROT_READ for
- * a copyin or PROT_WRITE for a copyout. 
+ * a copyin or PROT_WRITE for a copyout.
  *
  * retval	is_fault	Intepretation
  *   0		   0		Success

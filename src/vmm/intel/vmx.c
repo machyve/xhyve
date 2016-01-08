@@ -415,7 +415,7 @@ exit_reason_to_str(int reason)
 
 // 	for (i = 0; i < 8; i++)
 // 		error += guest_msr_ro(vmx, MSR_APIC_TMR0 + i);
-	
+
 // 	for (i = 0; i < 8; i++)
 // 		error += guest_msr_ro(vmx, MSR_APIC_IRR0 + i);
 
@@ -670,7 +670,7 @@ vmx_handle_cpuid(struct vm *vm, int vcpuid)
 {
 	uint32_t eax, ebx, ecx, edx;
 	int error;
-	
+
 	eax = (uint32_t) reg_read(vcpuid, HV_X86_RAX);
 	ebx = (uint32_t) reg_read(vcpuid, HV_X86_RBX);
 	ecx = (uint32_t) reg_read(vcpuid, HV_X86_RCX);
@@ -2129,8 +2129,7 @@ vmx_exit_process(struct vmx *vmx, int vcpu, struct vm_exit *vmexit)
 }
 
 static int
-vmx_run(void *arg, int vcpu, register_t rip, void *rendezvous_cookie,
-	void *suspend_cookie)
+vmx_run(void *arg, int vcpu, register_t rip, struct vm_eventinfo *evinfo)
 {
 	int handled;
 	struct vmx *vmx;
@@ -2161,14 +2160,19 @@ vmx_run(void *arg, int vcpu, register_t rip, void *rendezvous_cookie,
 		 * vmx_inject_interrupts() can suspend the vcpu due to a
 		 * triple fault.
 		 */
-		if (vcpu_suspended(suspend_cookie)) {
+		if (vcpu_suspended(evinfo)) {
 			vm_exit_suspended(vmx->vm, vcpu, ((uint64_t) rip));
 			break;
 		}
 
-		if (vcpu_rendezvous_pending(rendezvous_cookie)) {
+		if (vcpu_rendezvous_pending(evinfo)) {
 			vm_exit_rendezvous(vmx->vm, vcpu, ((uint64_t) rip));
 			break;
+		}
+
+		if (vcpu_reqidle(evinfo)) {
+ 			vm_exit_reqidle(vmx->vm, vcpu,  ((uint64_t) rip));
+ 			break;
 		}
 
 		vmx_run_trace(vmx, vcpu);
@@ -2382,7 +2386,7 @@ vmx_setreg(void *arg, int vcpu, int reg, uint64_t val)
 		if (shadow > 0) {
 			/*
 			 * Store the unmodified value in the shadow
-			 */			
+			 */
 			error = vmcs_setreg(vcpu, VMCS_IDENT(shadow), val);
 		}
 
@@ -2698,7 +2702,7 @@ vmx_vlapic_init(void *arg, int vcpuid)
 	struct vmx *vmx;
 	struct vlapic *vlapic;
 	struct vlapic_vtx *vlapic_vtx;
-	
+
 	vmx = arg;
 
 	vlapic = malloc(sizeof(struct vlapic_vtx));

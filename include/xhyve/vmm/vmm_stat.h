@@ -101,7 +101,7 @@ vmm_stat_array_incr(struct vm *vm, int vcpu, struct vmm_stat_type *vst,
 {
 #ifdef XHYVE_CONFIG_STATS
 	uint64_t *stats;
-	
+
 	stats = vcpu_stats(vm, vcpu);
 
 	if (vst->index >= 0 && statidx < vst->nelems)
@@ -121,7 +121,7 @@ vmm_stat_array_set(struct vm *vm, int vcpu, struct vmm_stat_type *vst,
 {
 #ifdef XHYVE_CONFIG_STATS
 	uint64_t *stats;
-	
+
 	stats = vcpu_stats(vm, vcpu);
 
 	if (vst->index >= 0 && statidx < vst->nelems)
@@ -134,7 +134,7 @@ vmm_stat_array_set(struct vm *vm, int vcpu, struct vmm_stat_type *vst,
 	(void) val;
 #endif
 }
-		   
+
 static void __inline
 vmm_stat_incr(struct vm *vm, int vcpu, struct vmm_stat_type *vst, uint64_t x)
 {
@@ -183,3 +183,4 @@ VMM_STAT_DECLARE(VMEXIT_ASTPENDING);
 VMM_STAT_DECLARE(VMEXIT_USERSPACE);
 VMM_STAT_DECLARE(VMEXIT_RENDEZVOUS);
 VMM_STAT_DECLARE(VMEXIT_EXCEPTION);
+VMM_STAT_DECLARE(VMEXIT_REQIDLE);

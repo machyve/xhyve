@@ -512,7 +512,7 @@ struct blockif_ctxt *
 blockif_open(const char *optstr, UNUSED const char *ident)
 {
 	// char name[MAXPATHLEN];
-	char *nopt, *xopts, *cp;
+	char *nopt, *xopts, *cp, tmp[255];
 	struct blockif_ctxt *bc;
 	struct stat sbuf;
 	// struct diocgattr_arg arg;
@@ -552,10 +552,22 @@ blockif_open(const char *optstr, UNUSED const char *ident)
 			;
 		else if (sscanf(cp, "sectorsize=%d", &ssopt) == 1)
 			pssopt = ssopt;
-		else if (sscanf(cp, "size=%zd", &size) == 1) /* size is in kilobytes */
-			size *= 1024;
-		else if (sscanf(cp, "split=%zd", &split) == 1) /* split into chunks of this (in kilobytes) */
-			split *= 1024;
+		else if (sscanf(cp, "size=%s", tmp) == 1) {
+			uint64_t num = 0;
+			if (expand_number(tmp, &num)) {
+				fprintf(stderr, "xhyve: could not parse size parameter: %s", strerror(errno));
+				goto err;
+			}
+			size = (size_t)num;
+		}
+		else if (sscanf(cp, "split=%s", tmp) == 1) { /* split into chunks */
+			uint64_t num = 0;
+			if (expand_number(tmp, &num)) {
+				fprintf(stderr, "xhyve: could not parse split parameter: %s", strerror(errno));
+				goto err;
+			}
+			split = (size_t)num;
+		}
 		else {
 			fprintf(stderr, "Invalid device option \"%s\"\n", cp);
 			goto err;

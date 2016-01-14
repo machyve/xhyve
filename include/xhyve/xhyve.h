@@ -79,3 +79,4 @@ void vcpu_add(int fromcpu, int newcpu, uint64_t rip);
 int fbsdrun_vmexit_on_hlt(void);
 int fbsdrun_vmexit_on_pause(void);
 int fbsdrun_virtio_msix(void);
+int expand_number(const char *buf, uint64_t *num);

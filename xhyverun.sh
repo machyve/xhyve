@@ -14,7 +14,7 @@ MEM="-m 1G"
 #SMP="-c 2"
 #NET="-s 2:0,virtio-net"
 #IMG_CD="-s 3,ahci-cd,/somepath/somefile.iso"
-#IMG_HDD="-s 4,virtio-blk,test/hdd.img,size=1048576,split=131072" # 1G, 8 splits
+#IMG_HDD="-s 4,virtio-blk,test/hdd.img,size=1g,split=128m" # 1G, 8 splits
 PCI_DEV="-s 0:0,hostbridge -s 31,lpc"
 LPC_DEV="-l com1,stdio"
 ACPI="-A"

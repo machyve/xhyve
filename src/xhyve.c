@@ -637,7 +637,7 @@ num_vcpus_allowed(void)
 	return (VM_MAXCPU);
 }
 
-static int
+int
 expand_number(const char *buf, uint64_t *num)
 {
 	char *endptr;

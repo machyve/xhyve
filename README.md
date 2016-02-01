@@ -53,6 +53,7 @@ It exposes the following peripherals to virtual machines:
     - VirtIO block device
     - VirtIO networking
     - VirtIO RNG
+    - VirtIO filesystem sharing
 
 Notably absent are sound, USB, HID and any kind of graphics support. With a focus on server virtualization this is not strictly a requirement. bhyve may gain desktop virtualization capabilities in the future but this doesn't seem to be a priority.
 

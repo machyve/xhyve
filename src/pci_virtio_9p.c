@@ -1,5 +1,6 @@
 /*-
- * Copyright (c) 2015 iXsystems Inc.
+ * Copyright (c) 2016 Jakub Klama <jceel@FreeBSD.org>
+ * Copyright (c) 2016 iXsystems Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

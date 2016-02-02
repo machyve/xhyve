@@ -141,9 +141,9 @@ dostat(struct l9p_stat *s, char *name, struct stat *buf, bool dotu)
 	if (!dotu) {
 		user = getpwuid(buf->st_uid);
 		group = getgrgid(buf->st_gid);
-		s->uid = user != NULL ? user->pw_name : NULL;
-		s->gid = group != NULL ? group->gr_name : NULL;
-		s->muid = user != NULL ? user->pw_name : NULL;
+		s->uid = user != NULL ? strdup(user->pw_name) : NULL;
+		s->gid = group != NULL ? strdup(group->gr_name) : NULL;
+		s->muid = user != NULL ? strdup(user->pw_name) : NULL;
 	} else {
 		/*
 		 * When using 9P2000.u, we don't need to bother about
@@ -250,6 +250,7 @@ fs_attach(void *softc, struct l9p_request *req)
 {
 	struct fs_softc *sc = (struct fs_softc *)softc;
 	struct openfile *file;
+	struct passwd *pwd;
 	uid_t uid;
 
 	assert(req->lr_fid != NULL);
@@ -261,17 +262,18 @@ fs_attach(void *softc, struct l9p_request *req)
 	req->lr_resp.rattach.qid = req->lr_fid->lo_qid;
 
 	uid = req->lr_req.tattach.n_uname;
-	if (req->lr_conn->lc_version >= L9P_2000U && uid != (uid_t)-1) {
-		struct passwd *pwd = getpwuid(uid);
-		if (pwd == NULL) {
-			l9p_respond(req, EPERM);
-			return;
-		}
+	if (req->lr_conn->lc_version >= L9P_2000U && uid != (uid_t)-1)
+		pwd = getpwuid(uid);
+	else
+		pwd = getpwnam(req->lr_req.tattach.uname);
 
-		file->uid = pwd->pw_uid;
-		file->gid = pwd->pw_gid;
+	if (pwd == NULL) {
+		l9p_respond(req, EPERM);
+		return;
 	}
 
+	file->uid = pwd->pw_uid;
+	file->gid = pwd->pw_gid;
 	l9p_respond(req, 0);
 }
 

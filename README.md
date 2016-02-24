@@ -24,7 +24,7 @@ Installation
 If you have homebrew, then simply:
 
     $ brew update
-    $ brew install xhyve
+    $ brew install --HEAD xhyve
 
 if not then:  
 

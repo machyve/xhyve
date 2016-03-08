@@ -107,3 +107,7 @@ $(TARGET): $(TARGET).sym
 
 clean:
 	@rm -rf build
+
+install:
+	@mkdir -p /usr/local/bin
+	@cp build/xhyve /usr/local/bin/

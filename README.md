@@ -56,7 +56,7 @@ It exposes the following peripherals to virtual machines:
 
 Notably absent are sound, USB, HID and any kind of graphics support. With a focus on server virtualization this is not strictly a requirement. bhyve may gain desktop virtualization capabilities in the future but this doesn't seem to be a priority.
 
-Unlike QEMU, byhve also currently lacks any kind of guest-side firmware (QEMU uses the GPL3 [SeaBIOS](http://www.seabios.org)), but aims to provide a compatible [OVMF EFI](http://www.linux-kvm.org/page/OVMF) in the near future. It does however provide ACPI, SMBIOS and MP Tables.
+Unlike QEMU, bhyve also currently lacks any kind of guest-side firmware (QEMU uses the GPL3 [SeaBIOS](http://www.seabios.org)), but aims to provide a compatible [OVMF EFI](http://www.linux-kvm.org/page/OVMF) in the near future. It does however provide ACPI, SMBIOS and MP Tables.
 
 bhyve architecture
 ------------------

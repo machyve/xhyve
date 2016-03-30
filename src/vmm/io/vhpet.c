@@ -221,7 +221,7 @@ vhpet_timer_interrupt(struct vhpet *vhpet, int n)
 		lapic_intr_msi(vhpet->vm, vhpet->timer[n].msireg >> 32,
 		    vhpet->timer[n].msireg & 0xffffffff);
 		return;
-	}	
+	}
 
 	pin = vhpet_timer_ioapic_pin(vhpet, n);
 	if (pin == 0) {
@@ -291,7 +291,7 @@ vhpet_handler(void *a)
 	callout_deactivate(callout);
 
 	if (!vhpet_counter_enabled(vhpet))
-		xhyve_abort("vhpet(%p) callout with counter disabled\n", vhpet);
+		xhyve_abort("vhpet(%p) callout with counter disabled\n", (void*)vhpet);
 
 	counter = vhpet_counter(vhpet, &now);
 	vhpet_start_timer(vhpet, n, counter, now);
@@ -483,7 +483,7 @@ vhpet_mmio_write(void *vm, UNUSED int vcpuid, uint64_t gpa, uint64_t val, int si
 		if ((offset & 0x4) != 0) {
 			mask <<= 32;
 			data <<= 32;
-		} 
+		}
 		break;
 	default:
 		VM_CTR2(vhpet->vm, "hpet invalid mmio write: "
@@ -638,7 +638,7 @@ vhpet_mmio_read(void *vm, UNUSED int vcpuid, uint64_t gpa, uint64_t *rval, int s
 
 	if (offset == HPET_CAPABILITIES || offset == HPET_CAPABILITIES + 4) {
 		data = vhpet_capabilities();
-		goto done;	
+		goto done;
 	}
 
 	if (offset == HPET_CONFIG || offset == HPET_CONFIG + 4) {

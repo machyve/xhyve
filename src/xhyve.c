@@ -137,7 +137,6 @@ usage(int code)
 		"       -H: vmexit from the guest on hlt\n"
 		"       -l: LPC device configuration\n"
 		"       -m: memory size in MB, may be suffixed with one of K, M, G or T\n"
-		"       -m: memory size in MB\n"
 		"       -M: print MAC address and exit if using vmnet\n"
 		"       -p: pin 'vcpu' to 'hostcpu'\n"
 		"       -P: vmexit from the guest on pause\n"

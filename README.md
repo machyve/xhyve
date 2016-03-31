@@ -18,9 +18,22 @@ Requirements
 * OS X 10.10.3 Yosemite or later
 * a 2010 or later Mac (i.e. a CPU that supports EPT)
 
+Installation
+------------
+
+If you have homebrew, then simply:
+
+    $ brew update
+    $ brew install --HEAD xhyve
+
+The `--HEAD` in the brew command ensures that you always get the latest changes, even if the homebrew database is not yet updated. If for any reason you don't want that simply do `brew install xhyve` .
+
+if not then:  
+
 Building
 --------
-
+    $ git clone https://github.com/mist64/xhyve
+    $ cd xhyve
     $ make
 
 The resulting binary will be in build/xhyve

@@ -18,9 +18,22 @@ Requirements
 * OS X 10.10.3 Yosemite or later
 * a 2010 or later Mac (i.e. a CPU that supports EPT)
 
+Installation
+------------
+
+If you have homebrew, then simply:
+
+    $ brew update
+    $ brew install --HEAD xhyve
+
+The `--HEAD` in the brew command ensures that you always get the latest changes, even if the homebrew database is not yet updated. If for any reason you don't want that simply do `brew install xhyve` .
+
+if not then:  
+
 Building
 --------
-
+    $ git clone https://github.com/mist64/xhyve
+    $ cd xhyve
     $ make
 
 The resulting binary will be in build/xhyve
@@ -57,7 +70,7 @@ It exposes the following peripherals to virtual machines:
 
 Notably absent are sound, USB, HID and any kind of graphics support. With a focus on server virtualization this is not strictly a requirement. bhyve may gain desktop virtualization capabilities in the future but this doesn't seem to be a priority.
 
-Unlike QEMU, byhve also currently lacks any kind of guest-side firmware (QEMU uses the GPL3 [SeaBIOS](http://www.seabios.org)), but aims to provide a compatible [OVMF EFI](http://www.linux-kvm.org/page/OVMF) in the near future. It does however provide ACPI, SMBIOS and MP Tables.
+Unlike QEMU, bhyve also currently lacks any kind of guest-side firmware (QEMU uses the GPL3 [SeaBIOS](http://www.seabios.org)), but aims to provide a compatible [OVMF EFI](http://www.linux-kvm.org/page/OVMF) in the near future. It does however provide ACPI, SMBIOS and MP Tables.
 
 bhyve architecture
 ------------------

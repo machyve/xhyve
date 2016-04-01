@@ -28,11 +28,11 @@ If you have homebrew, then simply:
 
 The `--HEAD` in the brew command ensures that you always get the latest changes, even if the homebrew database is not yet updated. If for any reason you don't want that simply do `brew install xhyve` .
 
-if not then:  
+if not then:
 
 Building
 --------
-    $ git clone https://github.com/mist64/xhyve
+    $ git clone --recursive https://github.com/mist64/xhyve
     $ cd xhyve
     $ make
 
@@ -153,7 +153,7 @@ xhyve architecture
         ------------------------------┼------------------------------
                                       |syscall            xnu kernel
                                       V
-        
+
                                    VMX host
                                VMX nested paging
 
@@ -181,6 +181,22 @@ instead of:
     virtio-net
 
 Where *X* is your tap device, i.e. */dev/tapX*.
+
+File Sharing
+------
+You can setup shared folders between OS X and your guest by using the `virtio-9p` device.
+9P / VirtFS is a shared FS protocol introduced by Bell's Plan 9 OS.
+More information is available in the [KVM wiki](http://www.linux-kvm.org/page/9p_virtio).
+
+Adding a VirtFS device to your VM:
+
+    $ xhyve -s 5,virtio-9p,hostshare=/Users/example/shared,ro ...
+
+Inside the Linux VM:
+
+    $ mount -t 9p -o trans=virtio,version=9p2000.L hostshare /tmp/host_files
+
+The `hostshare` identifier can be changed to support multiple mounts.
 
 Issues
 ------

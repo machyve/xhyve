@@ -1,0 +1,3 @@
+[submodule "lib9p"]
+	path = lib9p
+	url = https://github.com/jceel/lib9p.git

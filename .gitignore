@@ -1,1 +1,9 @@
-/build/
+build
+DerivedData
+.DS_Store
+*~
+*.rej
+*.orig
+cscope.*
+tags
+TAGS

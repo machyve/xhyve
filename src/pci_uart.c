@@ -86,6 +86,7 @@ static int
 pci_uart_init(struct pci_devinst *pi, char *opts)
 {
 	struct uart_softc *sc;
+	char *name;
 
 	pci_emul_alloc_bar(pi, 0, PCIBAR_IO, UART_IO_BAR_SIZE);
 	pci_lintr_request(pi);
@@ -98,12 +99,14 @@ pci_uart_init(struct pci_devinst *pi, char *opts)
 	sc = uart_init(pci_uart_intr_assert, pci_uart_intr_deassert, pi);
 	pi->pi_arg = sc;
 
-	if (uart_set_backend(sc, opts) != 0) {
-		fprintf(stderr, "Unable to initialize backend '%s' for "
-		    "pci uart at %d:%d\n", opts, pi->pi_slot, pi->pi_func);
+	asprintf(&name, "pci uart at %d:%d", pi->pi_slot, pi->pi_func);
+	if (uart_set_backend(sc, opts, name) != 0) {
+		fprintf(stderr, "Unable to initialize backend '%s' for %s\n", opts, name);
+		free(name);
 		return (-1);
 	}
 
+	free(name);
 	return (0);
 }
 

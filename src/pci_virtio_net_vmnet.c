@@ -199,6 +199,14 @@ struct vmnet_state {
 
 static void pci_vtnet_tap_callback(struct pci_vtnet_softc *sc);
 
+/*
+ * Create an interface for the guest using Apple's vmnet framework.
+ *
+ * The interface works in VMNET_SHARED_MODE which allows for packets
+ * of the guest to reach other guests and the Internet.
+ *
+ * See also: https://developer.apple.com/library/mac/documentation/vmnet/Reference/vmnet_Reference/index.html
+ */
 static int
 vmn_create(struct pci_vtnet_softc *sc)
 {

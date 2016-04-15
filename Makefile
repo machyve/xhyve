@@ -52,6 +52,7 @@ XHYVE_SRC := \
 	src/pci_virtio_block.c \
 	src/pci_virtio_net_tap.c \
 	src/pci_virtio_net_vmnet.c \
+	src/pci_virtio_net_pcap.c \
 	src/pci_virtio_rnd.c \
 	src/pm.c \
 	src/post.c \
@@ -97,7 +98,7 @@ build/%.o: src/%.c
 
 $(TARGET).sym: $(OBJ)
 	@echo ld $(notdir $@)
-	$(VERBOSE) $(ENV) $(LD) $(LDFLAGS) -Xlinker $(TARGET).lto.o -o $@ $(OBJ)
+	$(VERBOSE) $(ENV) $(LD) $(LDFLAGS) -Xlinker $(TARGET).lto.o -o $@ $(OBJ) -lpcap
 	@echo dsym $(notdir $(TARGET).dSYM)
 	$(VERBOSE) $(ENV) $(DSYM) $@ -o $(TARGET).dSYM
 

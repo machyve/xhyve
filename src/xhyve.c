@@ -138,7 +138,7 @@ usage(int code)
 		"       -g: gdb port\n"
 		"       -h: help\n"
 		"       -H: vmexit from the guest on hlt\n"
-		"       -l: LPC device configuration\n"
+		"       -l: LPC device configuration. Ex: -l com1,stdio -l com2,autopty -l com2,/dev/myownpty\n"
 		"       -m: memory size in MB, may be suffixed with one of K, M, G or T\n"
 		"       -M: print MAC address and exit if using vmnet\n"
 		"       -p: pin 'vcpu' to 'hostcpu'\n"

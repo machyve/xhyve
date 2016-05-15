@@ -297,7 +297,7 @@ vmn_create(struct pci_vtnet_softc *sc)
 	dispatch_release(if_create_q);
 
 	if (iface == NULL || iface_status != VMNET_SUCCESS) {
-		printf("virtio_net: Could not create vmnet interface, "
+		fprintf(stderr, "virtio_net: Could not create vmnet interface, "
 			"permission denied or no entitlement?\n");
 		free(vms);
 		return (-1);

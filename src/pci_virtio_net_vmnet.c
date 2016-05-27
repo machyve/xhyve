@@ -200,6 +200,25 @@ struct vmnet_state {
 static void pci_vtnet_tap_callback(struct pci_vtnet_softc *sc);
 
 /*
+ * Drop privileges according to the CERT Secure C Coding Standard section
+ * POS36-C
+ * https://www.securecoding.cert.org/confluence/display/c/POS36-C.+Observe+correct+revocation+order+while+relinquishing+privileges
+*/
+static int drop_privileges(void) {
+	// If we are not effectively root, don't drop privileges
+	if (geteuid() != 0 && getegid() != 0) {
+		return 0;
+	}
+	if (setgid(getgid()) == -1) {
+		return -1;
+	}
+	if (setuid(getuid()) == -1) {
+		return -1;
+	}
+	return 0;
+}
+
+/*
  * Create an interface for the guest using Apple's vmnet framework.
  *
  * The interface works in VMNET_SHARED_MODE which allows for packets
@@ -278,7 +297,7 @@ vmn_create(struct pci_vtnet_softc *sc)
 	dispatch_release(if_create_q);
 
 	if (iface == NULL || iface_status != VMNET_SUCCESS) {
-		printf("virtio_net: Could not create vmnet interface, "
+		fprintf(stderr, "virtio_net: Could not create vmnet interface, "
 			"permission denied or no entitlement?\n");
 		free(vms);
 		return (-1);
@@ -294,6 +313,11 @@ vmn_create(struct pci_vtnet_softc *sc)
 	{
 		pci_vtnet_tap_callback(sc);
 	});
+	if (drop_privileges() == -1) {
+		perror("Dropping privileges after networking was enabled.");
+		free(vms);
+		return (-1);
+	}
 
 	return (0);
 }

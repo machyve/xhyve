@@ -1,0 +1,6 @@
+language: c
+os:
+  - osx
+  osx_image: xcode7.3
+  script:
+    make

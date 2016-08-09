@@ -29,7 +29,7 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <assert.h>
-#include <xhyve/support/lock.h>
+#include <xhyve/lock.h>
 #include <xhyve/support/misc.h>
 #include <xhyve/support/i8259.h>
 #include <xhyve/support/apicreg.h>

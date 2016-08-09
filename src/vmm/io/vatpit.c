@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
-#include <xhyve/support/lock.h>
+#include <xhyve/lock.h>
 #include <xhyve/support/timerreg.h>
 #include <xhyve/vmm/vmm_callout.h>
 #include <xhyve/vmm/vmm_ktr.h>

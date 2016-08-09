@@ -33,7 +33,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <assert.h>
-#include <xhyve/support/lock.h>
+#include <xhyve/lock.h>
 #include <xhyve/support/misc.h>
 #include <xhyve/support/atomic.h>
 #include <xhyve/support/cpuset.h>

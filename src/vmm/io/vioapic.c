@@ -32,7 +32,7 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <assert.h>
-#include <xhyve/support/lock.h>
+#include <xhyve/lock.h>
 #include <xhyve/support/misc.h>
 #include <xhyve/support/apicreg.h>
 #include <xhyve/vmm/vmm_ktr.h>

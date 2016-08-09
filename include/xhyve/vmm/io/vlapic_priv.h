@@ -30,7 +30,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <xhyve/support/lock.h>
+#include <xhyve/lock.h>
 #include <xhyve/support/apicreg.h>
 #include <xhyve/vmm/vmm_callout.h>
 

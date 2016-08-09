@@ -53,7 +53,8 @@
  *
  * // #define BLOCKIF_NUMTHR 8
  *
- * OS X does not support preadv/pwritev, we need to serialize reads and writes
+ * As split disk images probably need multiple reads and writes we can not
+ * use preadv/pwritev, we need to serialize reads and writes
  * for the time being until we find a better solution.
  */
 #define BLOCKIF_NUMTHR 1
@@ -88,12 +89,16 @@ struct blockif_elem {
 
 struct blockif_ctxt {
 	int bc_magic;
-	int bc_fd;
+
+	int *bc_fd;
+	int bc_num_fd;
+
 	int bc_ischr;
 	int bc_isgeom;
 	int bc_candelete;
 	int bc_rdonly;
-	off_t bc_size;
+	size_t bc_size;
+	size_t bc_split;
 	int bc_sectsz;
 	int bc_psectsz;
 	int bc_psectoff;
@@ -120,26 +125,6 @@ struct blockif_sig_elem {
 static struct blockif_sig_elem *blockif_bse_head;
 
 #pragma clang diagnostic pop
-
-static ssize_t
-preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset)
-{
-	off_t res;
-
-	res = lseek(fd, offset, SEEK_SET);
-	assert(res == offset);
-	return readv(fd, iov, iovcnt);
-}
-
-static ssize_t
-pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset)
-{
-	off_t res;
-
-	res = lseek(fd, offset, SEEK_SET);
-	assert(res == offset);
-	return writev(fd, iov, iovcnt);
-}
 
 static int
 blockif_enqueue(struct blockif_ctxt *bc, struct blockif_req *breq,
@@ -224,6 +209,98 @@ blockif_complete(struct blockif_ctxt *bc, struct blockif_elem *be)
 	TAILQ_INSERT_TAIL(&bc->bc_freeq, be, be_link);
 }
 
+static int
+blockif_get_fd(struct blockif_ctxt *bc, size_t offset) {
+	if (bc->bc_split) {
+		int i = (int)(offset / bc->bc_split);
+		return bc->bc_fd[i];
+	} else {
+		return bc->bc_fd[0];
+	}
+}
+
+static ssize_t
+blockif_read_data(struct blockif_ctxt *bc, uint8_t *buf, size_t len, size_t offset) {
+	// find correct fd
+	int fd = blockif_get_fd(bc, offset);
+	ssize_t bytes = 0;
+
+	if (bc->bc_split) {
+		lseek(fd, (off_t)(offset % bc->bc_split), SEEK_SET);
+	} else {
+		lseek(fd, (off_t)offset, SEEK_SET);
+	}
+
+	// is this a multi part read
+	if ((bc->bc_split) && (offset % bc->bc_split + len > bc->bc_split)) {
+		// read is longer than current segment
+
+		// read until end of segment
+		size_t len1 = bc->bc_split - (offset % bc->bc_split);
+		bytes = read(fd, buf, len1);
+		if (bytes < 0) {
+			return bytes;
+		}
+
+		// get next fd and read the rest
+		size_t len2 = len - len1;
+		fd = blockif_get_fd(bc, offset + len1);
+		lseek(fd, 0, SEEK_SET);
+		ssize_t result = read(fd, buf + len1, len2);
+		if (result < 0) {
+			return result;
+		}
+		bytes += result;
+	} else {
+		// read does not cross segment border
+		bytes = read(fd, buf, len);
+	}
+
+	// return read bytes
+	return bytes;
+}
+
+static ssize_t
+blockif_write_data(struct blockif_ctxt *bc, uint8_t *buf, size_t len, size_t offset) {
+	// find correct fd
+	int fd = blockif_get_fd(bc, offset);
+	ssize_t bytes = 0;
+
+	if (bc->bc_split) {
+		lseek(fd, (off_t)(offset % bc->bc_split), SEEK_SET);
+	} else {
+		lseek(fd, (off_t)offset, SEEK_SET);
+	}
+
+	// is this a multi part write
+	if ((bc->bc_split) && (offset % bc->bc_split + len > bc->bc_split)) {
+		// write is longer than current segment
+
+		// write until end of segment
+		size_t len1 = bc->bc_split - (offset % bc->bc_split);
+		bytes = write(fd, buf, len1);
+		if (bytes < 0) {
+			return bytes;
+		}
+
+		// get next fd and write the rest
+		size_t len2 = len - len1;
+		fd = blockif_get_fd(bc, offset + len1);
+		lseek(fd, 0, SEEK_SET);
+		ssize_t result = write(fd, buf + len1, len2);
+		if (result < 0) {
+			return result;
+		}
+		bytes += result;
+	} else {
+		// write does not cross segment border
+		bytes = write(fd, buf, len);
+	}
+
+	// return written bytes
+	return bytes;
+}
+
 static void
 blockif_proc(struct blockif_ctxt *bc, struct blockif_elem *be, uint8_t *buf)
 {
@@ -239,22 +316,30 @@ blockif_proc(struct blockif_ctxt *bc, struct blockif_elem *be, uint8_t *buf)
 	switch (be->be_op) {
 	case BOP_READ:
 		if (buf == NULL) {
-			if ((len = preadv(bc->bc_fd, br->br_iov, br->br_iovcnt,
-				   br->br_offset)) < 0)
-				err = errno;
-			else
-				br->br_resid -= len;
+			// as we have to account for split disk images we disassemble
+			// the iovec buffers and call read for each of them
+			size_t offset = (size_t)br->br_offset;
+			for(i = 0; i < br->br_iovcnt; i++) {
+				len = blockif_read_data(bc, br->br_iov[i].iov_base, br->br_iov[i].iov_len, offset);
+				if (len < 0) {
+					err = errno;
+				} else {
+					br->br_resid -= len;
+				}
+				offset += br->br_iov[i].iov_len;
+			}
 			break;
 		}
 		i = 0;
 		off = voff = 0;
 		while (br->br_resid > 0) {
 			len = MIN(br->br_resid, MAXPHYS);
-			if (pread(bc->bc_fd, buf, ((size_t) len), br->br_offset + off) < 0)
-			{
+
+			if (blockif_read_data(bc, buf, (size_t)len, (size_t)(br->br_offset + off)) < 0) {
 				err = errno;
 				break;
 			}
+
 			boff = 0;
 			do {
 				clen = MIN((len - boff),
@@ -279,11 +364,18 @@ blockif_proc(struct blockif_ctxt *bc, struct blockif_elem *be, uint8_t *buf)
 			break;
 		}
 		if (buf == NULL) {
-			if ((len = pwritev(bc->bc_fd, br->br_iov, br->br_iovcnt,
-				    br->br_offset)) < 0)
-				err = errno;
-			else
-				br->br_resid -= len;
+			// as we have to account for split disk images we disassemble
+			// the iovec buffers and call write for each of them
+			size_t offset = (size_t)br->br_offset;
+			for(i = 0; i < br->br_iovcnt; i++) {
+				len = blockif_write_data(bc, br->br_iov[i].iov_base, br->br_iov[i].iov_len, offset);
+				if (len < 0) {
+					err = errno;
+				} else {
+					br->br_resid -= len;
+				}
+				offset += br->br_iov[i].iov_len;
+			}
 			break;
 		}
 		i = 0;
@@ -305,8 +397,8 @@ blockif_proc(struct blockif_ctxt *bc, struct blockif_elem *be, uint8_t *buf)
 				}
 				boff += clen;
 			} while (boff < len);
-			if (pwrite(bc->bc_fd, buf, ((size_t) len), br->br_offset +
-			    off) < 0) {
+
+			if (blockif_write_data(bc, buf, (size_t)len, (size_t)(br->br_offset + off)) < 0) {
 				err = errno;
 				break;
 			}
@@ -315,11 +407,13 @@ blockif_proc(struct blockif_ctxt *bc, struct blockif_elem *be, uint8_t *buf)
 		}
 		break;
 	case BOP_FLUSH:
-		if (bc->bc_ischr) {
-			if (ioctl(bc->bc_fd, DKIOCSYNCHRONIZECACHE))
+		for(i = 0; i < bc->bc_num_fd; i++) {
+			if (bc->bc_ischr) {
+				if (ioctl(bc->bc_fd[i], DKIOCSYNCHRONIZECACHE))
+					err = errno;
+			} else if (fsync(bc->bc_fd[i]))
 				err = errno;
-		} else if (fsync(bc->bc_fd))
-			err = errno;
+		}
 		break;
 	case BOP_DELETE:
 		if (!bc->bc_candelete) {
@@ -418,21 +512,25 @@ struct blockif_ctxt *
 blockif_open(const char *optstr, UNUSED const char *ident)
 {
 	// char name[MAXPATHLEN];
-	char *nopt, *xopts, *cp;
+	char *nopt, *xopts, *cp, tmp[255];
 	struct blockif_ctxt *bc;
 	struct stat sbuf;
 	// struct diocgattr_arg arg;
-	off_t size, psectsz, psectoff;
-	int extra, fd, i, sectsz;
+	size_t size, psectsz, psectoff, split;
+	int extra, fd, sectsz;
 	int nocache, sync, ro, candelete, geom, ssopt, pssopt;
+	int *fds;
 
 	pthread_once(&blockif_once, blockif_init);
 
 	fd = -1;
+	fds = NULL;
 	ssopt = 0;
 	nocache = 0;
 	sync = 0;
 	ro = 0;
+	size = 0;
+	split = 0;
 
 	pssopt = 0;
 	/*
@@ -454,6 +552,22 @@ blockif_open(const char *optstr, UNUSED const char *ident)
 			;
 		else if (sscanf(cp, "sectorsize=%d", &ssopt) == 1)
 			pssopt = ssopt;
+		else if (sscanf(cp, "size=%s", tmp) == 1) {
+			uint64_t num = 0;
+			if (expand_number(tmp, &num)) {
+				fprintf(stderr, "xhyve: could not parse size parameter: %s", strerror(errno));
+				goto err;
+			}
+			size = (size_t)num;
+		}
+		else if (sscanf(cp, "split=%s", tmp) == 1) { /* split into chunks */
+			uint64_t num = 0;
+			if (expand_number(tmp, &num)) {
+				fprintf(stderr, "xhyve: could not parse split parameter: %s", strerror(errno));
+				goto err;
+			}
+			split = (size_t)num;
+		}
 		else {
 			fprintf(stderr, "Invalid device option \"%s\"\n", cp);
 			goto err;
@@ -469,33 +583,109 @@ blockif_open(const char *optstr, UNUSED const char *ident)
 	if (sync)
 		extra |= O_SYNC;
 
-	fd = open(nopt, (ro ? O_RDONLY : O_RDWR) | extra);
-	if (fd < 0 && !ro) {
-		/* Attempt a r/w fail with a r/o open */
-		fd = open(nopt, O_RDONLY | extra);
-		ro = 1;
-	}
+	if (split != 0) {
+		// open multiple files
+		if (size == 0) {
+			perror("xhyve: when using 'split' a 'size' is required!");
+			goto err;
+		}
 
-	if (fd < 0) {
-		perror("Could not open backing file");
-		goto err;
-	}
+		size_t num_parts = size / split;
+		fds = malloc(sizeof(int) * num_parts);
+		for (size_t i = 0; i < num_parts; i++) {
+			fds[i] = -1;
+		}
 
-	if (fstat(fd, &sbuf) < 0) {
-		perror("Could not stat backing file");
-		goto err;
+		printf("Split disk, opening %zu image parts\n", num_parts);
+
+		for (size_t i = 0; i < num_parts; i++) {
+			size_t len = strlen(nopt) + 6;
+			char *filename = calloc(len, 1);
+			snprintf(filename, len, "%s.%04zu", nopt, i);
+
+			printf(" - %s\n", filename);
+
+			fd = open(filename, (ro ? O_RDONLY : O_RDWR | O_CREAT) | extra);
+			if (fd < 0 && !ro) {
+				perror("Could not open backing file r/w, reverting to readonly");
+				/* Attempt a r/w fail with a r/o open */
+				fd = open(nopt, O_RDONLY | extra);
+				ro = 1;
+			}
+
+			if (fd < 0) {
+				perror("Could not open backing file");
+				goto err;
+			}
+
+			if (fstat(fd, &sbuf) < 0) {
+				perror("Could not stat backing file");
+				goto err;
+			}
+
+			if (sbuf.st_size == 0) {
+				// create image file
+				printf("   -> file does not exist, creating empty file\n");
+				fchmod(fd, 0660);
+				char buffer[1024];
+				memset(buffer, 0, 1024);
+				for(size_t j = 0; j < split / 1024; j++) {
+					write(fd, buffer, 1024);
+				}
+				lseek(fd, 0, SEEK_SET);
+			}
+
+			fds[i] = fd;
+			free(filename);
+		}
+	} else {
+        // open a single file
+
+        printf("Single image disk\n");
+
+		fd = open(nopt, (ro ? O_RDONLY : O_RDWR | O_CREAT) | extra);
+		if (fd < 0 && !ro) {
+			/* Attempt a r/w fail with a r/o open */
+			fd = open(nopt, O_RDONLY | extra);
+			ro = 1;
+		}
+
+		if (fd < 0) {
+			perror("Could not open backing file");
+			goto err;
+		}
+
+		if (fstat(fd, &sbuf) < 0) {
+			perror("Could not stat backing file");
+			goto err;
+		}
+
+		if (size == 0) {
+			size = (size_t)sbuf.st_size;
+		}
+		if (sbuf.st_size == 0) {
+			// TODO: make growing disks possible
+			// create image file
+			printf(" -> file does not exist, creating empty file\n");
+			fchmod(fd, 0660);
+			char buffer[1024];
+			memset(buffer, 0, 1024);
+			for(size_t i = 0; i < size / 1024; i++) {
+				write(fd, buffer, 1024);
+			}
+			lseek(fd, 0, SEEK_SET);
+		}
 	}
 
     /*
 	 * Deal with raw devices
 	 */
-	size = sbuf.st_size;
 	sectsz = DEV_BSIZE;
 	psectsz = psectoff = 0;
 	candelete = geom = 0;
 	if (S_ISCHR(sbuf.st_mode)) {
 		perror("xhyve: raw device support unimplemented");
-		goto err;		
+		goto err;
 		// if (ioctl(fd, DIOCGMEDIASIZE, &size) < 0 ||
 		// 	ioctl(fd, DIOCGSECTORSIZE, &sectsz))
 		// {
@@ -513,7 +703,7 @@ blockif_open(const char *optstr, UNUSED const char *ident)
 		// if (ioctl(fd, DIOCGPROVIDERNAME, name) == 0)
 		// 	geom = 1;
 	} else
-		psectsz = sbuf.st_blksize;
+		psectsz = (size_t)sbuf.st_blksize;
 
 	if (ssopt != 0) {
 		if (!powerof2(ssopt) || !powerof2(pssopt) || ssopt < 512 ||
@@ -540,7 +730,7 @@ blockif_open(const char *optstr, UNUSED const char *ident)
 		// }
 
 		sectsz = ssopt;
-		psectsz = pssopt;
+		psectsz = (size_t)pssopt;
 		psectoff = 0;
 	}
 
@@ -551,12 +741,20 @@ blockif_open(const char *optstr, UNUSED const char *ident)
 	}
 
 	bc->bc_magic = (int) BLOCKIF_SIG;
-	bc->bc_fd = fd;
+	if (split == 0) {
+		bc->bc_num_fd = 1;
+		bc->bc_fd = malloc(sizeof(int));
+		bc->bc_fd[0] = fd;
+	} else {
+		bc->bc_num_fd = (int)(size / split);
+		bc->bc_fd = fds;
+	}
 	bc->bc_ischr = S_ISCHR(sbuf.st_mode);
 	bc->bc_isgeom = geom;
 	bc->bc_candelete = candelete;
 	bc->bc_rdonly = ro;
 	bc->bc_size = size;
+	bc->bc_split = split;
 	bc->bc_sectsz = sectsz;
 	bc->bc_psectsz = (int) psectsz;
 	bc->bc_psectoff = (int) psectoff;
@@ -565,12 +763,12 @@ blockif_open(const char *optstr, UNUSED const char *ident)
 	TAILQ_INIT(&bc->bc_freeq);
 	TAILQ_INIT(&bc->bc_pendq);
 	TAILQ_INIT(&bc->bc_busyq);
-	for (i = 0; i < BLOCKIF_MAXREQ; i++) {
+	for (int i = 0; i < BLOCKIF_MAXREQ; i++) {
 		bc->bc_reqs[i].be_status = BST_FREE;
 		TAILQ_INSERT_HEAD(&bc->bc_freeq, &bc->bc_reqs[i], be_link);
 	}
 
-	for (i = 0; i < BLOCKIF_NUMTHR; i++) {
+	for (int i = 0; i < BLOCKIF_NUMTHR; i++) {
 		pthread_create(&bc->bc_btid[i], NULL, blockif_thr, bc);
 	}
 
@@ -578,6 +776,15 @@ blockif_open(const char *optstr, UNUSED const char *ident)
 err:
 	if (fd >= 0)
 		close(fd);
+	if (fds != NULL) {
+		int num_fds = (int)(size / split);
+		for (int i = 0; i < num_fds; i++) {
+			if (fds[i] >= 0) {
+				close(fds[i]);
+			}
+		}
+		free(fds);
+	}
 	return (NULL);
 }
 
@@ -732,8 +939,9 @@ blockif_close(struct blockif_ctxt *bc)
 	bc->bc_closing = 1;
 	pthread_mutex_unlock(&bc->bc_mtx);
 	pthread_cond_broadcast(&bc->bc_cond);
-	for (i = 0; i < BLOCKIF_NUMTHR; i++)
+	for (i = 0; i < BLOCKIF_NUMTHR; i++) {
 		pthread_join(bc->bc_btid[i], &jval);
+	}
 
 	/* XXX Cancel queued i/o's ??? */
 
@@ -741,7 +949,10 @@ blockif_close(struct blockif_ctxt *bc)
 	 * Release resources
 	 */
 	bc->bc_magic = 0;
-	close(bc->bc_fd);
+	for(i = 0; i < bc->bc_num_fd; i++) {
+		close(bc->bc_fd[i]);
+	}
+	free(bc->bc_fd);
 	free(bc);
 
 	return (0);
@@ -761,7 +972,7 @@ blockif_chs(struct blockif_ctxt *bc, uint16_t *c, uint8_t *h, uint8_t *s)
 
 	assert(bc->bc_magic == ((int) BLOCKIF_SIG));
 
-	sectors = bc->bc_size / bc->bc_sectsz;
+	sectors = (off_t)(bc->bc_size / (size_t)bc->bc_sectsz);
 
 	/* Clamp the size to the largest possible with CHS */
 	if (sectors > 65535LL*16*255)
@@ -803,7 +1014,7 @@ off_t
 blockif_size(struct blockif_ctxt *bc)
 {
 	assert(bc->bc_magic == ((int) BLOCKIF_SIG));
-	return (bc->bc_size);
+	return (off_t)(bc->bc_size);
 }
 
 int

@@ -320,7 +320,7 @@ static struct smbios_table_type0 smbios_type0_template = {
 };
 
 static const char *smbios_type0_strings[] = {
-	"BHYVE",	/* vendor string */
+	"XHYVE",	/* vendor string */
 	"1.00",		/* bios version string */
 	"03/14/2014",	/* bios release date string */
 	NULL
@@ -344,7 +344,7 @@ static int smbios_type1_initializer(struct smbios_structure *template_entry,
 
 static const char *smbios_type1_strings[] = {
 	" ",		/* manufacturer string */
-	"BHYVE",	/* product name string */
+	"XHYVE",	/* product name string */
 	"1.0",		/* version string */
 	"None",		/* serial number string */
 	"None",		/* sku string */

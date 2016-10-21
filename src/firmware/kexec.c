@@ -35,6 +35,10 @@
 #define ALIGNUP(x, a) (((x - 1) & ~(a - 1)) + a)
 #endif
 
+#ifndef ALIGNDOWN
+#define ALIGNDOWN(x, a) (-(a) & (x))
+#endif
+
 #define BASE_GDT 0x2000ull
 #define BASE_ZEROPAGE 0x3000ull
 #define BASE_CMDLINE 0x4000ull
@@ -170,6 +174,7 @@ kexec_load_kernel(char *path, char *cmdline) {
 static int
 kexec_load_ramdisk(char *path) {
 	uint64_t ramdisk_start;
+	uint32_t initrd_max;
 	volatile struct zero_page *zp;
 	size_t sz;
 	FILE *f;
@@ -184,7 +189,18 @@ kexec_load_ramdisk(char *path) {
 	sz = (size_t) ftell(f);
 	fseek(f, 0, SEEK_SET);
 
-	ramdisk_start = ALIGNUP((kernel.base + kernel.size), 0x1000ull);
+	/* highest address for loading the initrd */
+	if (zp->setup_header.version >= 0x203) {
+		initrd_max = zp->setup_header.initrd_addr_max;
+	} else {
+		initrd_max = 0x37ffffff; /* Hardcoded value for older kernels */
+	}
+
+	if (initrd_max >= memory.size) {
+		initrd_max = ((uint32_t) memory.size - 1);
+	}
+
+	ramdisk_start = ALIGNDOWN(initrd_max - sz, 0x1000ull);
 
 	if ((ramdisk_start + sz) > memory.size) {
 		/* not enough memory */

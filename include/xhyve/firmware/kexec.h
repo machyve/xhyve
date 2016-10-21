@@ -29,7 +29,7 @@ struct setup_header {
 	uint8_t ext_loader_ver; /* Extended boot loader version */
 	uint8_t ext_loader_type; /* Extended boot loader ID */
 	uint32_t cmd_line_ptr; /* 32-bit pointer to the kernel command line */
-	uint32_t nitrd_addr_max; /* Highest legal initrd address */
+	uint32_t initrd_addr_max; /* Highest legal initrd address */
 	uint32_t kernel_alignment; /* Physical addr alignment required for kernel */
 	uint8_t relocatable_kernel; /* Whether kernel is relocatable or not */
 	uint8_t min_alignment; /* Minimum alignment, as a power of two */

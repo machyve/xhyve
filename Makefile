@@ -67,9 +67,14 @@ FIRMWARE_SRC := \
 	src/firmware/kexec.c \
 	src/firmware/fbsd.c
 
+VDSK_SRC := \
+	src/vdsk/vdsk-raw.c \
+	src/vdsk/vdsk.c
+
 SRC := \
 	$(VMM_SRC) \
 	$(XHYVE_SRC) \
+	$(VDSK_SRC) \
 	$(FIRMWARE_SRC)
 
 OBJ := $(SRC:src/%.c=build/%.o)

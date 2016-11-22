@@ -80,9 +80,9 @@
 #define FACS_OFFSET		0x3C0
 #define DSDT_OFFSET		0x400
 
-#define	BHYVE_ASL_TEMPLATE	"bhyve.XXXXXXX"
-#define BHYVE_ASL_SUFFIX	".aml"
-#define BHYVE_ASL_COMPILER	"/usr/sbin/iasl"
+#define BHYVE_ASL_TEMPLATE	"bhyve.XXXXXXX"
+#define BHYVE_ASL_SUFFIX  	".aml"
+#define BHYVE_ASL_COMPILER	"/usr/local/bin/iasl"
 
 static int basl_keep_temps;
 static int basl_verbose_iasl;

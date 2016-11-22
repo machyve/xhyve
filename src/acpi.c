@@ -82,7 +82,6 @@
 
 #define	BHYVE_ASL_TEMPLATE	"bhyve.XXXXXXX"
 #define BHYVE_ASL_SUFFIX	".aml"
-#define BHYVE_ASL_COMPILER	"/usr/sbin/iasl"
 
 static int basl_keep_temps;
 static int basl_verbose_iasl;

@@ -32,6 +32,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <assert.h>
+#include <unistd.h>
 
 #include <xhyve/support/linker_set.h>
 #include <xhyve/vmm/vmm_api.h>
@@ -131,6 +132,25 @@ CFGREAD(struct pci_devinst *pi, int coff, int bytes)
 		return (pci_get_cfgdata16(pi, coff));
 	else
 		return (pci_get_cfgdata32(pi, coff));
+}
+
+/*
+ * Drop privileges according to the CERT Secure C Coding Standard section
+ * POS36-C
+ * https://www.securecoding.cert.org/confluence/display/c/POS36-C.+Observe+correct+revocation+order+while+relinquishing+privileges
+*/
+static int drop_privileges(void) {
+	// If we are not effectively root, don't drop privileges
+	if (geteuid() != 0 && getegid() != 0) {
+		return 0;
+	}
+	if (setgid(getgid()) == -1) {
+		return -1;
+	}
+	if (setuid(getuid()) == -1) {
+		return -1;
+	}
+	return 0;
 }
 
 /*
@@ -1120,6 +1140,10 @@ init_pci(void)
 		pci_emul_membase64 = roundup2(pci_emul_membase64,
 			((uint64_t) BUSMEM_ROUNDUP));
 		bi->memlimit64 = pci_emul_membase64;
+	}
+	if (drop_privileges() == -1) {
+		perror("Dropping privileges after PCI init.");
+		return (-1);
 	}
 
 	/*

@@ -40,8 +40,9 @@
 struct vdsk *
 vdsk_open(const char *optstr, int numthr)
 {
+	int fatal;
 	/* for now, the one and only backend */
-	return vdsk_raw_open(optstr, numthr);
+	return vdsk_raw_open(optstr, numthr, &fatal);
 }
 
 int

@@ -239,7 +239,7 @@ disk_delete(struct vdsk *vdsk, UNUSED struct blockif_req *br)
 }
 
 struct vdsk *
-vdsk_raw_open(const char *optstr, int numthr)
+vdsk_raw_open(const char *optstr, int numthr, int *fatal)
 {
 	// char name[MAXPATHLEN];
 	char *nopt, *xopts, *cp;
@@ -252,6 +252,7 @@ vdsk_raw_open(const char *optstr, int numthr)
 
 	assert(numthr == 1);
 
+	*fatal = 1;
 	fd = -1;
 	ssopt = 0;
 	nocache = 0;

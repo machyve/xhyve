@@ -28,4 +28,4 @@
 
 #pragma once
 
-struct vdsk *vdsk_raw_open(const char *optstr, int numthr);
+struct vdsk *vdsk_raw_open(const char *optstr, int numthr, int *fatal);

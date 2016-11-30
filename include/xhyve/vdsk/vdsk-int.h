@@ -30,10 +30,10 @@
 
 struct vdsk {
 	int (*close)(struct vdsk *vdsk);
-	int (*read)(const struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf);
-	int (*write)(const struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf);
-	int (*flush)(const struct vdsk *vdsk);
-	int (*delete)(const struct vdsk *vdsk, struct blockif_req *br);
+	int (*read)(struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf);
+	int (*write)(struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf);
+	int (*flush)(struct vdsk *vdsk);
+	int (*delete)(struct vdsk *vdsk, struct blockif_req *br);
 	int bc_isgeom;
 	int bc_candelete;
 	int bc_rdonly;

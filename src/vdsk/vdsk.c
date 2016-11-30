@@ -40,8 +40,8 @@
 struct vdsk *
 vdsk_open(const char *optstr, int numthr)
 {
-    /* for now, the one and only backend */
-    return vdsk_raw_open(optstr, numthr);
+	/* for now, the one and only backend */
+	return vdsk_raw_open(optstr, numthr);
 }
 
 int
@@ -51,25 +51,25 @@ vdsk_close(struct vdsk *vdsk)
 }
 
 int
-vdsk_read(const struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf)
+vdsk_read(struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf)
 {
 	return vdsk->read(vdsk, br, buf);
 }
 
 int
-vdsk_write(const struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf)
+vdsk_write(struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf)
 {
 	return vdsk->write(vdsk, br, buf);
 }
 
 int
-vdsk_flush(const struct vdsk *vdsk)
+vdsk_flush(struct vdsk *vdsk)
 {
 	return vdsk->flush(vdsk);
 }
 
 int
-vdsk_delete(const struct vdsk *vdsk, struct blockif_req *br)
+vdsk_delete(struct vdsk *vdsk, struct blockif_req *br)
 {
 	return vdsk->delete(vdsk, br);
 }

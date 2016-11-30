@@ -95,7 +95,7 @@ disk_close(struct vdsk *vdsk)
 }
 
 static int
-disk_read(const struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf)
+disk_read(struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf)
 {
 	const struct vdsk_raw_ctx *vp = (const struct vdsk_raw_ctx *)vdsk;
 
@@ -143,7 +143,7 @@ disk_read(const struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf)
 }
 
 static int
-disk_write(const struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf)
+disk_write(struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf)
 {
 	const struct vdsk_raw_ctx *vp = (const struct vdsk_raw_ctx *)vdsk;
 
@@ -196,7 +196,7 @@ disk_write(const struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf)
 }
 
 static int
-disk_flush(const struct vdsk *vdsk)
+disk_flush(struct vdsk *vdsk)
 {
 	const struct vdsk_raw_ctx *vp = (const struct vdsk_raw_ctx *)vdsk;
 
@@ -212,7 +212,7 @@ disk_flush(const struct vdsk *vdsk)
 }
 
 static int
-disk_delete(const struct vdsk *vdsk, UNUSED struct blockif_req *br)
+disk_delete(struct vdsk *vdsk, UNUSED struct blockif_req *br)
 {
 	// const struct vdsk_raw_ctx *vp = (const struct vdsk_raw_ctx *)vdsk;
 

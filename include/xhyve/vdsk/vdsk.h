@@ -37,10 +37,10 @@ struct vdsk;
 struct vdsk *vdsk_open(const char *optstr, int numthr);
 
 int vdsk_close(struct vdsk *vdsk);
-int vdsk_read(const struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf);
-int vdsk_write(const struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf);
-int vdsk_flush(const struct vdsk *vdsk);
-int vdsk_delete(const struct vdsk *vdsk, struct blockif_req *br);
+int vdsk_read(struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf);
+int vdsk_write(struct vdsk *vdsk, struct blockif_req *br, uint8_t *buf);
+int vdsk_flush(struct vdsk *vdsk);
+int vdsk_delete(struct vdsk *vdsk, struct blockif_req *br);
 
 void vdsk_chs(const struct vdsk *vdsk, uint16_t *c, uint8_t *h, uint8_t *s);
 

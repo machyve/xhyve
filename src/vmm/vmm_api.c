@@ -204,13 +204,13 @@ xh_vm_map_gpa(uint64_t gpa, size_t len)
 {
 	assert(mmap_style == VM_MMAP_ALL);
 
-	if ((gpa < lowmem) && ((gpa + len) <= lowmem)) {
+	if ((gpa < lowmem) && (len <= lowmem) && ((gpa + len) <= lowmem)) {
 		return ((void *) (((uintptr_t) lowmem_addr) + gpa));
 	}
 
 	if (gpa >= (4ull << 30)) {
 		gpa -= (4ull << 30);
-		if ((gpa < highmem) && ((gpa + len) <= highmem)) {
+		if ((gpa < highmem) && (len <= highmem) && ((gpa + len) <= highmem)) {
 			return ((void *) (((uintptr_t) highmem_addr) + gpa));
 		}
 	}

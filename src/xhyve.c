@@ -67,6 +67,7 @@
 
 #include <xhyve/firmware/kexec.h>
 #include <xhyve/firmware/fbsd.h>
+#include <xhyve/firmware/bootrom.h>
 
 #define GUEST_NIO_PORT 0x488 /* guest upcalls via i/o port */
 
@@ -728,6 +729,8 @@ firmware_parse(const char *opt) {
 		fw_func = kexec;
 	} else if (strncmp(fw, "fbsd", strlen("fbsd")) == 0) {
 		fw_func = fbsd_load;
+        } else if (strncmp(fw, "bootrom", strlen("bootrom")) == 0) {
+                fw_func = bootrom_load;
 	} else {
 		goto fail;
 	}
@@ -761,6 +764,8 @@ firmware_parse(const char *opt) {
 	} else if (fw_func == fbsd_load) {
 		/* FIXME: let user set boot-loader serial device */
 		fbsd_init(opt1, opt2, opt3, NULL);
+        } else if (fw_func == bootrom_load) {
+                bootrom_init(opt1);
 	} else {
 		goto fail;
 	}
@@ -770,7 +775,8 @@ firmware_parse(const char *opt) {
 fail:
 	fprintf(stderr, "Invalid firmware argument\n"
 		"    -f kexec,'kernel','initrd','\"cmdline\"'\n"
-		"    -f fbsd,'userboot','boot volume','\"kernel env\"'\n");
+                "    -f fbsd,'userboot','boot volume','\"kernel env\"'\n"
+                "    -f bootrom,'ROM',,\n"); /* FIXME: trailing commas _required_! */
 
 	return -1;
 }

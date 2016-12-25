@@ -58,7 +58,7 @@
  */
 #define BLOCKIF_NUMTHR 1
 
-#define BLOCKIF_MAXREQ (64 + BLOCKIF_NUMTHR)
+#define BLOCKIF_MAXREQ (128 + BLOCKIF_NUMTHR)
 
 enum blockop {
 	BOP_READ,

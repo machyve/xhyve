@@ -50,7 +50,7 @@
 #include <xhyve/virtio.h>
 #include <xhyve/block_if.h>
 
-#define VTBLK_RINGSZ 64
+#define VTBLK_RINGSZ 128
 
 #define VTBLK_S_OK 0
 #define VTBLK_S_IOERR 1

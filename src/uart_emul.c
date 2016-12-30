@@ -28,6 +28,7 @@
  * $FreeBSD$
  */
 
+#include <signal.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -130,6 +131,14 @@ ttyclose(void)
 }
 
 static void
+sig_ttyclose(int signo)
+{
+        if (signo == SIGTERM) {
+                exit(1);
+        }
+}
+
+static void
 ttyopen(struct ttyfd *tf)
 {
 
@@ -142,6 +151,7 @@ ttyopen(struct ttyfd *tf)
 
 	if (tf->fd == STDIN_FILENO) {
 		tio_stdio_orig = tf->tio_orig;
+                signal(SIGTERM, sig_ttyclose);
 		atexit(ttyclose);
 	}
 }

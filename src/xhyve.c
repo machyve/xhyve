@@ -727,37 +727,70 @@ firmware_parse(const char *opt) {
 
 	if (strncmp(fw, "kexec", strlen("kexec")) == 0) {
 		fw_func = kexec;
+
+                if ((cp = strchr(fw, ',')) != NULL) {
+                        *cp = '\0';
+                        opt1 = cp + 1;
+                } else {
+                        goto fail;
+                }
+
+                if ((cp = strchr(opt1, ',')) != NULL) {
+                        *cp = '\0';
+                        opt2 = cp + 1;
+                } else {
+                        goto fail;
+                }
+
+                if ((cp = strchr(opt2, ',')) != NULL) {
+                        *cp = '\0';
+                        opt3 = cp + 1;
+                } else {
+                        goto fail;
+                }
+
+
 	} else if (strncmp(fw, "fbsd", strlen("fbsd")) == 0) {
 		fw_func = fbsd_load;
+
+                if ((cp = strchr(fw, ',')) != NULL) {
+                        *cp = '\0';
+                        opt1 = cp + 1;
+                } else {
+                        goto fail;
+                }
+
+                if ((cp = strchr(opt1, ',')) != NULL) {
+                        *cp = '\0';
+                        opt2 = cp + 1;
+                } else {
+                        goto fail;
+                }
+
+                if ((cp = strchr(opt2, ',')) != NULL) {
+                        *cp = '\0';
+                        opt3 = cp + 1;
+                } else {
+                        goto fail;
+                }
+
         } else if (strncmp(fw, "bootrom", strlen("bootrom")) == 0) {
                 fw_func = bootrom_load;
+                opt2 = "";
+                opt3 = "";
+                if ((cp = strchr(fw, ',')) != NULL) {
+                        *cp = '\0';
+                        opt1 = cp + 1;
+                } else {
+                        goto fail;
+                }
+
 	} else {
 		goto fail;
 	}
 
-		if ((cp = strchr(fw, ',')) != NULL) {
-			*cp = '\0';
-			opt1 = cp + 1;
-		} else {
-			goto fail;
-		}
-
-		if ((cp = strchr(opt1, ',')) != NULL) {
-			*cp = '\0';
-			opt2 = cp + 1;
-		} else {
-			goto fail;
-		}
-
-		if ((cp = strchr(opt2, ',')) != NULL) {
-			*cp = '\0';
-			opt3 = cp + 1;
-		} else {
-			goto fail;
-		}
-
-		opt2 = strlen(opt2) ? opt2 : NULL;
-		opt3 = strlen(opt3) ? opt3 : NULL;
+	opt2 = strlen(opt2) ? opt2 : NULL;
+	opt3 = strlen(opt3) ? opt3 : NULL;
 
 	if (fw_func == kexec) {
 		kexec_init(opt1, opt2, opt3);
@@ -776,7 +809,7 @@ fail:
 	fprintf(stderr, "Invalid firmware argument\n"
 		"    -f kexec,'kernel','initrd','\"cmdline\"'\n"
                 "    -f fbsd,'userboot','boot volume','\"kernel env\"'\n"
-                "    -f bootrom,'ROM',,\n"); /* FIXME: trailing commas _required_! */
+                "    -f bootrom,'ROM'\n");
 
 	return -1;
 }

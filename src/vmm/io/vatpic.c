@@ -29,7 +29,7 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <assert.h>
-#include <libkern/OSAtomic.h>
+#include <xhyve/lock.h>
 #include <xhyve/support/misc.h>
 #include <xhyve/support/i8259.h>
 #include <xhyve/support/apicreg.h>
@@ -38,9 +38,9 @@
 #include <xhyve/vmm/io/vatpic.h>
 #include <xhyve/vmm/io/vioapic.h>
 
-#define VATPIC_LOCK_INIT(v) (v)->lock = OS_SPINLOCK_INIT;
-#define VATPIC_LOCK(v) OSSpinLockLock(&(v)->lock)
-#define VATPIC_UNLOCK(v) OSSpinLockUnlock(&(v)->lock)
+#define VATPIC_LOCK_INIT(v) XHYVE_LOCK_INIT(v, lock)
+#define VATPIC_LOCK(v) XHYVE_LOCK(v, lock)
+#define VATPIC_UNLOCK(v) XHYVE_UNLOCK(v, lock)
 
 enum irqstate {
 	IRQSTATE_ASSERT,
@@ -70,7 +70,7 @@ struct atpic {
 
 struct vatpic {
 	struct vm *vm;
-	OSSpinLock lock;
+	xhyve_lock_t lock;
 	struct atpic atpic[2];
 	uint8_t elc[2];
 };

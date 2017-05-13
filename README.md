@@ -16,7 +16,7 @@ Requirements
 ------------
 
 * OS X 10.10.3 Yosemite or later
-* a 2010 or later Mac (i.e. a CPU that supports EPT)
+* a 2010 or later Mac (i.e. a CPU that supports EPT: `sysctl kern.hv_support` = 1)
 
 Installation
 ------------

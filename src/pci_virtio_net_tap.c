@@ -37,6 +37,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
+#include <sys/time.h>
 #include <sys/select.h>
 #include <sys/param.h>
 #include <sys/uio.h>

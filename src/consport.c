@@ -33,6 +33,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/select.h>
 #include <xhyve/support/misc.h>

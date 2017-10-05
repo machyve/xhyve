@@ -28,7 +28,18 @@ If you have homebrew, then simply:
 
 The `--HEAD` in the brew command ensures that you always get the latest changes, even if the homebrew database is not yet updated. If for any reason you don't want that simply do `brew install xhyve` .
 
-if not then:  
+If you have MacPorts, then simply:
+
+    $ sudo port selfupdate
+    $ sudo port install xhyve
+
+MacPorts is up to date with the GitHub ref listed in the port info
+
+    $ port info xhyve
+    xhyve @20170117 (emulators)
+    ...
+
+Otherwise:
 
 Building
 --------

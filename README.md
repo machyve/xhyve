@@ -18,6 +18,29 @@ Requirements
 * OS X 10.10.3 Yosemite or later
 * a 2010 or later Mac (i.e. a CPU that supports EPT)
 
+Installation
+------------
+
+If you have homebrew, then simply:
+
+    $ brew update
+    $ brew install --HEAD xhyve
+
+The `--HEAD` in the brew command ensures that you always get the latest changes, even if the homebrew database is not yet updated. If for any reason you don't want that simply do `brew install xhyve` .
+
+If you have MacPorts, then simply:
+
+    $ sudo port selfupdate
+    $ sudo port install xhyve
+
+MacPorts is up to date with the GitHub ref listed in the port info
+
+    $ port info xhyve
+    xhyve @20170117 (emulators)
+    ...
+
+Otherwise:
+
 Building
 --------
     $ git clone https://github.com/xhyve-xyz/xhyve.git

@@ -36,6 +36,7 @@ XHYVE_SRC := \
 	src/atkbdc.c \
 	src/bhyvegc.c \
 	src/block_if.c \
+	src/bootrom.c \
 	src/console.c \
 	src/consport.c \
 	src/dbgport.c \

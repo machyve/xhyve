@@ -258,7 +258,11 @@ vcpu_thread(void *param)
 	assert(error == 0);
 
 	if (vcpu == BSP) {
-		rip_entry = fw_func();
+        if (fw_func != NULL) {
+            rip_entry = fw_func();
+        } else {
+            rip_entry = 0xFFF0;
+        }
 	} else {
 		rip_entry = vmexit[vcpu].rip;
 		spinup_ap_realmode(vcpu, &rip_entry);
@@ -936,7 +940,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (fw != 1)
+	if ((fw != 1) && (lpc_bootrom() == NULL))
 		usage(1);
 
 	error = xh_vm_create();

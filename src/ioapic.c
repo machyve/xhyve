@@ -28,6 +28,8 @@
 
 #include <xhyve/vmm/vmm_api.h>
 #include <xhyve/ioapic.h>
+#include <xhyve/pci_emul.h>
+#include <xhyve/pci_lpc.h>
 
 /*
  * Assign PCI INTx interrupts to I/O APIC pins in a round-robin
@@ -58,11 +60,15 @@ ioapic_init(void)
 }
 
 int
-ioapic_pci_alloc_irq(void)
+ioapic_pci_alloc_irq(struct pci_devinst *pi)
 {
 	static int last_pin;
 
 	if (pci_pins == 0)
 		return (-1);
+    if (lpc_bootrom()) {
+        /* For external bootrom use fixed mapping. */
+        return (16 + (4 + pi->pi_slot + pi->pi_lintr.pin) % 8);
+    }
 	return (16 + (last_pin++ % pci_pins));
 }

@@ -71,3 +71,4 @@ struct lpc_sysres {
 int lpc_device_parse(const char *opt);
 char *lpc_pirq_name(int pin);
 void lpc_pirq_routed(void);
+const char *lpc_bootrom(void);

@@ -37,9 +37,6 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#pragma clang diagnostic ignored "-Wsign-conversion"
-#pragma clang diagnostic ignored "-Wshorten-64-to-32"
-
 #include <xhyve/support/misc.h>
 
 #include <xhyve/vmm/vmm.h>
@@ -86,7 +83,7 @@ bootrom_init(const char *romfile)
 	}
 
 	/* Map the bootrom into the guest address space */
-	if (xh_setup_bootrom_memory(sbuf.st_size, (void **)&ptr) != 0)
+	if (xh_setup_bootrom_memory((size_t)sbuf.st_size, (void **)&ptr) != 0)
     {
         fprintf(stderr, "hv_setup_bootrom_memory failed\n");
 		goto done;

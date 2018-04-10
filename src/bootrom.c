@@ -37,7 +37,6 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#pragma clang diagnostic ignored "-Wformat"
 #pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
 
@@ -76,12 +75,12 @@ bootrom_init(const char *romfile)
 	 * MMIO space (e.g. APIC, HPET, MSI).
 	 */
 	if (sbuf.st_size > MAX_BOOTROM_SIZE || sbuf.st_size < XHYVE_PAGE_SIZE) {
-		fprintf(stderr, "Invalid bootrom size %ld\n", sbuf.st_size);
+		fprintf(stderr, "Invalid bootrom size %lld\n", sbuf.st_size);
 		goto done;
 	}
 
 	if (sbuf.st_size & XHYVE_PAGE_MASK) {
-		fprintf(stderr, "Bootrom size %ld is not a multiple of the "
+		fprintf(stderr, "Bootrom size %lld is not a multiple of the "
 		    "page size\n", sbuf.st_size);
 		goto done;
 	}

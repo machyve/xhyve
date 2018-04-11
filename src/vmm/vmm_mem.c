@@ -40,11 +40,11 @@ vmm_mem_init(void)
 	return (0);
 }
 
-
 void *
-vmm_mem_alloc(uint64_t gpa, size_t size)
+vmm_mem_alloc(uint64_t gpa, size_t size, uint64_t prot)
 {
 	void *object;
+    hv_memory_flags_t hvProt;
 
 	object = valloc(size);
 
@@ -52,8 +52,11 @@ vmm_mem_alloc(uint64_t gpa, size_t size)
 		xhyve_abort("vmm_mem_alloc failed\n");
 	}
 
-	if (hv_vm_map(object, gpa, size,
-		HV_MEMORY_READ | HV_MEMORY_WRITE | HV_MEMORY_EXEC))
+    hvProt = (prot & XHYVE_PROT_READ) ? HV_MEMORY_READ : 0;
+    hvProt |= (prot & XHYVE_PROT_WRITE) ? HV_MEMORY_WRITE : 0;
+    hvProt |= (prot & XHYVE_PROT_EXECUTE) ? HV_MEMORY_EXEC : 0;
+
+	if (hv_vm_map(object, gpa, size, hvProt))
 	{
 		xhyve_abort("hv_vm_map failed\n");
 	}

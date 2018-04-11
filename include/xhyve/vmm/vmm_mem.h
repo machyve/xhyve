@@ -34,5 +34,5 @@
 struct vmspace;
 
 int	vmm_mem_init(void);
-void *vmm_mem_alloc(uint64_t gpa, size_t size);
+void *vmm_mem_alloc(uint64_t gpa, size_t size, uint64_t prot);
 void vmm_mem_free(uint64_t gpa, size_t size, void *object);

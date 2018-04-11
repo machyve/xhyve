@@ -145,14 +145,14 @@ xh_vm_get_memory_seg(uint64_t gpa, size_t *ret_len)
 }
 
 static int
-setup_memory_segment(uint64_t gpa, size_t len, void **addr)
+setup_memory_segment(uint64_t gpa, size_t len, uint64_t prot, void **addr)
 {
 	void *object;
 	uint64_t offset;
 	int error;
 
 	vcpu_freeze_all(true);
-	error = vm_malloc(vm, gpa, len);
+	error = vm_malloc(vm, gpa, len, prot);
 	if (error == 0) {
 		error = vm_get_memobj(vm, gpa, len, &offset, &object);
 		if (error == 0) {
@@ -168,6 +168,7 @@ xh_vm_setup_memory(size_t len, enum vm_mmap_style vms)
 {
 	void **addr;
 	int error;
+    const uint64_t protFlags = XHYVE_PROT_READ | XHYVE_PROT_WRITE | XHYVE_PROT_EXECUTE;
 
 	/* XXX VM_MMAP_SPARSE not implemented yet */
 	assert(vms == VM_MMAP_NONE || vms == VM_MMAP_ALL);
@@ -184,14 +185,14 @@ xh_vm_setup_memory(size_t len, enum vm_mmap_style vms)
 
 	if (lowmem > 0) {
 		addr = (vms == VM_MMAP_ALL) ? &lowmem_addr : NULL;
-		if ((error = setup_memory_segment(0, lowmem, addr))) {
+		if ((error = setup_memory_segment(0, lowmem, protFlags, addr))) {
 			return (error);
 		}
 	}
 
 	if (highmem > 0) {
 		addr = (vms == VM_MMAP_ALL) ? &highmem_addr : NULL;
-		if ((error = setup_memory_segment((4ull << 30), highmem, addr))) {
+		if ((error = setup_memory_segment((4ull << 30), highmem, protFlags, addr))) {
 			return (error);
 		}
 	}

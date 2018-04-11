@@ -34,7 +34,9 @@ VMM_SRC := \
 XHYVE_SRC := \
 	src/acpitbl.c \
 	src/atkbdc.c \
+	src/bhyvegc.c \
 	src/block_if.c \
+	src/console.c \
 	src/consport.c \
 	src/dbgport.c \
 	src/inout.c \
@@ -44,6 +46,7 @@ XHYVE_SRC := \
 	src/mptbl.c \
 	src/pci_ahci.c \
 	src/pci_emul.c \
+	src/pci_fbuf.c \
 	src/pci_hostbridge.c \
 	src/pci_irq.c \
 	src/pci_lpc.c \
@@ -55,10 +58,13 @@ XHYVE_SRC := \
 	src/pm.c \
 	src/post.c \
 	src/rtc.c \
+	src/rfb.c \
 	src/smbiostbl.c \
+	src/sockstream.c \
 	src/task_switch.c \
 	src/uart_emul.c \
 	src/xhyve.c \
+	src/vga.c \
 	src/virtio.c \
 	src/xmsr.c
 

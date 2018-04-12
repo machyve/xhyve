@@ -100,7 +100,7 @@ struct mem_seg {
 	void *object;
 };
 
-#define	VM_MAX_MEMORY_SEGMENTS	2
+#define	VM_MAX_MEMORY_SEGMENTS	4
 
 /*
  * Initialization:

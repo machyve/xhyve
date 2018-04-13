@@ -53,6 +53,7 @@
 
 #include <xhyve/xhyve.h>
 #include <xhyve/acpi.h>
+#include <xhyve/atkbdc.h>
 #include <xhyve/inout.h>
 #include <xhyve/dbgport.h>
 #include <xhyve/ioapic.h>
@@ -976,6 +977,7 @@ main(int argc, char *argv[])
 
 	init_mem();
 	init_inout();
+    atkbdc_init();
 	pci_irq_init();
 	ioapic_init();
 

@@ -13,6 +13,8 @@
 		00D3D5B3207C82AB00DDCDF6 /* rfb.c in Sources */ = {isa = PBXBuildFile; fileRef = 00D3D5B2207C82AB00DDCDF6 /* rfb.c */; };
 		00D3D5B5207C82B300DDCDF6 /* vga.c in Sources */ = {isa = PBXBuildFile; fileRef = 00D3D5B4207C82B200DDCDF6 /* vga.c */; };
 		00D3D5B8207EAFF900DDCDF6 /* sockstream.c in Sources */ = {isa = PBXBuildFile; fileRef = 00D3D5B7207EAFF900DDCDF6 /* sockstream.c */; };
+		00D3D5BB2080044200DDCDF6 /* ps2kbd.c in Sources */ = {isa = PBXBuildFile; fileRef = 00D3D5B92080044100DDCDF6 /* ps2kbd.c */; };
+		00D3D5BC2080044200DDCDF6 /* ps2mouse.c in Sources */ = {isa = PBXBuildFile; fileRef = 00D3D5BA2080044200DDCDF6 /* ps2mouse.c */; };
 		3F3FF9E91BF7C63A004C89A1 /* Hypervisor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F3FF9E81BF7C63A004C89A1 /* Hypervisor.framework */; };
 		3F3FFA5D1BF7C6A7004C89A1 /* acpitbl.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA1F1BF7C6A7004C89A1 /* acpitbl.c */; };
 		3F3FFA5E1BF7C6A7004C89A1 /* atkbdc.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA201BF7C6A7004C89A1 /* atkbdc.c */; };
@@ -95,6 +97,11 @@
 		00D3D5B4207C82B200DDCDF6 /* vga.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vga.c; sourceTree = "<group>"; };
 		00D3D5B6207EAFE600DDCDF6 /* sockstream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sockstream.h; sourceTree = "<group>"; };
 		00D3D5B7207EAFF900DDCDF6 /* sockstream.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sockstream.c; sourceTree = "<group>"; };
+		00D3D5B92080044100DDCDF6 /* ps2kbd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ps2kbd.c; sourceTree = "<group>"; };
+		00D3D5BA2080044200DDCDF6 /* ps2mouse.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ps2mouse.c; sourceTree = "<group>"; };
+		00D3D5BD2080046200DDCDF6 /* ps2mouse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ps2mouse.h; sourceTree = "<group>"; };
+		00D3D5BE2080046200DDCDF6 /* ps2kbd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ps2kbd.h; sourceTree = "<group>"; };
+		00D3D5BF208004CB00DDCDF6 /* atkbdc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = atkbdc.h; sourceTree = "<group>"; };
 		3F1934921BF7C0D40099CC46 /* xhyve */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = xhyve; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F3FF9E01BF7C5D5004C89A1 /* common.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = common.xcconfig; sourceTree = "<group>"; };
 		3F3FF9E11BF7C5D5004C89A1 /* common_asan.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = common_asan.xcconfig; sourceTree = "<group>"; };
@@ -332,6 +339,8 @@
 				3F3FFA381BF7C6A7004C89A1 /* pci_virtio_rnd.c */,
 				3F3FFA391BF7C6A7004C89A1 /* pm.c */,
 				3F3FFA3A1BF7C6A7004C89A1 /* post.c */,
+				00D3D5B92080044100DDCDF6 /* ps2kbd.c */,
+				00D3D5BA2080044200DDCDF6 /* ps2mouse.c */,
 				00D3D5B2207C82AB00DDCDF6 /* rfb.c */,
 				3F3FFA3B1BF7C6A7004C89A1 /* rtc.c */,
 				3F3FFA3C1BF7C6A7004C89A1 /* smbiostbl.c */,
@@ -420,6 +429,7 @@
 			children = (
 				3FB6515C1BF7CD4500ED886F /* acpi.h */,
 				3FB6515D1BF7CD4500ED886F /* ahci.h */,
+				00D3D5BF208004CB00DDCDF6 /* atkbdc.h */,
 				00D3D5A8207C825800DDCDF6 /* bhyvegc.h */,
 				3FB6515E1BF7CD4500ED886F /* block_if.h */,
 				00D3D5A9207C826300DDCDF6 /* console.h */,
@@ -433,6 +443,8 @@
 				3FB651681BF7CD4500ED886F /* pci_emul.h */,
 				3FB651691BF7CD4500ED886F /* pci_irq.h */,
 				3FB6516A1BF7CD4500ED886F /* pci_lpc.h */,
+				00D3D5BE2080046200DDCDF6 /* ps2kbd.h */,
+				00D3D5BD2080046200DDCDF6 /* ps2mouse.h */,
 				00D3D5AA207C827000DDCDF6 /* rfb.h */,
 				3FB6516B1BF7CD4500ED886F /* rtc.h */,
 				3FB6516C1BF7CD4500ED886F /* smbiostbl.h */,
@@ -609,6 +621,7 @@
 				3F3FFA751BF7C6A7004C89A1 /* pm.c in Sources */,
 				3F3FFA721BF7C6A7004C89A1 /* pci_virtio_net_tap.c in Sources */,
 				3F3FFA6F1BF7C6A7004C89A1 /* pci_lpc.c in Sources */,
+				00D3D5BB2080044200DDCDF6 /* ps2kbd.c in Sources */,
 				3F3FFA7C1BF7C6A7004C89A1 /* vmcs.c in Sources */,
 				3F3FFA851BF7C6A7004C89A1 /* vrtc.c in Sources */,
 				3F3FFA921BF7C6A7004C89A1 /* xmsr.c in Sources */,
@@ -657,6 +670,7 @@
 				00D3D5B5207C82B300DDCDF6 /* vga.c in Sources */,
 				3F3FFA601BF7C6A7004C89A1 /* consport.c in Sources */,
 				3F3FFA681BF7C6A7004C89A1 /* mevent.c in Sources */,
+				00D3D5BC2080044200DDCDF6 /* ps2mouse.c in Sources */,
 				3F3FFA8C1BF7C6A7004C89A1 /* vmm_lapic.c in Sources */,
 				3F3FFA731BF7C6A7004C89A1 /* pci_virtio_net_vmnet.c in Sources */,
 				3F3FFA891BF7C6A7004C89A1 /* vmm_host.c in Sources */,

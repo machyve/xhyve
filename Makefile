@@ -57,6 +57,8 @@ XHYVE_SRC := \
 	src/pci_virtio_rnd.c \
 	src/pm.c \
 	src/post.c \
+	src/ps2kbd.c \
+	src/ps2mouse.c \
 	src/rtc.c \
 	src/rfb.c \
 	src/smbiostbl.c \

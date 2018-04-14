@@ -48,6 +48,8 @@
 
 #include <zlib.h>
 
+#include <CommonCrypto/CommonCrypto.h>
+
 #pragma clang diagnostic ignored "-Wconversion"
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma clang diagnostic ignored "-Wpadded"
@@ -65,12 +67,6 @@
 #include <xhyve/console.h>
 #include <xhyve/rfb.h>
 #include <xhyve/sockstream.h>
-
-#define NO_OPENSSL
-
-#ifndef NO_OPENSSL
-#include <openssl/des.h>
-#endif
 
 static int rfb_debug = 0;
 #define	DPRINTF(params) if (rfb_debug) printf params
@@ -775,14 +771,13 @@ rfb_handle(struct rfb_softc *rc, int cfd)
 	unsigned char buf[80];
 	unsigned char *message = NULL;
 
-#ifndef NO_OPENSSL
 	unsigned char challenge[AUTH_LENGTH];
 	unsigned char keystr[PASSWD_LENGTH];
 	unsigned char crypt_expected[AUTH_LENGTH];
 
-	DES_key_schedule ks;
-	int i;
-#endif
+    size_t dataOutSize;
+    int i;
+    CCCryptorStatus cryptoResult;
 
 	pthread_t tid = NULL;
 	uint32_t sres = 0;
@@ -799,14 +794,10 @@ rfb_handle(struct rfb_softc *rc, int cfd)
 
 	/* 2a. Send security type */
 	buf[0] = 1;
-#ifndef NO_OPENSSL
 	if (rc->password)
 		buf[1] = SECURITY_TYPE_VNC_AUTH;
 	else
 		buf[1] = SECURITY_TYPE_NONE;
-#else
-	buf[1] = SECURITY_TYPE_NONE;
-#endif
 
 	stream_write(cfd, buf, 2);
 
@@ -826,7 +817,6 @@ rfb_handle(struct rfb_softc *rc, int cfd)
 		 * eight characters, or padded with null bytes on the right.
 		 * The client then sends the resulting 16-bytes response.
 		 */
-#ifndef NO_OPENSSL
 		strncpy(keystr, rc->password, PASSWD_LENGTH);
 
 		/* VNC clients encrypts the challenge with all the bit fields
@@ -851,27 +841,23 @@ rfb_handle(struct rfb_softc *rc, int cfd)
 
 		memcpy(crypt_expected, challenge, AUTH_LENGTH);
 
-		/* Encrypt the Challenge with DES */
-		DES_set_key((const_DES_cblock *)keystr, &ks);
-		DES_ecb_encrypt((const_DES_cblock *)challenge,
-				(const_DES_cblock *)crypt_expected,
-				&ks, DES_ENCRYPT);
-		DES_ecb_encrypt((const_DES_cblock *)(challenge + PASSWD_LENGTH),
-				(const_DES_cblock *)(crypt_expected +
-				PASSWD_LENGTH),
-				&ks, DES_ENCRYPT);
+        cryptoResult = CCCrypt(kCCEncrypt, kCCAlgorithmDES, kCCOptionECBMode,
+                               keystr, PASSWD_LENGTH,
+                               NULL,
+                               challenge, AUTH_LENGTH,
+                               crypt_expected, AUTH_LENGTH,
+                               &dataOutSize);
 
-		if (memcmp(crypt_expected, buf, AUTH_LENGTH) != 0) {
+        if (cryptoResult != kCCSuccess) {
+            message = "Auth Failed: Internal Error.";
+            sres = htonl(1);
+        } else if (memcmp(crypt_expected, buf, AUTH_LENGTH) != 0) {
 			message = "Auth Failed: Invalid Password.";
 			sres = htonl(1);
-		} else
+        } else {
 			sres = 0;
-#else
-		sres = 0;
-		WPRINTF(("Auth not supported, no OpenSSL in your system"));
-#endif
-
-		break;
+        }
+        break;
 	}
 
 	/* 2d. Write back a status */

@@ -47,7 +47,8 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#include <CommonCrypto/CommonDigest.h>
+#include <dispatch/dispatch.h>
+#include <vmnet/vmnet.h>
 
 #pragma clang diagnostic ignored "-Wcast-align"
 #pragma clang diagnostic ignored "-Wconversion"
@@ -68,6 +69,7 @@
 
 #include <xhyve/support/e1000_regs.h>
 #include <xhyve/support/e1000_defines.h>
+#include <xhyve/support/uuid.h>
 
 #include <xhyve/pci_emul.h>
 #include <xhyve/mevent.h>
@@ -256,10 +258,9 @@ struct e82545_softc {
 	struct mevent   *esc_mevp;
 	struct mevent   *esc_mevpitr;
 	pthread_mutex_t	esc_mtx;
-	struct ether_addr esc_mac;
-	int		esc_tapfd;
+    struct vmnet_state *vms;
 
-	/* General */
+    /* General */
 	uint32_t	esc_CTRL;	/* x0000 device ctl */
 	uint32_t	esc_FCAL;	/* x0028 flow ctl addr lo */
 	uint32_t	esc_FCAH;	/* x002C flow ctl addr hi */
@@ -363,10 +364,196 @@ struct e82545_softc {
 static void e82545_reset(struct e82545_softc *sc, int dev);
 static void e82545_rx_enable(struct e82545_softc *sc);
 static void e82545_rx_disable(struct e82545_softc *sc);
-static void e82545_tap_callback(int fd, enum ev_type type, void *param);
+static void e82545_tap_callback(struct e82545_softc *sc);
 static void e82545_tx_start(struct e82545_softc *sc);
 static void e82545_tx_enable(struct e82545_softc *sc);
 static void e82545_tx_disable(struct e82545_softc *sc);
+
+struct vmnet_state {
+    interface_ref iface;
+    uint8_t mac[6];
+    unsigned int mtu;
+    unsigned int max_packet_size;
+};
+
+/*
+ * Drop privileges according to the CERT Secure C Coding Standard section
+ * POS36-C
+ * https://www.securecoding.cert.org/confluence/display/c/POS36-C.+Observe+correct+revocation+order+while+relinquishing+privileges
+ */
+static int drop_privileges(void) {
+    // If we are not effectively root, don't drop privileges
+    if (geteuid() != 0 && getegid() != 0) {
+        return 0;
+    }
+    if (setgid(getgid()) == -1) {
+        return -1;
+    }
+    if (setuid(getuid()) == -1) {
+        return -1;
+    }
+    return 0;
+}
+
+/*
+ * Create an interface for the guest using Apple's vmnet framework.
+ *
+ * The interface works in VMNET_SHARED_MODE which allows for packets
+ * of the guest to reach other guests and the Internet.
+ *
+ * See also: https://developer.apple.com/library/mac/documentation/vmnet/Reference/vmnet_Reference/index.html
+ */
+static int
+vmn_create(struct e82545_softc *sc)
+{
+    xpc_object_t interface_desc;
+    uuid_t uuid;
+    __block interface_ref iface;
+    __block vmnet_return_t iface_status;
+    dispatch_semaphore_t iface_created;
+    dispatch_queue_t if_create_q;
+    dispatch_queue_t if_q;
+    struct vmnet_state *vms;
+    uint32_t uuid_status;
+
+    interface_desc = xpc_dictionary_create(NULL, NULL, 0);
+    xpc_dictionary_set_uint64(interface_desc, vmnet_operation_mode_key,
+                              VMNET_SHARED_MODE);
+
+    if (guest_uuid_str != NULL) {
+        uuid_from_string(guest_uuid_str, &uuid, &uuid_status);
+        if (uuid_status != uuid_s_ok) {
+            return (-1);
+        }
+    } else {
+        uuid_generate_random(uuid);
+    }
+
+    xpc_dictionary_set_uuid(interface_desc, vmnet_interface_id_key, uuid);
+    iface = NULL;
+    iface_status = 0;
+
+    vms = malloc(sizeof(struct vmnet_state));
+
+    if (!vms) {
+        return (-1);
+    }
+
+    if_create_q = dispatch_queue_create("org.xhyve.vmnet.create",
+                                        DISPATCH_QUEUE_SERIAL);
+
+    iface_created = dispatch_semaphore_create(0);
+
+    iface = vmnet_start_interface(interface_desc, if_create_q,
+                                  ^(vmnet_return_t status, xpc_object_t interface_param)
+                                  {
+                                      iface_status = status;
+                                      if (status != VMNET_SUCCESS || !interface_param) {
+                                          dispatch_semaphore_signal(iface_created);
+                                          return;
+                                      }
+
+                                      if (sscanf(xpc_dictionary_get_string(interface_param,
+                                                                           vmnet_mac_address_key),
+                                                 "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+                                                 &vms->mac[0], &vms->mac[1], &vms->mac[2], &vms->mac[3],
+                                                 &vms->mac[4], &vms->mac[5]) != 6)
+                                      {
+                                          assert(0);
+                                      }
+
+                                      vms->mtu = (unsigned)xpc_dictionary_get_uint64(interface_param, vmnet_mtu_key);
+                                      vms->max_packet_size = (unsigned)xpc_dictionary_get_uint64(interface_param,
+                                                                                                 vmnet_max_packet_size_key);
+                                      dispatch_semaphore_signal(iface_created);
+                                  });
+
+    dispatch_semaphore_wait(iface_created, DISPATCH_TIME_FOREVER);
+    dispatch_release(if_create_q);
+
+    if (iface == NULL || iface_status != VMNET_SUCCESS) {
+        fprintf(stderr, "virtio_net: Could not create vmnet interface, "
+                "permission denied or no entitlement?\n");
+        free(vms);
+        return (-1);
+    }
+
+    vms->iface = iface;
+    sc->vms = vms;
+
+    if_q = dispatch_queue_create("org.xhyve.vmnet.iface_q", 0);
+
+    vmnet_interface_set_event_callback(iface, VMNET_INTERFACE_PACKETS_AVAILABLE,
+                                       if_q, ^(UNUSED interface_event_t event_id, UNUSED xpc_object_t event)
+                                       {
+                                           e82545_tap_callback(sc);
+                                       });
+    if (drop_privileges() == -1) {
+        perror("Dropping privileges after networking was enabled.");
+        free(vms);
+        return (-1);
+    }
+
+    return (0);
+}
+
+static ssize_t
+vmn_read(struct vmnet_state *vms, struct iovec *iov, int n) {
+    vmnet_return_t r;
+    struct vmpktdesc v;
+    int pktcnt;
+    int i;
+
+    v.vm_pkt_size = 0;
+
+    for (i = 0; i < n; i++) {
+        v.vm_pkt_size += iov[i].iov_len;
+    }
+
+    assert(v.vm_pkt_size >= vms->max_packet_size);
+
+    v.vm_pkt_iov = iov;
+    v.vm_pkt_iovcnt = (uint32_t) n;
+    v.vm_flags = 0; /* TODO no clue what this is */
+
+    pktcnt = 1;
+
+    r = vmnet_read(vms->iface, &v, &pktcnt);
+
+    assert(r == VMNET_SUCCESS);
+
+    if (pktcnt < 1) {
+        return (-1);
+    }
+
+    return ((ssize_t) v.vm_pkt_size);
+}
+
+static void
+vmn_write(struct vmnet_state *vms, struct iovec *iov, int n) {
+    vmnet_return_t r;
+    struct vmpktdesc v;
+    int pktcnt;
+    int i;
+
+    v.vm_pkt_size = 0;
+
+    for (i = 0; i < n; i++) {
+        v.vm_pkt_size += iov[i].iov_len;
+    }
+
+    assert(v.vm_pkt_size <= vms->max_packet_size);
+
+    v.vm_pkt_iov = iov;
+    v.vm_pkt_iovcnt = (uint32_t) n;
+    v.vm_flags = 0; /* TODO no clue what this is */
+
+    pktcnt = 1;
+
+    r = vmnet_write(vms->iface, &v, &pktcnt);
+
+    assert(r == VMNET_SUCCESS);
+}
 
 static inline int
 e82545_size_stat_index(uint32_t size)
@@ -387,12 +574,12 @@ e82545_init_eeprom(struct e82545_softc *sc)
 	uint16_t checksum, i;
 
         /* mac addr */
-	sc->eeprom_data[NVM_MAC_ADDR] = ((uint16_t)sc->esc_mac.octet[0]) |
-		(((uint16_t)sc->esc_mac.octet[1]) << 8);
-	sc->eeprom_data[NVM_MAC_ADDR+1] = ((uint16_t)sc->esc_mac.octet[2]) |
-		(((uint16_t)sc->esc_mac.octet[3]) << 8);
-	sc->eeprom_data[NVM_MAC_ADDR+2] = ((uint16_t)sc->esc_mac.octet[4]) |
-		(((uint16_t)sc->esc_mac.octet[5]) << 8);
+	sc->eeprom_data[NVM_MAC_ADDR] = ((uint16_t)sc->vms->mac[0]) |
+		(((uint16_t)sc->vms->mac[1]) << 8);
+	sc->eeprom_data[NVM_MAC_ADDR+1] = ((uint16_t)sc->vms->mac[2]) |
+		(((uint16_t)sc->vms->mac[3]) << 8);
+	sc->eeprom_data[NVM_MAC_ADDR+2] = ((uint16_t)sc->vms->mac[4]) |
+		(((uint16_t)sc->vms->mac[5]) << 8);
 
 	/* pci ids */
 	sc->eeprom_data[NVM_SUB_DEV_ID] = E82545_SUBDEV_ID;
@@ -834,9 +1021,8 @@ static uint8_t dummybuf[2048];
 
 /* XXX one packet at a time until this is debugged */
 static void
-e82545_tap_callback(UNUSED int fd, UNUSED enum ev_type type, void *param)
+e82545_tap_callback(struct e82545_softc *sc)
 {
-	struct e82545_softc *sc = param;
 	struct e1000_rx_desc *rxd;
 	struct iovec vec[64];
 	int left, len, lim, maxpktsz, maxpktdesc, bufsz, i, n, size;
@@ -849,8 +1035,9 @@ e82545_tap_callback(UNUSED int fd, UNUSED enum ev_type type, void *param)
 	if (!sc->esc_rx_enabled || sc->esc_rx_loopback) {
 		DPRINTF("rx disabled (!%d || %d) -- packet(s) dropped\r\n",
 		    sc->esc_rx_enabled, sc->esc_rx_loopback);
-		while (read(sc->esc_tapfd, dummybuf, sizeof(dummybuf)) > 0) {
-		}
+        vec[0].iov_base = dummybuf;
+        vec[0].iov_len = sizeof(dummybuf);
+        (void) vmn_read(sc->vms, vec, 1);
 		goto done1;
 	}
 	bufsz = e82545_bufsz(sc->esc_RCTL);
@@ -862,8 +1049,9 @@ e82545_tap_callback(UNUSED int fd, UNUSED enum ev_type type, void *param)
 	if (left < maxpktdesc) {
 		DPRINTF("rx overflow (%d < %d) -- packet(s) dropped\r\n",
 		    left, maxpktdesc);
-		while (read(sc->esc_tapfd, dummybuf, sizeof(dummybuf)) > 0) {
-		}
+        vec[0].iov_base = dummybuf;
+        vec[0].iov_len = sizeof(dummybuf);
+        (void) vmn_read(sc->vms, vec, 1);
 		goto done1;
 	}
 
@@ -878,7 +1066,7 @@ e82545_tap_callback(UNUSED int fd, UNUSED enum ev_type type, void *param)
 			vec[i].iov_base = paddr_guest2host(rxd->buffer_addr, bufsz);
 			vec[i].iov_len = bufsz;
 		}
-		len = readv(sc->esc_tapfd, vec, maxpktdesc);
+        len = vmn_read(sc->vms, vec, maxpktdesc);
 		if (len <= 0) {
 			DPRINTF("tap: readv() returned %d\n", len);
 			goto done;
@@ -1054,11 +1242,10 @@ e82545_transmit_checksum(struct iovec *iov, int iovcnt, struct ck_info *ck)
 static void
 e82545_transmit_backend(struct e82545_softc *sc, struct iovec *iov, int iovcnt)
 {
+    if (!sc->vms)
+        return;
 
-	if (sc->esc_tapfd == -1)
-		return;
-
-	(void) writev(sc->esc_tapfd, iov, iovcnt);
+    vmn_write(sc->vms, iov, iovcnt);
 }
 
 static void
@@ -2176,7 +2363,7 @@ e82545_reset(struct e82545_softc *sc, int drvr)
 
 		/* XXX not necessary on 82545 ?? */
 		sc->esc_uni[0].eu_valid = 1;
-		memcpy(sc->esc_uni[0].eu_eth.octet, sc->esc_mac.octet,
+		memcpy(sc->esc_uni[0].eu_eth.octet, sc->vms->mac,
 		    ETHER_ADDR_LEN);
 	} else {
 		/* Clear RAH valid bits */
@@ -2219,78 +2406,12 @@ e82545_reset(struct e82545_softc *sc, int drvr)
 	sc->esc_TXDCTL = 0;
 }
 
-static void
-e82545_open_tap(struct e82545_softc *sc, char *opts)
-{
-	char tbuf[80];
-
-	if (opts == NULL) {
-		sc->esc_tapfd = -1;
-		return;
-	}
-
-	strcpy(tbuf, "/dev/");
-	strlcat(tbuf, opts, sizeof(tbuf));
-
-	sc->esc_tapfd = open(tbuf, O_RDWR);
-	if (sc->esc_tapfd == -1) {
-		DPRINTF("unable to open tap device %s\n", opts);
-		exit(1);
-	}
-
-	/*
-	 * Set non-blocking and register for read
-	 * notifications with the event loop
-	 */
-	int opt = 1;
-	if (ioctl(sc->esc_tapfd, FIONBIO, &opt) < 0) {
-		WPRINTF("tap device O_NONBLOCK failed: %d\n", errno);
-		close(sc->esc_tapfd);
-		sc->esc_tapfd = -1;
-	}
-
-	sc->esc_mevp = mevent_add(sc->esc_tapfd,
-				  EVF_READ,
-				  e82545_tap_callback,
-				  sc);
-	if (sc->esc_mevp == NULL) {
-		DPRINTF("Could not register mevent %d\n", EVF_READ);
-		close(sc->esc_tapfd);
-		sc->esc_tapfd = -1;
-	}
-}
-
-static int
-e82545_parsemac(char *mac_str, uint8_t *mac_addr)
-{
-	struct ether_addr *ea;
-	char *tmpstr;
-	char zero_addr[ETHER_ADDR_LEN] = { 0, 0, 0, 0, 0, 0 };
-
-	tmpstr = strsep(&mac_str,"=");
-	if ((mac_str != NULL) && (!strcmp(tmpstr,"mac"))) {
-		ea = ether_aton(mac_str);
-		if (ea == NULL || ETHER_IS_MULTICAST(ea->octet) ||
-		    memcmp(ea->octet, zero_addr, ETHER_ADDR_LEN) == 0) {
-			fprintf(stderr, "Invalid MAC %s\n", mac_str);
-			return (1);
-		} else
-			memcpy(mac_addr, ea->octet, ETHER_ADDR_LEN);
-	}
-	return (0);
-}
-
 static int
 e82545_init(struct pci_devinst *pi, char *opts)
 {
 	DPRINTF("Loading with options: %s\r\n", opts);
 
-    char nstr[80];
-	unsigned char digest[16];
 	struct e82545_softc *sc;
-	char *devname;
-	char *vtopts;
-	int mac_provided;
 
 	/* Setup our softc */
 	sc = calloc(1, sizeof(*sc));
@@ -2328,47 +2449,17 @@ e82545_init(struct pci_devinst *pi, char *opts)
 	 * Attempt to open the tap device and read the MAC address
 	 * if specified.  Copied from virtio-net, slightly modified.
 	 */
-	mac_provided = 0;
-	sc->esc_tapfd = -1;
-	if (opts != NULL) {
-		int err;
+    if (vmn_create(sc) == -1) {
+        return (-1);
+    }
 
-		devname = vtopts = strdup(opts);
-		(void) strsep(&vtopts, ",");
-
-		if (vtopts != NULL) {
-			err = e82545_parsemac(vtopts, sc->esc_mac.octet);
-			if (err != 0) {
-				free(devname);
-				return (err);
-			}
-			mac_provided = 1;
-		}
-
-		if (strncmp(devname, "tap", 3) == 0 ||
-		    strncmp(devname, "vmnet", 5) == 0)
-			e82545_open_tap(sc, devname);
-
-		free(devname);
-	}
-
-	/*
-	 * The default MAC address is the standard NetApp OUI of 00-a0-98,
-	 * followed by an MD5 of the PCI slot/func number and dev name
-	 */
-	if (!mac_provided) {
-		snprintf(nstr, sizeof(nstr), "%d-%d-%s", pi->pi_slot,
-		    pi->pi_func, vmname);
-
-        CC_MD5(nstr, (CC_LONG)strlen(nstr), digest);
-
-		sc->esc_mac.octet[0] = 0x00;
-		sc->esc_mac.octet[1] = 0xa0;
-		sc->esc_mac.octet[2] = 0x98;
-		sc->esc_mac.octet[3] = digest[0];
-		sc->esc_mac.octet[4] = digest[1];
-		sc->esc_mac.octet[5] = digest[2];
-	}
+    if (print_mac == 1)
+    {
+        printf("MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
+               sc->vms->mac[0], sc->vms->mac[1], sc->vms->mac[2],
+               sc->vms->mac[3], sc->vms->mac[4], sc->vms->mac[5]);
+        exit(0);
+    }
 
 	/* H/w initiated reset */
 	e82545_reset(sc, 0);

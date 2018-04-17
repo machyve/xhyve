@@ -46,6 +46,7 @@ XHYVE_SRC := \
 	src/mevent.c \
 	src/mptbl.c \
 	src/pci_ahci.c \
+	src/pci_e82545.c \
 	src/pci_emul.c \
 	src/pci_fbuf.c \
 	src/pci_hostbridge.c \

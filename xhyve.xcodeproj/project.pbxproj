@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		005C8E61208536B9009B0C6B /* pci_e82545.c in Sources */ = {isa = PBXBuildFile; fileRef = 005C8E60208536B9009B0C6B /* pci_e82545.c */; };
+		00D3D5A6207C662200DDCDF6 /* bootrom.c in Sources */ = {isa = PBXBuildFile; fileRef = 00D3D5A5207C662200DDCDF6 /* bootrom.c */; };
 		00D3D5AD207C828900DDCDF6 /* bhyvegc.c in Sources */ = {isa = PBXBuildFile; fileRef = 00D3D5AC207C828900DDCDF6 /* bhyvegc.c */; };
 		00D3D5AF207C829600DDCDF6 /* console.c in Sources */ = {isa = PBXBuildFile; fileRef = 00D3D5AE207C829600DDCDF6 /* console.c */; };
 		00D3D5B1207C82A200DDCDF6 /* pci_fbuf.c in Sources */ = {isa = PBXBuildFile; fileRef = 00D3D5B0207C82A200DDCDF6 /* pci_fbuf.c */; };
@@ -15,7 +17,6 @@
 		00D3D5B8207EAFF900DDCDF6 /* sockstream.c in Sources */ = {isa = PBXBuildFile; fileRef = 00D3D5B7207EAFF900DDCDF6 /* sockstream.c */; };
 		00D3D5BB2080044200DDCDF6 /* ps2kbd.c in Sources */ = {isa = PBXBuildFile; fileRef = 00D3D5B92080044100DDCDF6 /* ps2kbd.c */; };
 		00D3D5BC2080044200DDCDF6 /* ps2mouse.c in Sources */ = {isa = PBXBuildFile; fileRef = 00D3D5BA2080044200DDCDF6 /* ps2mouse.c */; };
-		00D3D5A6207C662200DDCDF6 /* bootrom.c in Sources */ = {isa = PBXBuildFile; fileRef = 00D3D5A5207C662200DDCDF6 /* bootrom.c */; };
 		3F3FF9E91BF7C63A004C89A1 /* Hypervisor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F3FF9E81BF7C63A004C89A1 /* Hypervisor.framework */; };
 		3F3FFA5D1BF7C6A7004C89A1 /* acpitbl.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA1F1BF7C6A7004C89A1 /* acpitbl.c */; };
 		3F3FFA5E1BF7C6A7004C89A1 /* atkbdc.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA201BF7C6A7004C89A1 /* atkbdc.c */; };
@@ -87,6 +88,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		005C8E60208536B9009B0C6B /* pci_e82545.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pci_e82545.c; sourceTree = "<group>"; };
+		005C8E6220853BD8009B0C6B /* e1000_regs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = e1000_regs.h; sourceTree = "<group>"; };
+		005C8E6320853BD8009B0C6B /* e1000_defines.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = e1000_defines.h; sourceTree = "<group>"; };
+		00D3D5A5207C662200DDCDF6 /* bootrom.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bootrom.c; sourceTree = "<group>"; };
+		00D3D5A7207C662E00DDCDF6 /* bootrom.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bootrom.h; sourceTree = "<group>"; };
 		00D3D5A8207C825800DDCDF6 /* bhyvegc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bhyvegc.h; sourceTree = "<group>"; };
 		00D3D5A9207C826300DDCDF6 /* console.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = console.h; sourceTree = "<group>"; };
 		00D3D5AA207C827000DDCDF6 /* rfb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rfb.h; sourceTree = "<group>"; };
@@ -103,8 +109,6 @@
 		00D3D5BD2080046200DDCDF6 /* ps2mouse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ps2mouse.h; sourceTree = "<group>"; };
 		00D3D5BE2080046200DDCDF6 /* ps2kbd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ps2kbd.h; sourceTree = "<group>"; };
 		00D3D5BF208004CB00DDCDF6 /* atkbdc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = atkbdc.h; sourceTree = "<group>"; };
-		00D3D5A5207C662200DDCDF6 /* bootrom.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bootrom.c; sourceTree = "<group>"; };
-		00D3D5A7207C662E00DDCDF6 /* bootrom.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bootrom.h; sourceTree = "<group>"; };
 		3F1934921BF7C0D40099CC46 /* xhyve */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = xhyve; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F3FF9E01BF7C5D5004C89A1 /* common.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = common.xcconfig; sourceTree = "<group>"; };
 		3F3FF9E11BF7C5D5004C89A1 /* common_asan.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = common_asan.xcconfig; sourceTree = "<group>"; };
@@ -331,6 +335,7 @@
 				3F3FFA2D1BF7C6A7004C89A1 /* mevent_test.c */,
 				3F3FFA2E1BF7C6A7004C89A1 /* mptbl.c */,
 				3F3FFA2F1BF7C6A7004C89A1 /* pci_ahci.c */,
+				005C8E60208536B9009B0C6B /* pci_e82545.c */,
 				3F3FFA301BF7C6A7004C89A1 /* pci_emul.c */,
 				00D3D5B0207C82A200DDCDF6 /* pci_fbuf.c */,
 				3F3FFA311BF7C6A7004C89A1 /* pci_hostbridge.c */,
@@ -483,6 +488,8 @@
 				3FB651711BF7CD4500ED886F /* atomic.h */,
 				3FB651721BF7CD4500ED886F /* bitset.h */,
 				3FB651731BF7CD4500ED886F /* cpuset.h */,
+				005C8E6320853BD8009B0C6B /* e1000_defines.h */,
+				005C8E6220853BD8009B0C6B /* e1000_regs.h */,
 				3FB651741BF7CD4500ED886F /* i8253reg.h */,
 				3FB651751BF7CD4500ED886F /* i8259.h */,
 				3FB651761BF7CD4500ED886F /* linker_set.h */,
@@ -654,6 +661,7 @@
 				3F3FFA771BF7C6A7004C89A1 /* rtc.c in Sources */,
 				3F3FFA8B1BF7C6A7004C89A1 /* vmm_ioport.c in Sources */,
 				3F3FFA671BF7C6A7004C89A1 /* mem.c in Sources */,
+				005C8E61208536B9009B0C6B /* pci_e82545.c in Sources */,
 				3F3FFA8F1BF7C6A7004C89A1 /* vmm_util.c in Sources */,
 				3F3FFA791BF7C6A7004C89A1 /* task_switch.c in Sources */,
 				3F3FFA6B1BF7C6A7004C89A1 /* pci_ahci.c in Sources */,

@@ -50,7 +50,6 @@
 
 #include <CommonCrypto/CommonCrypto.h>
 
-#pragma clang diagnostic ignored "-Wpointer-sign"
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
 #pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wunused-macros"
@@ -770,7 +769,7 @@ rfb_handle(struct rfb_softc *rc, int cfd)
 {
 	const char *vbuf = "RFB 003.008\n";
 	unsigned char buf[80];
-	unsigned char *message = NULL;
+	char *message = NULL;
 
 	unsigned char challenge[AUTH_LENGTH];
 	unsigned char keystr[PASSWD_LENGTH];
@@ -818,7 +817,7 @@ rfb_handle(struct rfb_softc *rc, int cfd)
 		 * eight characters, or padded with null bytes on the right.
 		 * The client then sends the resulting 16-bytes response.
 		 */
-		strncpy(keystr, rc->password, PASSWD_LENGTH);
+		strncpy((char *)keystr, rc->password, PASSWD_LENGTH);
 
 		/* VNC clients encrypts the challenge with all the bit fields
 		 * in each byte of the password mirrored.

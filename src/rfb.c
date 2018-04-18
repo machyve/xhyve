@@ -50,7 +50,6 @@
 
 #include <CommonCrypto/CommonCrypto.h>
 
-#pragma clang diagnostic ignored "-Wpointer-arith"
 #pragma clang diagnostic ignored "-Wpointer-sign"
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
 #pragma clang diagnostic ignored "-Wsign-conversion"
@@ -251,7 +250,7 @@ rfb_recv_set_pixfmt_msg(UNUSED struct rfb_softc *rc, int cfd)
 {
 	struct rfb_pixfmt_msg pixfmt_msg;
 
-	(void)stream_read(cfd, ((void *)&pixfmt_msg)+1, sizeof(pixfmt_msg)-1);
+	(void)stream_read(cfd, ((uint8_t *)&pixfmt_msg)+1, sizeof(pixfmt_msg)-1);
 }
 
 
@@ -263,7 +262,7 @@ rfb_recv_set_encodings_msg(struct rfb_softc *rc, int cfd)
 	uint32_t encoding;
 
 	assert((sizeof(enc_msg) - 1) == 3);
-	(void)stream_read(cfd, ((void *)&enc_msg)+1, sizeof(enc_msg)-1);
+	(void)stream_read(cfd, ((uint8_t *)&enc_msg)+1, sizeof(enc_msg)-1);
 
 	for (i = 0; i < htons(enc_msg.numencs); i++) {
 		(void)stream_read(cfd, &encoding, sizeof(encoding));
@@ -641,7 +640,7 @@ rfb_recv_update_msg(struct rfb_softc *rc, int cfd, int discardonly)
 	struct rfb_updt_msg updt_msg;
 	struct bhyvegc_image *gc_image;
 
-	(void)stream_read(cfd, ((void *)&updt_msg) + 1 , sizeof(updt_msg) - 1);
+	(void)stream_read(cfd, ((uint8_t *)&updt_msg) + 1 , sizeof(updt_msg) - 1);
 
 	console_refresh();
 	gc_image = console_get_image();
@@ -670,7 +669,7 @@ rfb_recv_key_msg(UNUSED struct rfb_softc *rc, int cfd)
 {
 	struct rfb_key_msg key_msg;
 
-	(void)stream_read(cfd, ((void *)&key_msg) + 1, sizeof(key_msg) - 1);
+	(void)stream_read(cfd, ((uint8_t *)&key_msg) + 1, sizeof(key_msg) - 1);
 
 	console_key_event(key_msg.down, htonl(key_msg.code));
 }
@@ -680,7 +679,7 @@ rfb_recv_ptr_msg(UNUSED struct rfb_softc *rc, int cfd)
 {
 	struct rfb_ptr_msg ptr_msg;
 
-	(void)stream_read(cfd, ((void *)&ptr_msg) + 1, sizeof(ptr_msg) - 1);
+	(void)stream_read(cfd, ((uint8_t *)&ptr_msg) + 1, sizeof(ptr_msg) - 1);
 
 	console_ptr_event(ptr_msg.button, htons(ptr_msg.x), htons(ptr_msg.y));
 }
@@ -692,7 +691,7 @@ rfb_recv_cuttext_msg(UNUSED struct rfb_softc *rc, int cfd)
 	unsigned char buf[32];
 	int len;
 
-	len = stream_read(cfd, ((void *)&ct_msg) + 1, sizeof(ct_msg) - 1);
+	len = stream_read(cfd, ((uint8_t *)&ct_msg) + 1, sizeof(ct_msg) - 1);
 	ct_msg.length = htonl(ct_msg.length);
 	while (ct_msg.length > 0) {
 		len = stream_read(cfd, buf, ct_msg.length > sizeof(buf) ?

@@ -36,7 +36,6 @@
 #include <strings.h>
 #include <pthread.h>
 
-#pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wunused-macros"
 
 #include <xhyve/atkbdc.h>
@@ -92,6 +91,9 @@ struct fifo {
 	int	size;		/* size of the fifo */
 };
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+
 struct ps2mouse_softc {
 	struct atkbdc_softc	*atkbdc_sc;
 	pthread_mutex_t		mtx;
@@ -107,6 +109,8 @@ struct ps2mouse_softc {
 	int		cur_x, cur_y;
 	int		delta_x, delta_y;
 };
+
+#pragma clang diagnostic pop
 
 static void
 fifo_init(struct ps2mouse_softc *sc)

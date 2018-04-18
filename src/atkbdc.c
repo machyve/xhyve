@@ -38,7 +38,6 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wunused-macros"
 
 #include <xhyve/support/misc.h>
@@ -103,6 +102,9 @@
 #define	FIFOSZ			15
 #define	CTRL_CMD_FLAG		0x8000
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+
 struct kbd_dev {
 	bool	irq_active;
 	int	irq;
@@ -133,6 +135,8 @@ struct atkbdc_softc {
 	struct kbd_dev kbd;
 	struct aux_dev aux;
 };
+
+#pragma clang diagnostic pop
 
 static void
 atkbdc_assert_kbd_intr(struct atkbdc_softc *sc)

@@ -36,8 +36,6 @@
 #include <strings.h>
 #include <pthread.h>
 
-#pragma clang diagnostic ignored "-Wpadded"
-
 #include <xhyve/atkbdc.h>
 #include <xhyve/console.h>
 #include <xhyve/ps2kbd.h>
@@ -65,6 +63,9 @@ struct fifo {
 	int	size;		/* size of the fifo */
 };
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+
 struct ps2kbd_softc {
 	struct atkbdc_softc	*atkbdc_sc;
 	pthread_mutex_t		mtx;
@@ -74,6 +75,8 @@ struct ps2kbd_softc {
 
 	uint8_t			curcmd;	/* current command for next byte */
 };
+
+#pragma clang diagnostic pop
 
 static void
 fifo_init(struct ps2kbd_softc *sc)

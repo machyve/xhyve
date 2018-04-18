@@ -35,7 +35,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#pragma clang diagnostic ignored "-Wconversion"
 #pragma clang diagnostic ignored "-Wgnu-case-range"
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma clang diagnostic ignored "-Wpadded"
@@ -227,10 +226,10 @@ vga_get_pixel(struct vga_softc *sc, int x, int y)
 	offset = (y * sc->gc_width / 8) + (x / 8);
 	bit = 7 - (x % 8);
 
-	data = (((sc->vga_ram[offset + 0 * 64*KB] >> bit) & 0x1) << 0) |
-		(((sc->vga_ram[offset + 1 * 64*KB] >> bit) & 0x1) << 1) |
-		(((sc->vga_ram[offset + 2 * 64*KB] >> bit) & 0x1) << 2) |
-		(((sc->vga_ram[offset + 3 * 64*KB] >> bit) & 0x1) << 3);
+	data = (uint8_t)(((sc->vga_ram[offset + 0 * 64*KB] >> bit) & 0x1) << 0) |
+		(uint8_t)(((sc->vga_ram[offset + 1 * 64*KB] >> bit) & 0x1) << 1) |
+		(uint8_t)(((sc->vga_ram[offset + 2 * 64*KB] >> bit) & 0x1) << 2) |
+		(uint8_t)(((sc->vga_ram[offset + 3 * 64*KB] >> bit) & 0x1) << 3);
 
 	data &= sc->vga_atc.atc_color_plane_enb;
 
@@ -457,8 +456,8 @@ vga_mem_wr_handler(uint64_t addr, uint8_t val, void *arg1)
 		/* write mode 0 */
 		mask = sc->vga_gc.gc_bit_mask;
 
-		val = (val >> sc->vga_gc.gc_rotate) |
-		    (val << (8 - sc->vga_gc.gc_rotate));
+		val = (uint8_t)(val >> sc->vga_gc.gc_rotate) |
+		    (uint8_t)(val << (8 - sc->vga_gc.gc_rotate));
 
 		switch (sc->vga_gc.gc_op) {
 		case 0x00:		/* replace */
@@ -575,8 +574,8 @@ vga_mem_wr_handler(uint64_t addr, uint8_t val, void *arg1)
 		/* write mode 3 */
 		mask = sc->vga_gc.gc_bit_mask & val;
 
-		val = (val >> sc->vga_gc.gc_rotate) |
-		    (val << (8 - sc->vga_gc.gc_rotate));
+		val = (uint8_t)(val >> sc->vga_gc.gc_rotate) |
+		    (uint8_t)(val << (8 - sc->vga_gc.gc_rotate));
 
 		switch (sc->vga_gc.gc_op) {
 		case 0x00:		/* replace */
@@ -664,27 +663,27 @@ vga_mem_handler(UNUSED int vcpu, int dir, uint64_t addr,
 	if (dir == MEM_F_WRITE) {
 		switch (size) {
 		case 1:
-			vga_mem_wr_handler(addr, *val, arg1);
+			vga_mem_wr_handler(addr, (uint8_t)*val, arg1);
 			break;
 		case 2:
-			vga_mem_wr_handler(addr, *val, arg1);
-			vga_mem_wr_handler(addr + 1, *val >> 8, arg1);
+			vga_mem_wr_handler(addr, (uint8_t)*val, arg1);
+			vga_mem_wr_handler(addr + 1, (uint8_t)(*val >> 8), arg1);
 			break;
 		case 4:
-			vga_mem_wr_handler(addr, *val, arg1);
-			vga_mem_wr_handler(addr + 1, *val >> 8, arg1);
-			vga_mem_wr_handler(addr + 2, *val >> 16, arg1);
-			vga_mem_wr_handler(addr + 3, *val >> 24, arg1);
+			vga_mem_wr_handler(addr, (uint8_t)*val, arg1);
+			vga_mem_wr_handler(addr + 1, (uint8_t)(*val >> 8), arg1);
+			vga_mem_wr_handler(addr + 2, (uint8_t)(*val >> 16), arg1);
+			vga_mem_wr_handler(addr + 3, (uint8_t)(*val >> 24), arg1);
 			break;
 		case 8:
-			vga_mem_wr_handler(addr, *val, arg1);
-			vga_mem_wr_handler(addr + 1, *val >> 8, arg1);
-			vga_mem_wr_handler(addr + 2, *val >> 16, arg1);
-			vga_mem_wr_handler(addr + 3, *val >> 24, arg1);
-			vga_mem_wr_handler(addr + 4, *val >> 32, arg1);
-			vga_mem_wr_handler(addr + 5, *val >> 40, arg1);
-			vga_mem_wr_handler(addr + 6, *val >> 48, arg1);
-			vga_mem_wr_handler(addr + 7, *val >> 56, arg1);
+			vga_mem_wr_handler(addr, (uint8_t)*val, arg1);
+			vga_mem_wr_handler(addr + 1, (uint8_t)(*val >> 8), arg1);
+			vga_mem_wr_handler(addr + 2, (uint8_t)(*val >> 16), arg1);
+			vga_mem_wr_handler(addr + 3, (uint8_t)(*val >> 24), arg1);
+			vga_mem_wr_handler(addr + 4, (uint8_t)(*val >> 32), arg1);
+			vga_mem_wr_handler(addr + 5, (uint8_t)(*val >> 40), arg1);
+			vga_mem_wr_handler(addr + 6, (uint8_t)(*val >> 48), arg1);
+			vga_mem_wr_handler(addr + 7, (uint8_t)(*val >> 56), arg1);
 			break;
 		}
 	} else {
@@ -727,7 +726,7 @@ vga_port_in_handler(UNUSED int in, int port, UNUSED int bytes,
 	switch (port) {
 	case CRTC_IDX_MONO_PORT:
 	case CRTC_IDX_COLOR_PORT:
-		*val = sc->vga_crtc.crtc_index;
+		*val = (uint8_t)sc->vga_crtc.crtc_index;
 		break;
 	case CRTC_DATA_MONO_PORT:
 	case CRTC_DATA_COLOR_PORT:
@@ -814,7 +813,7 @@ vga_port_in_handler(UNUSED int in, int port, UNUSED int bytes,
 		}
 		break;
 	case ATC_IDX_PORT:
-		*val = sc->vga_atc.atc_index;
+		*val = (uint8_t)sc->vga_atc.atc_index;
 		break;
 	case ATC_DATA_PORT:
 		switch (sc->vga_atc.atc_index) {
@@ -843,7 +842,7 @@ vga_port_in_handler(UNUSED int in, int port, UNUSED int bytes,
 		}
 		break;
 	case SEQ_IDX_PORT:
-		*val = sc->vga_seq.seq_index;
+		*val = (uint8_t)sc->vga_seq.seq_index;
 		break;
 	case SEQ_DATA_PORT:
 		switch (sc->vga_seq.seq_index) {
@@ -878,7 +877,7 @@ vga_port_in_handler(UNUSED int in, int port, UNUSED int bytes,
 		}
 		break;
 	case GC_IDX_PORT:
-		*val = sc->vga_gc.gc_index;
+		*val = (uint8_t)sc->vga_gc.gc_index;
 		break;
 	case GC_DATA_PORT:
 		switch (sc->vga_gc.gc_index) {
@@ -1074,9 +1073,9 @@ vga_port_out_handler(UNUSED int in, int port, UNUSED int bytes,
 			case ATC_COLOR_SELECT:
 				sc->vga_atc.atc_color_select = val;
 				sc->vga_atc.atc_color_select_45 =
-					(val & ATC_CS_C45) << 4;
+					(uint8_t)((val & ATC_CS_C45) << 4);
 				sc->vga_atc.atc_color_select_67 =
-					((val & ATC_CS_C67) >> 2) << 6;
+					(uint8_t)(((val & ATC_CS_C67) >> 2) << 6);
 				break;
 			default:
 				//printf("XXX VGA ATC: outb 0x%04x, 0x%02x at index %d\n", port, val, sc->vga_atc.atc_index);

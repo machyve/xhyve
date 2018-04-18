@@ -38,7 +38,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#pragma clang diagnostic ignored "-Wconversion"
 #pragma clang diagnostic ignored "-Wformat"
 #pragma clang diagnostic ignored "-Wformat-pedantic"
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
@@ -154,7 +153,7 @@ pci_fbuf_write(UNUSED int vcpu, struct pci_devinst *pi,
 
 	switch (size) {
 	case 1:
-		*p = value;
+		*p = (uint8_t)value;
 		break;
 	case 2:
         write_uint16_unaligned(p, (uint16_t)value);
@@ -281,7 +280,7 @@ pci_fbuf_parse_opts(struct pci_fbuf_softc *sc, char *opts)
 				goto done;
 			}
 	        } else if (!strcmp(xopts, "w")) {
-		        sc->memregs.width = atoi(config);
+		        sc->memregs.width = (uint16_t)atoi(config);
 			if (sc->memregs.width > COLS_MAX) {
 				pci_fbuf_usage(xopts);
 				ret = -1;
@@ -289,7 +288,7 @@ pci_fbuf_parse_opts(struct pci_fbuf_softc *sc, char *opts)
 			} else if (sc->memregs.width == 0)
 				sc->memregs.width = 1920;
 		} else if (!strcmp(xopts, "h")) {
-			sc->memregs.height = atoi(config);
+			sc->memregs.height = (uint16_t)atoi(config);
 			if (sc->memregs.height > ROWS_MAX) {
 				pci_fbuf_usage(xopts);
 				ret = -1;

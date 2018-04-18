@@ -50,7 +50,6 @@
 
 #include <CommonCrypto/CommonCrypto.h>
 
-#pragma clang diagnostic ignored "-Wconversion"
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wpointer-arith"
@@ -825,11 +824,11 @@ rfb_handle(struct rfb_softc *rc, int cfd)
 		 */
 		for (i = 0; i < PASSWD_LENGTH; i++) {
 			keystr[i] = (keystr[i] & 0xF0) >> 4
-				  | (keystr[i] & 0x0F) << 4;
+				  | (unsigned char)((keystr[i] & 0x0F) << 4);
 			keystr[i] = (keystr[i] & 0xCC) >> 2
-				  | (keystr[i] & 0x33) << 2;
+				  | (unsigned char)((keystr[i] & 0x33) << 2);
 			keystr[i] = (keystr[i] & 0xAA) >> 1
-				  | (keystr[i] & 0x55) << 1;
+				  | (unsigned char)((keystr[i] & 0x55) << 1);
 		}
 
 		/* Initialize a 16-byte random challenge */

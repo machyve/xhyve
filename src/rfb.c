@@ -50,8 +50,6 @@
 
 #include <CommonCrypto/CommonCrypto.h>
 
-#pragma clang diagnostic ignored "-Wunused-macros"
-
 #include <xhyve/support/misc.h>
 
 #include <xhyve/support/specialreg.h>
@@ -70,9 +68,6 @@ static int rfb_debug = 0;
 
 #define SECURITY_TYPE_NONE 1
 #define SECURITY_TYPE_VNC_AUTH 2
-
-#define AUTH_FAILED_UNAUTH 1
-#define AUTH_FAILED_ERROR 2
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpadded"

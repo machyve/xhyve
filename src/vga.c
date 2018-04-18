@@ -35,8 +35,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#pragma clang diagnostic ignored "-Wunused-macros"
-
 #include <xhyve/vmm/vmm.h>
 
 #include <xhyve/bhyvegc.h>
@@ -46,7 +44,6 @@
 #include <xhyve/vga.h>
 
 #define	KB	(1024UL)
-#define	MB	(1024 * 1024UL)
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpadded"

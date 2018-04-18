@@ -38,8 +38,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#pragma clang diagnostic ignored "-Wunused-macros"
-
 #include <xhyve/support/misc.h>
 
 #include <xhyve/vmm/vmm.h>
@@ -67,7 +65,7 @@ static int fbuf_debug = 1;
 
 
 #define	KB	(1024UL)
-#define	MB	(1024 * 1024UL)
+#define	MB	(1024UL * KB)
 
 #define	DMEMSZ	128
 
@@ -79,8 +77,13 @@ static int fbuf_debug = 1;
 #define COLS_DEFAULT	1024
 #define ROWS_DEFAULT	768
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-macros"
+
 #define COLS_MIN	640
 #define ROWS_MIN	480
+
+#pragma clang diagnostic pop
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpadded"

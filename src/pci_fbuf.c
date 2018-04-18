@@ -38,7 +38,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#pragma clang diagnostic ignored "-Wformat"
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma clang diagnostic ignored "-Wpacked"
 #pragma clang diagnostic ignored "-Wpadded"
@@ -139,11 +138,11 @@ pci_fbuf_write(UNUSED int vcpu, struct pci_devinst *pi,
 	sc = pi->pi_arg;
 
 	DPRINTF(DEBUG_VERBOSE,
-	    ("fbuf wr: offset 0x%lx, size: %d, value: 0x%lx\n",
+	    ("fbuf wr: offset 0x%llx, size: %d, value: 0x%llx\n",
 	    offset, size, value));
 
 	if (offset + size > DMEMSZ) {
-		printf("fbuf: write too large, offset %ld size %d\n",
+		printf("fbuf: write too large, offset %lld size %d\n",
 		       offset, size);
 		return;
 	}
@@ -195,7 +194,7 @@ pci_fbuf_read(UNUSED int vcpu, struct pci_devinst *pi,
 
 
 	if (offset + size > DMEMSZ) {
-		printf("fbuf: read too large, offset %ld size %d\n",
+		printf("fbuf: read too large, offset %lld size %d\n",
 		       offset, size);
 		return (0);
 	}
@@ -221,7 +220,7 @@ pci_fbuf_read(UNUSED int vcpu, struct pci_devinst *pi,
 	}
 
 	DPRINTF(DEBUG_VERBOSE,
-	    ("fbuf rd: offset 0x%lx, size: %d, value: 0x%lx\n",
+	    ("fbuf rd: offset 0x%llx, size: %d, value: 0x%llx\n",
 	     offset, size, value));
 
 	return (value);

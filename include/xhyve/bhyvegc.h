@@ -31,12 +31,17 @@
 
 struct bhyvegc;
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+
 struct bhyvegc_image {
 	int		vgamode;
 	int		width;
 	int		height;
 	uint32_t	*data;
 };
+
+#pragma clang diagnostic pop
 
 struct bhyvegc *bhyvegc_init(int width, int height, void *fbaddr);
 void bhyvegc_set_fbaddr(struct bhyvegc *gc, void *fbaddr);

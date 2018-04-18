@@ -35,7 +35,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
 #pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wunused-macros"
@@ -50,6 +49,9 @@
 
 #define	KB	(1024UL)
 #define	MB	(1024 * 1024UL)
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
 
 struct vga_softc {
 	struct mem_range	mr;
@@ -173,6 +175,8 @@ struct vga_softc {
 		uint32_t	dac_palette_rgb[256];
 	} vga_dac;
 };
+
+#pragma clang diagnostic pop
 
 static bool
 vga_in_reset(struct vga_softc *sc)

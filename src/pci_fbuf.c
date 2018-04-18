@@ -38,7 +38,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
 #pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wunused-macros"
@@ -85,6 +84,9 @@ static int fbuf_debug = 1;
 #define COLS_MIN	640
 #define ROWS_MIN	480
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+
 struct pci_fbuf_softc {
 	struct pci_devinst *fsc_pi;
 	struct {
@@ -111,6 +113,8 @@ struct pci_fbuf_softc {
 	void      *vgasc;
 	struct bhyvegc_image *gc_image;
 };
+
+#pragma clang diagnostic pop
 
 static struct pci_fbuf_softc *fbuf_sc;
 

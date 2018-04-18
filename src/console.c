@@ -30,10 +30,11 @@
 
 #include <sys/types.h>
 
-#pragma clang diagnostic ignored "-Wpadded"
-
 #include <xhyve/bhyvegc.h>
 #include <xhyve/console.h>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
 
 static struct {
 	struct bhyvegc		*gc;
@@ -49,6 +50,8 @@ static struct {
 	void			*ptr_arg;
 	int			ptr_priority;
 } console;
+
+#pragma clang diagnostic pop
 
 void
 console_init(int w, int h, void *fbaddr)

@@ -6,15 +6,19 @@
 #include <stdio.h>
 #include <string.h>
 
-#pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wsign-conversion"
 
 #include <xhyve/bhyvegc.h>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
 
 struct bhyvegc {
 	struct bhyvegc_image	*gc_image;
 	int raw;
 };
+
+#pragma clang diagnostic pop
 
 struct bhyvegc *
 bhyvegc_init(int width, int height, void *fbaddr)

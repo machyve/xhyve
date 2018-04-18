@@ -50,7 +50,6 @@
 
 #include <CommonCrypto/CommonCrypto.h>
 
-#pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wpointer-arith"
 #pragma clang diagnostic ignored "-Wpointer-sign"
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
@@ -78,6 +77,9 @@ static int rfb_debug = 0;
 
 #define AUTH_FAILED_UNAUTH 1
 #define AUTH_FAILED_ERROR 2
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
 
 struct rfb_softc {
 	int		sfd;
@@ -107,6 +109,8 @@ struct rfb_softc {
 	uint32_t	*crc_tmp;	/* buffer to store single crc row */
 	int		crc_width, crc_height;
 };
+
+#pragma clang diagnostic pop
 
 struct rfb_pixfmt {
 	uint8_t		bpp;

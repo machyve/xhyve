@@ -36,8 +36,6 @@
 #include <strings.h>
 #include <pthread.h>
 
-#pragma clang diagnostic ignored "-Wunused-macros"
-
 #include <xhyve/atkbdc.h>
 #include <xhyve/console.h>
 #include <xhyve/ps2mouse.h>
@@ -76,7 +74,14 @@
 /* mouse status bits */
 #define	PS2M_STS_REMOTE_MODE	0x40
 #define	PS2M_STS_ENABLE_DEV	0x20
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-macros"
+
 #define	PS2M_STS_SCALING_21	0x10
+
+#pragma clang diagnostic pop
+
 #define	PS2M_STS_MID_BUTTON	0x04
 #define	PS2M_STS_RIGHT_BUTTON	0x02
 #define	PS2M_STS_LEFT_BUTTON	0x01

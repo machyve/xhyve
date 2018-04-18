@@ -38,8 +38,6 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#pragma clang diagnostic ignored "-Wunused-macros"
-
 #include <xhyve/support/misc.h>
 
 #include <xhyve/acpi.h>
@@ -85,8 +83,14 @@
 #define	KBD_DISABLE_AUX_PORT	0x20
 #define	KBD_ENABLE_AUX_INT	0x02
 #define	KBD_ENABLE_KBD_INT	0x01
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-macros"
+
 #define	KBD_KBD_CONTROL_BITS	(KBD_DISABLE_KBD_PORT | KBD_ENABLE_KBD_INT)
 #define	KBD_AUX_CONTROL_BITS	(KBD_DISABLE_AUX_PORT | KBD_ENABLE_AUX_INT)
+
+#pragma clang diagnostic pop
 
 /* controller status bits */
 #define	KBDS_KBD_BUFFER_FULL	0x01

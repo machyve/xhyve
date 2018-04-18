@@ -50,7 +50,6 @@
 
 #include <CommonCrypto/CommonCrypto.h>
 
-#pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wpointer-arith"
 #pragma clang diagnostic ignored "-Wpointer-sign"
@@ -763,7 +762,7 @@ be32enc(void *pp, uint32_t x)
     p[0] = (x >> 24) & 0xff;
 }
 
-void
+static void
 rfb_handle(struct rfb_softc *rc, int cfd)
 {
 	const char *vbuf = "RFB 003.008\n";

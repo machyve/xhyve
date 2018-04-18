@@ -38,7 +38,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma clang diagnostic ignored "-Wpacked"
 #pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
@@ -180,7 +179,7 @@ pci_fbuf_write(UNUSED int vcpu, struct pci_devinst *pi,
 	}
 }
 
-uint64_t
+static uint64_t
 pci_fbuf_read(UNUSED int vcpu, struct pci_devinst *pi,
 	      int baridx, uint64_t offset, int size)
 {
@@ -306,10 +305,7 @@ done:
 	return (ret);
 }
 
-
-extern void vga_render(struct bhyvegc *gc, void *arg);
-
-void
+static void
 pci_fbuf_render(struct bhyvegc *gc, void *arg)
 {
 	struct pci_fbuf_softc *sc;

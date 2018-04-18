@@ -39,7 +39,6 @@
 #include <unistd.h>
 
 #pragma clang diagnostic ignored "-Wformat"
-#pragma clang diagnostic ignored "-Wformat-pedantic"
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma clang diagnostic ignored "-Wpacked"
 #pragma clang diagnostic ignored "-Wpadded"
@@ -387,7 +386,7 @@ pci_fbuf_init(struct pci_devinst *pi, char *opts)
 	}
 
 	DPRINTF(DEBUG_INFO, ("fbuf frame buffer base: %p [sz %lu]\r\n",
-	        sc->fb_base, FB_SIZE));
+	        (void *)sc->fb_base, FB_SIZE));
 
 	/*
 	 * Map the framebuffer into the guest address space.

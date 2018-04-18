@@ -35,7 +35,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#pragma clang diagnostic ignored "-Wgnu-case-range"
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
@@ -817,9 +816,6 @@ vga_port_in_handler(UNUSED int in, int port, UNUSED int bytes,
 		break;
 	case ATC_DATA_PORT:
 		switch (sc->vga_atc.atc_index) {
-		case ATC_PALETTE0 ... ATC_PALETTE15:
-			*val = sc->vga_atc.atc_palette[sc->vga_atc.atc_index];
-			break;
 		case ATC_MODE_CONTROL:
 			*val = sc->vga_atc.atc_mode;
 			break;
@@ -836,8 +832,12 @@ vga_port_in_handler(UNUSED int in, int port, UNUSED int bytes,
 			*val = sc->vga_atc.atc_color_select;
 			break;
 		default:
-			//printf("XXX VGA ATC inb 0x%04x at index %d\n", port , sc->vga_atc.atc_index);
-			assert(0);
+            if (sc->vga_atc.atc_index >= ATC_PALETTE0 && sc->vga_atc.atc_index <= ATC_PALETTE15) {
+                *val = sc->vga_atc.atc_palette[sc->vga_atc.atc_index];
+            } else {
+                //printf("XXX VGA ATC inb 0x%04x at index %d\n", port , sc->vga_atc.atc_index);
+                assert(0);
+            }
 			break;
 		}
 		break;
@@ -1055,9 +1055,6 @@ vga_port_out_handler(UNUSED int in, int port, UNUSED int bytes,
 			sc->vga_atc.atc_index = val & ATC_IDX_MASK;
 		} else {
 			switch (sc->vga_atc.atc_index) {
-			case ATC_PALETTE0 ... ATC_PALETTE15:
-				sc->vga_atc.atc_palette[sc->vga_atc.atc_index] = val & 0x3f;
-				break;
 			case ATC_MODE_CONTROL:
 				sc->vga_atc.atc_mode = val;
 				break;
@@ -1078,8 +1075,12 @@ vga_port_out_handler(UNUSED int in, int port, UNUSED int bytes,
 					(uint8_t)(((val & ATC_CS_C67) >> 2) << 6);
 				break;
 			default:
-				//printf("XXX VGA ATC: outb 0x%04x, 0x%02x at index %d\n", port, val, sc->vga_atc.atc_index);
-				assert(0);
+                if (sc->vga_atc.atc_index >= ATC_PALETTE0 && sc->vga_atc.atc_index <= ATC_PALETTE15) {
+                    sc->vga_atc.atc_palette[sc->vga_atc.atc_index] = val & 0x3f;
+                } else {
+                    //printf("XXX VGA ATC: outb 0x%04x, 0x%02x at index %d\n", port, val, sc->vga_atc.atc_index);
+                    assert(0);
+                }
 				break;
 			}
 		}

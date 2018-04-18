@@ -36,7 +36,6 @@
 #include <strings.h>
 #include <pthread.h>
 
-#pragma clang diagnostic ignored "-Wgnu-case-range"
 #pragma clang diagnostic ignored "-Wpadded"
 
 #include <xhyve/atkbdc.h>
@@ -232,214 +231,215 @@ ps2kbd_keysym_queue(struct ps2kbd_softc *sc,
 		0x22, 0x35, 0x1a, 0x54, 0x5d, 0x5b, 0x0e, 0x00,
 	};
 
-	switch (keysym) {
-	case 0x0 ... 0x7f:
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, translation[keysym]);
-		break;
-	case 0xff08:	/* Back space */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x66);
-		break;
-	case 0xff09:	/* Tab */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x0d);
-		break;
-	case 0xff0d:	/* Return  */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x5a);
-		break;
-	case 0xff1b:	/* Escape */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x76);
-		break;
-	case 0xff50:	/* Home */
-		fifo_put(sc, 0xe0);
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x6c);
-		break;
-	case 0xff51:	/* Left arrow */
-		fifo_put(sc, 0xe0);
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x6b);
-		break;
-	case 0xff52:	/* Up arrow */
-		fifo_put(sc, 0xe0);
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x75);
-		break;
-	case 0xff53:	/* Right arrow */
-		fifo_put(sc, 0xe0);
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x74);
-		break;
-	case 0xff54:	/* Down arrow */
-		fifo_put(sc, 0xe0);
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x72);
-		break;
-	case 0xff55:	/* PgUp */
-		fifo_put(sc, 0xe0);
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x7d);
-		break;
-	case 0xff56:	/* PgDwn */
-		fifo_put(sc, 0xe0);
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x7a);
-		break;
-	case 0xff57:	/* End */
-		fifo_put(sc, 0xe0);
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x69);
-		break;
-	case 0xff63:	/* Ins */
-		fifo_put(sc, 0xe0);
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x70);
-		break;
-	case 0xff8d:	/* Keypad Enter */
-		fifo_put(sc, 0xe0);
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x5a);
-		break;
-	case 0xffe1:	/* Left shift */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x12);
-		break;
-	case 0xffe2:	/* Right shift */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x59);
-		break;
-	case 0xffe3:	/* Left control */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x14);
-		break;
-	case 0xffe4:	/* Right control */
-		fifo_put(sc, 0xe0);
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x14);
-		break;
-	case 0xffe7:	/* Left meta */
-		/* XXX */
-		break;
-	case 0xffe8:	/* Right meta */
-		/* XXX */
-		break;
-	case 0xffe9:	/* Left alt */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x11);
-		break;
-	case 0xfe03:	/* AltGr */
-	case 0xffea:	/* Right alt */
-		fifo_put(sc, 0xe0);
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x11);
-		break;
-	case 0xffeb:	/* Left Windows */
-		fifo_put(sc, 0xe0);
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x1f);
-		break;
-	case 0xffec:	/* Right Windows */
-		fifo_put(sc, 0xe0);
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x27);
-		break;
-	case 0xffbe:    /* F1 */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x05);
-		break;
-	case 0xffbf:    /* F2 */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x06);
-		break;
-	case 0xffc0:    /* F3 */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x04);
-		break;
-	case 0xffc1:    /* F4 */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x0C);
-		break;
-	case 0xffc2:    /* F5 */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x03);
-		break;
-	case 0xffc3:    /* F6 */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x0B);
-		break;
-	case 0xffc4:    /* F7 */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x83);
-		break;
-	case 0xffc5:    /* F8 */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x0A);
-		break;
-	case 0xffc6:    /* F9 */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x01);
-		break;
-	case 0xffc7:    /* F10 */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x09);
-		break;
-	case 0xffc8:    /* F11 */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x78);
-		break;
-	case 0xffc9:    /* F12 */
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x07);
-		break;
-	case 0xffff:    /* Del */
-		fifo_put(sc, 0xe0);
-		if (!down)
-			fifo_put(sc, 0xf0);
-		fifo_put(sc, 0x71);
-		break;
-	default:
-		fprintf(stderr, "Unhandled ps2 keyboard keysym 0x%x\n",
-		     keysym);
-		break;
-	}
+    if (keysym <= 0x7f) {
+        if (!down)
+            fifo_put(sc, 0xf0);
+        fifo_put(sc, translation[keysym]);
+    } else {
+        switch (keysym) {
+        case 0xff08:	/* Back space */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x66);
+            break;
+        case 0xff09:	/* Tab */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x0d);
+            break;
+        case 0xff0d:	/* Return  */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x5a);
+            break;
+        case 0xff1b:	/* Escape */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x76);
+            break;
+        case 0xff50:	/* Home */
+            fifo_put(sc, 0xe0);
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x6c);
+            break;
+        case 0xff51:	/* Left arrow */
+            fifo_put(sc, 0xe0);
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x6b);
+            break;
+        case 0xff52:	/* Up arrow */
+            fifo_put(sc, 0xe0);
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x75);
+            break;
+        case 0xff53:	/* Right arrow */
+            fifo_put(sc, 0xe0);
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x74);
+            break;
+        case 0xff54:	/* Down arrow */
+            fifo_put(sc, 0xe0);
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x72);
+            break;
+        case 0xff55:	/* PgUp */
+            fifo_put(sc, 0xe0);
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x7d);
+            break;
+        case 0xff56:	/* PgDwn */
+            fifo_put(sc, 0xe0);
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x7a);
+            break;
+        case 0xff57:	/* End */
+            fifo_put(sc, 0xe0);
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x69);
+            break;
+        case 0xff63:	/* Ins */
+            fifo_put(sc, 0xe0);
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x70);
+            break;
+        case 0xff8d:	/* Keypad Enter */
+            fifo_put(sc, 0xe0);
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x5a);
+            break;
+        case 0xffe1:	/* Left shift */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x12);
+            break;
+        case 0xffe2:	/* Right shift */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x59);
+            break;
+        case 0xffe3:	/* Left control */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x14);
+            break;
+        case 0xffe4:	/* Right control */
+            fifo_put(sc, 0xe0);
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x14);
+            break;
+        case 0xffe7:	/* Left meta */
+            /* XXX */
+            break;
+        case 0xffe8:	/* Right meta */
+            /* XXX */
+            break;
+        case 0xffe9:	/* Left alt */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x11);
+            break;
+        case 0xfe03:	/* AltGr */
+        case 0xffea:	/* Right alt */
+            fifo_put(sc, 0xe0);
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x11);
+            break;
+        case 0xffeb:	/* Left Windows */
+            fifo_put(sc, 0xe0);
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x1f);
+            break;
+        case 0xffec:	/* Right Windows */
+            fifo_put(sc, 0xe0);
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x27);
+            break;
+        case 0xffbe:    /* F1 */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x05);
+            break;
+        case 0xffbf:    /* F2 */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x06);
+            break;
+        case 0xffc0:    /* F3 */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x04);
+            break;
+        case 0xffc1:    /* F4 */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x0C);
+            break;
+        case 0xffc2:    /* F5 */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x03);
+            break;
+        case 0xffc3:    /* F6 */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x0B);
+            break;
+        case 0xffc4:    /* F7 */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x83);
+            break;
+        case 0xffc5:    /* F8 */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x0A);
+            break;
+        case 0xffc6:    /* F9 */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x01);
+            break;
+        case 0xffc7:    /* F10 */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x09);
+            break;
+        case 0xffc8:    /* F11 */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x78);
+            break;
+        case 0xffc9:    /* F12 */
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x07);
+            break;
+        case 0xffff:    /* Del */
+            fifo_put(sc, 0xe0);
+            if (!down)
+                fifo_put(sc, 0xf0);
+            fifo_put(sc, 0x71);
+            break;
+        default:
+            fprintf(stderr, "Unhandled ps2 keyboard keysym 0x%x\n",
+                 keysym);
+            break;
+        }
+    }
 }
 
 static void

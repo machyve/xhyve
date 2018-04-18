@@ -38,7 +38,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#pragma clang diagnostic ignored "-Wpacked"
 #pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
 #pragma clang diagnostic ignored "-Wsign-conversion"
@@ -95,7 +94,7 @@ struct pci_fbuf_softc {
 		uint16_t depth;
 		uint16_t refreshrate;
 		uint8_t  reserved[116];
-	} __packed memregs;
+	} memregs;
 
 	/* rfb server */
 	char      *rfb_host;

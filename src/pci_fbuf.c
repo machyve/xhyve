@@ -38,7 +38,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#pragma clang diagnostic ignored "-Wcast-align"
 #pragma clang diagnostic ignored "-Wconversion"
 #pragma clang diagnostic ignored "-Wformat"
 #pragma clang diagnostic ignored "-Wformat-pedantic"
@@ -48,6 +47,8 @@
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
 #pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wunused-macros"
+
+#include <xhyve/support/misc.h>
 
 #include <xhyve/vmm/vmm.h>
 #include <xhyve/vmm/vmm_api.h>
@@ -156,13 +157,13 @@ pci_fbuf_write(UNUSED int vcpu, struct pci_devinst *pi,
 		*p = value;
 		break;
 	case 2:
-		*(uint16_t *)p = value;
+        write_uint16_unaligned(p, (uint16_t)value);
 		break;
 	case 4:
-		*(uint32_t *)p = value;
+        write_uint32_unaligned(p, (uint32_t)value);
 		break;
 	case 8:
-		*(uint64_t *)p = value;
+        write_uint64_unaligned(p, value);
 		break;
 	default:
 		printf("fbuf: write unknown size %d\n", size);
@@ -208,13 +209,13 @@ pci_fbuf_read(UNUSED int vcpu, struct pci_devinst *pi,
 		value = *p;
 		break;
 	case 2:
-		value = *(uint16_t *)p;
+        value = read_uint16_unaligned(p);
 		break;
 	case 4:
-		value = *(uint32_t *)p;
+        value = read_uint32_unaligned(p);
 		break;
 	case 8:
-		value = *(uint64_t *)p;
+        value = read_uint64_unaligned(p);
 		break;
 	default:
 		printf("fbuf: read unknown size %d\n", size);

@@ -35,7 +35,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#pragma clang diagnostic ignored "-Wshorten-64-to-32"
 #pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wunused-macros"
 
@@ -349,7 +348,7 @@ vga_mem_rd_handler(uint64_t addr, void *arg1)
 {
 	struct vga_softc *sc = arg1;
 	uint8_t map_sel;
-	int offset;
+	long offset;
 
 	offset = addr;
 	switch (sc->vga_gc.gc_misc_mm) {
@@ -413,7 +412,7 @@ vga_mem_wr_handler(uint64_t addr, uint8_t val, void *arg1)
 	uint8_t set_reset;
 	uint8_t enb_set_reset;
 	uint8_t	mask;
-	int offset;
+	long offset;
 
 	offset = addr;
 	switch (sc->vga_gc.gc_misc_mm) {

@@ -50,7 +50,6 @@
 
 #include <CommonCrypto/CommonCrypto.h>
 
-#pragma clang diagnostic ignored "-Wshorten-64-to-32"
 #pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wunused-macros"
 
@@ -301,7 +300,7 @@ fast_crc32(void *buf, size_t len, uint32_t crcval)
 	return (crcval);
 }
 
-static int
+static long
 rfb_send_rect(struct rfb_softc *rc, int cfd, struct bhyvegc_image *gc,
               int x, int y, int w, int h)
 {
@@ -343,8 +342,8 @@ rfb_send_rect(struct rfb_softc *rc, int cfd, struct bhyvegc_image *gc,
 			rc->zstream.next_in = (Bytef *)p;
 			rc->zstream.avail_in = w;
 			rc->zstream.next_out = (Bytef *)zbufp;
-			rc->zstream.avail_out = RFB_ZLIB_BUFSZ + 16 -
-			                        rc->zstream.total_out;
+			rc->zstream.avail_out = (uInt)(RFB_ZLIB_BUFSZ + 16 -
+			                        rc->zstream.total_out);
 			rc->zstream.data_type = Z_BINARY;
 
 			/* Compress with zlib */
@@ -393,7 +392,7 @@ doraw:
 	return (total);
 }
 
-static int
+static long
 rfb_send_all(struct rfb_softc *rc, int cfd, struct bhyvegc_image *gc)
 {
 	struct rfb_srvr_updt_msg supdt_msg;
@@ -470,7 +469,7 @@ doraw:
 #define	PIXCELL_SHIFT	5
 #define PIXCELL_MASK	0x1F
 
-static int
+static long
 rfb_send_screen(struct rfb_softc *rc, int cfd, int all)
 {
 	struct bhyvegc_image *gc_image;
@@ -481,7 +480,7 @@ rfb_send_screen(struct rfb_softc *rc, int cfd, int all)
 	int w, h;
 	uint32_t *p;
 	int rem_x, rem_y;   /* remainder for resolutions not x32 pixels ratio */
-	int retval;
+	long retval;
 	uint32_t *crc_p, *orig_crc;
 	int changes;
 
@@ -688,7 +687,7 @@ rfb_recv_cuttext_msg(UNUSED struct rfb_softc *rc, int cfd)
 {
 	struct rfb_cuttext_msg ct_msg;
 	unsigned char buf[32];
-	int len;
+	long len;
 
 	len = stream_read(cfd, ((uint8_t *)&ct_msg) + 1, sizeof(ct_msg) - 1);
 	ct_msg.length = htonl(ct_msg.length);
@@ -747,7 +746,7 @@ rfb_wr_thr(void *arg)
 			}
 		} else {
 			/* sleep */
-			usleep(40000 - tdiff);
+			usleep((useconds_t)(40000 - tdiff));
 		}
 	}
 
@@ -781,7 +780,7 @@ rfb_handle(struct rfb_softc *rc, int cfd)
 
 	pthread_t tid = NULL;
 	uint32_t sres = 0;
-	int len;
+	long len;
 	int perror = 1;
 
 	rc->cfd = cfd;
@@ -864,7 +863,7 @@ rfb_handle(struct rfb_softc *rc, int cfd)
 	stream_write(cfd, &sres, 4);
 
 	if (sres) {
-		be32enc(buf, strlen(message));
+		be32enc(buf, (uint32_t)strlen(message));
 		stream_write(cfd, buf, 4);
 		stream_write(cfd, message, strlen(message));
 		goto done;

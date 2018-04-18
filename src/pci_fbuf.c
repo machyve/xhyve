@@ -38,7 +38,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#pragma clang diagnostic ignored "-Wshorten-64-to-32"
 #pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wunused-macros"
 
@@ -106,7 +105,7 @@ struct pci_fbuf_softc {
 	int       vga_enabled;
 	int	  vga_full;
 
-	uint32_t  fbaddr;
+	uint64_t  fbaddr;
 	char      *fb_base;
 	uint16_t  gc_width;
 	uint16_t  gc_height;

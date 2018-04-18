@@ -6,8 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#pragma clang diagnostic ignored "-Wsign-conversion"
-
 #include <xhyve/bhyvegc.h>
 
 #pragma clang diagnostic push
@@ -21,7 +19,7 @@ struct bhyvegc {
 #pragma clang diagnostic pop
 
 struct bhyvegc *
-bhyvegc_init(int width, int height, void *fbaddr)
+bhyvegc_init(uint16_t width, uint16_t height, void *fbaddr)
 {
 	struct bhyvegc *gc;
 	struct bhyvegc_image *gc_image;
@@ -54,7 +52,7 @@ bhyvegc_set_fbaddr(struct bhyvegc *gc, void *fbaddr)
 }
 
 void
-bhyvegc_resize(struct bhyvegc *gc, int width, int height)
+bhyvegc_resize(struct bhyvegc *gc, uint16_t width, uint16_t height)
 {
 	struct bhyvegc_image *gc_image;
 

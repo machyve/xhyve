@@ -36,16 +36,16 @@ struct bhyvegc;
 
 struct bhyvegc_image {
 	int		vgamode;
-	int		width;
-	int		height;
+	uint16_t    width;
+	uint16_t	height;
 	uint32_t	*data;
 };
 
 #pragma clang diagnostic pop
 
-struct bhyvegc *bhyvegc_init(int width, int height, void *fbaddr);
+struct bhyvegc *bhyvegc_init(uint16_t width, uint16_t height, void *fbaddr);
 void bhyvegc_set_fbaddr(struct bhyvegc *gc, void *fbaddr);
-void bhyvegc_resize(struct bhyvegc *gc, int width, int height);
+void bhyvegc_resize(struct bhyvegc *gc, uint16_t width, uint16_t height);
 struct bhyvegc_image *bhyvegc_get_image(struct bhyvegc *gc);
 
 #endif /* _BHYVEGC_H_ */

@@ -38,7 +38,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wunused-macros"
 
 #include <xhyve/support/misc.h>
@@ -134,7 +133,8 @@ pci_fbuf_write(UNUSED int vcpu, struct pci_devinst *pi,
 	struct pci_fbuf_softc *sc;
 	uint8_t *p;
 
-	assert(baridx == 0);
+    assert(baridx == 0);
+    assert(size >= 0);
 
 	sc = pi->pi_arg;
 
@@ -142,7 +142,7 @@ pci_fbuf_write(UNUSED int vcpu, struct pci_devinst *pi,
 	    ("fbuf wr: offset 0x%llx, size: %d, value: 0x%llx\n",
 	    offset, size, value));
 
-	if (offset + size > DMEMSZ) {
+	if (offset + (unsigned int)size > DMEMSZ) {
 		printf("fbuf: write too large, offset %lld size %d\n",
 		       offset, size);
 		return;
@@ -190,11 +190,12 @@ pci_fbuf_read(UNUSED int vcpu, struct pci_devinst *pi,
 	uint64_t value;
 
 	assert(baridx == 0);
+    assert(size >= 0);
 
 	sc = pi->pi_arg;
 
 
-	if (offset + size > DMEMSZ) {
+	if (offset + (unsigned int)size > DMEMSZ) {
 		printf("fbuf: read too large, offset %lld size %d\n",
 		       offset, size);
 		return (0);

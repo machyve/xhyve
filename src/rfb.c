@@ -50,7 +50,6 @@
 
 #include <CommonCrypto/CommonCrypto.h>
 
-#pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wunused-macros"
 
 #include <xhyve/support/misc.h>
@@ -104,7 +103,7 @@ struct rfb_softc {
 	int		hw_crc;
 	uint32_t	*crc;		/* WxH crc cells */
 	uint32_t	*crc_tmp;	/* buffer to store single crc row */
-	int		crc_width, crc_height;
+	uint16_t		crc_width, crc_height;
 };
 
 #pragma clang diagnostic pop
@@ -302,7 +301,7 @@ fast_crc32(void *buf, size_t len, uint32_t crcval)
 
 static long
 rfb_send_rect(struct rfb_softc *rc, int cfd, struct bhyvegc_image *gc,
-              int x, int y, int w, int h)
+              unsigned int x, unsigned int y, unsigned int w, unsigned int h)
 {
 	struct rfb_srvr_updt_msg supdt_msg;
         struct rfb_srvr_rect_hdr srect_hdr;
@@ -340,7 +339,7 @@ rfb_send_rect(struct rfb_softc *rc, int cfd, struct bhyvegc_image *gc,
 		rc->zstream.total_out = 0;
 		for (p = &gc->data[y * gc->width + x]; y < h; y++) {
 			rc->zstream.next_in = (Bytef *)p;
-			rc->zstream.avail_in = w;
+			rc->zstream.avail_in = (uInt)w;
 			rc->zstream.next_out = (Bytef *)zbufp;
 			rc->zstream.avail_out = (uInt)(RFB_ZLIB_BUFSZ + 16 -
 			                        rc->zstream.total_out);
@@ -367,7 +366,7 @@ rfb_send_rect(struct rfb_softc *rc, int cfd, struct bhyvegc_image *gc,
 		nwrite = stream_write(cfd, &zlen, sizeof(uint32_t));
 		if (nwrite <= 0)
 			return (nwrite);
-		return (stream_write(cfd, rc->zbuf, rc->zstream.total_out));
+		return (stream_write(cfd, rc->zbuf, (ssize_t)rc->zstream.total_out));
 	}
 
 doraw:
@@ -449,7 +448,7 @@ rfb_send_all(struct rfb_softc *rc, int cfd, struct bhyvegc_image *gc)
 		nwrite = stream_write(cfd, &zlen, sizeof(uint32_t));
 		if (nwrite <= 0)
 			return (nwrite);
-		return (stream_write(cfd, rc->zbuf, rc->zstream.total_out));
+		return (stream_write(cfd, rc->zbuf, (ssize_t)rc->zstream.total_out));
 	}
 
 doraw:
@@ -474,15 +473,15 @@ rfb_send_screen(struct rfb_softc *rc, int cfd, int all)
 {
 	struct bhyvegc_image *gc_image;
 	ssize_t nwrite;
-	int x, y;
-	int celly, cellwidth;
-	int xcells, ycells;
-	int w, h;
+	unsigned int x, y;
+	unsigned int celly, cellwidth;
+	unsigned int xcells, ycells;
+	unsigned int w, h;
 	uint32_t *p;
-	int rem_x, rem_y;   /* remainder for resolutions not x32 pixels ratio */
+	unsigned int rem_x, rem_y;   /* remainder for resolutions not x32 pixels ratio */
 	long retval;
 	uint32_t *crc_p, *orig_crc;
-	int changes;
+	unsigned int changes;
 
 	console_refresh();
 	gc_image = console_get_image();
@@ -514,8 +513,8 @@ rfb_send_screen(struct rfb_softc *rc, int cfd, int all)
 
 	w = rc->crc_width;
 	h = rc->crc_height;
-	xcells = howmany(rc->crc_width, PIX_PER_CELL);
-	ycells = howmany(rc->crc_height, PIX_PER_CELL);
+	xcells = (unsigned int)howmany(rc->crc_width, PIX_PER_CELL);
+	ycells = (unsigned int)howmany(rc->crc_height, PIX_PER_CELL);
 
 	rem_x = w & PIXCELL_MASK;
 
@@ -786,7 +785,7 @@ rfb_handle(struct rfb_softc *rc, int cfd)
 	rc->cfd = cfd;
 
 	/* 1a. Send server version */
-	stream_write(cfd, vbuf, strlen(vbuf));
+	stream_write(cfd, vbuf, (ssize_t)strlen(vbuf));
 
 	/* 1b. Read client version */
 	len = read(cfd, buf, sizeof(buf));
@@ -865,7 +864,7 @@ rfb_handle(struct rfb_softc *rc, int cfd)
 	if (sres) {
 		be32enc(buf, (uint32_t)strlen(message));
 		stream_write(cfd, buf, 4);
-		stream_write(cfd, message, strlen(message));
+		stream_write(cfd, message, (ssize_t)strlen(message));
 		goto done;
 	}
 

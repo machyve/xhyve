@@ -54,7 +54,7 @@ static struct {
 #pragma clang diagnostic pop
 
 void
-console_init(int w, int h, void *fbaddr)
+console_init(uint16_t w, uint16_t h, void *fbaddr)
 {
 	console.gc = bhyvegc_init(w, h, fbaddr);
 }

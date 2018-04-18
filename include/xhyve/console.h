@@ -35,7 +35,7 @@ typedef void (*fb_render_func_t)(struct bhyvegc *gc, void *arg);
 typedef void (*kbd_event_func_t)(int down, uint32_t keysym, void *arg);
 typedef void (*ptr_event_func_t)(uint8_t mask, int x, int y, void *arg);
 
-void	console_init(int w, int h, void *fbaddr);
+void	console_init(uint16_t w, uint16_t h, void *fbaddr);
 
 void	console_set_fbaddr(void *fbaddr);
 

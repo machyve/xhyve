@@ -35,8 +35,6 @@
 
 #include <errno.h>
 
-#pragma clang diagnostic ignored "-Wsign-conversion"
-
 #include <xhyve/sockstream.h>
 
 ssize_t
@@ -49,7 +47,7 @@ stream_read(int fd, void *buf, ssize_t nbytes)
 	p = buf;
 
 	while (len < nbytes) {
-		n = read(fd, p + len, nbytes - len);
+		n = read(fd, p + len, (size_t)(nbytes - len));
 		if (n == 0)
 			break;
 
@@ -73,7 +71,7 @@ stream_write(int fd, const void *buf, ssize_t nbytes)
 	p = buf;
 
 	while (len < nbytes) {
-		n = write(fd, p + len, nbytes - len);
+		n = write(fd, p + len, (size_t)(nbytes - len));
 		if (n == 0)
 			break;
 		if (n < 0) {

@@ -35,7 +35,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wunused-macros"
 
 #include <xhyve/vmm/vmm.h>
@@ -56,8 +55,8 @@ struct vga_softc {
 	struct mem_range	mr;
 
 	struct bhyvegc		*gc;
-	int			gc_width;
-	int			gc_height;
+	uint16_t			gc_width;
+	uint16_t			gc_height;
 	struct bhyvegc_image	*gc_image;
 
 	uint8_t			*vga_ram;
@@ -205,21 +204,21 @@ vga_check_size(struct bhyvegc *gc, struct vga_softc *sc)
 	 * pixels per scanlines divided by the number of pixels per
 	 * character clock.
 	 */
-	sc->gc_width = (sc->vga_crtc.crtc_horiz_disp_end + 1) *
-	    sc->vga_seq.seq_cm_dots;
+	sc->gc_width = (uint16_t)((sc->vga_crtc.crtc_horiz_disp_end + 1) *
+	    sc->vga_seq.seq_cm_dots);
 
-	sc->gc_height = (sc->vga_crtc.crtc_vert_disp_end |
+	sc->gc_height = (uint16_t)((sc->vga_crtc.crtc_vert_disp_end |
 	    (((sc->vga_crtc.crtc_overflow & CRTC_OF_VDE8) >> CRTC_OF_VDE8_SHIFT) << 8) |
-	    (((sc->vga_crtc.crtc_overflow & CRTC_OF_VDE9) >> CRTC_OF_VDE9_SHIFT) << 9)) + 1;
+	    (((sc->vga_crtc.crtc_overflow & CRTC_OF_VDE9) >> CRTC_OF_VDE9_SHIFT) << 9)) + 1);
 
 	if (old_width != sc->gc_width || old_height != sc->gc_height)
 		bhyvegc_resize(gc, sc->gc_width, sc->gc_height);
 }
 
 static uint32_t
-vga_get_pixel(struct vga_softc *sc, int x, int y)
+vga_get_pixel(struct vga_softc *sc, uint16_t x, uint16_t y)
 {
-	int offset;
+	unsigned int offset;
 	int bit;
 	uint8_t data;
 	uint8_t idx;
@@ -248,7 +247,7 @@ vga_get_pixel(struct vga_softc *sc, int x, int y)
 static void
 vga_render_graphics(struct vga_softc *sc)
 {
-	int x, y;
+	uint16_t x, y;
 
 	for (y = 0; y < sc->gc_height; y++) {
 		for (x = 0; x < sc->gc_width; x++) {
@@ -261,13 +260,15 @@ vga_render_graphics(struct vga_softc *sc)
 }
 
 static uint32_t
-vga_get_text_pixel(struct vga_softc *sc, int x, int y)
+vga_get_text_pixel(struct vga_softc *sc, uint16_t x, uint16_t y)
 {
-	int dots, offset, bit, font_offset;
+	int bit;
+    unsigned int dots, offset, font_offset;
 	uint8_t ch, attr, font;
 	uint8_t idx;
 
-	dots = sc->vga_seq.seq_cm_dots;
+    assert(sc->vga_seq.seq_cm_dots >= 0);
+	dots = (unsigned int)sc->vga_seq.seq_cm_dots;
 
 	offset = 2 * sc->vga_crtc.crtc_start_addr;
 	offset += (y / 16 * sc->gc_width / dots) * 2 + (x / dots) * 2;
@@ -288,14 +289,14 @@ vga_get_text_pixel(struct vga_softc *sc, int x, int y)
 	if ((sc->vga_seq.seq_mm & SEQ_MM_EM) &&
 	    sc->vga_seq.seq_cmap_pri_off != sc->vga_seq.seq_cmap_sec_off) {
 		if (attr & 0x8)
-			font_offset = sc->vga_seq.seq_cmap_pri_off +
-				(ch << 5) + y % 16;
+			font_offset = (unsigned int)sc->vga_seq.seq_cmap_pri_off +
+				(unsigned int)(ch << 5) + y % 16;
 		else
-			font_offset = sc->vga_seq.seq_cmap_sec_off +
-				(ch << 5) + y % 16;
+			font_offset = (unsigned int)sc->vga_seq.seq_cmap_sec_off +
+				(unsigned int)(ch << 5) + y % 16;
 		attr &= ~0x8;
 	} else {
-		font_offset = (ch << 5) + y % 16;
+		font_offset = (unsigned int)(ch << 5) + y % 16;
 	}
 
 	font = sc->vga_ram[font_offset + 2 * 64*KB];
@@ -311,7 +312,7 @@ vga_get_text_pixel(struct vga_softc *sc, int x, int y)
 static void
 vga_render_text(struct vga_softc *sc)
 {
-	int x, y;
+	uint16_t x, y;
 
 	for (y = 0; y < sc->gc_height; y++) {
 		for (x = 0; x < sc->gc_width; x++) {
@@ -348,7 +349,7 @@ vga_mem_rd_handler(uint64_t addr, void *arg1)
 {
 	struct vga_softc *sc = arg1;
 	uint8_t map_sel;
-	long offset;
+	uint64_t offset;
 
 	offset = addr;
 	switch (sc->vga_gc.gc_misc_mm) {
@@ -394,7 +395,7 @@ vga_mem_rd_handler(uint64_t addr, void *arg1)
 	map_sel = sc->vga_gc.gc_read_map_sel;
 	if (sc->vga_gc.gc_mode_oe) {
 		map_sel |= (offset & 1);
-		offset &= ~1;
+		offset &= (uint64_t)~1;
 	}
 
 	/* read mode 0: return the byte from the selected plane. */
@@ -412,7 +413,7 @@ vga_mem_wr_handler(uint64_t addr, uint8_t val, void *arg1)
 	uint8_t set_reset;
 	uint8_t enb_set_reset;
 	uint8_t	mask;
-	long offset;
+	uint64_t offset;
 
 	offset = addr;
 	switch (sc->vga_gc.gc_misc_mm) {
@@ -634,7 +635,7 @@ vga_mem_wr_handler(uint64_t addr, uint8_t val, void *arg1)
 
 	if (sc->vga_gc.gc_mode_oe) {
 		if (offset & 1) {
-			offset &= ~1;
+			offset &= (uint64_t)~1;
 			if (sc->vga_seq.seq_map_mask & 2)
 				sc->vga_ram[offset + 1*64*KB] = c1;
 			if (sc->vga_seq.seq_map_mask & 8)
@@ -1138,13 +1139,13 @@ vga_port_out_handler(UNUSED int in, int port, UNUSED int bytes,
 		sc->vga_dac.dac_wr_subindex++;
 		if (sc->vga_dac.dac_wr_subindex == 3) {
 			sc->vga_dac.dac_palette_rgb[sc->vga_dac.dac_wr_index] =
-				((((sc->vga_dac.dac_palette[3*sc->vga_dac.dac_wr_index + 0] << 2) |
+				((uint32_t)(((sc->vga_dac.dac_palette[3*sc->vga_dac.dac_wr_index + 0] << 2) |
 				   ((sc->vga_dac.dac_palette[3*sc->vga_dac.dac_wr_index + 0] & 0x1) << 1) |
 				   (sc->vga_dac.dac_palette[3*sc->vga_dac.dac_wr_index + 0] & 0x1)) << 16) |
-				 (((sc->vga_dac.dac_palette[3*sc->vga_dac.dac_wr_index + 1] << 2) |
+				 (uint32_t)(((sc->vga_dac.dac_palette[3*sc->vga_dac.dac_wr_index + 1] << 2) |
 				   ((sc->vga_dac.dac_palette[3*sc->vga_dac.dac_wr_index + 1] & 0x1) << 1) |
 				   (sc->vga_dac.dac_palette[3*sc->vga_dac.dac_wr_index + 1] & 0x1)) << 8) |
-				 (((sc->vga_dac.dac_palette[3*sc->vga_dac.dac_wr_index + 2] << 2) |
+				 (uint32_t)(((sc->vga_dac.dac_palette[3*sc->vga_dac.dac_wr_index + 2] << 2) |
 				   ((sc->vga_dac.dac_palette[3*sc->vga_dac.dac_wr_index + 2] & 0x1) << 1) |
 				   (sc->vga_dac.dac_palette[3*sc->vga_dac.dac_wr_index + 2] & 0x1)) << 0));
 
@@ -1230,7 +1231,7 @@ vga_port_handler(UNUSED int vcpu, int in, int port, int bytes,
 	switch (bytes) {
 	case 1:
 		if (in) {
-			*eax &= ~0xff;
+			*eax &= (uint32_t)~0xff;
 			error = vga_port_in_handler(in, port, 1,
 						    &val, arg);
 			if (!error) {
@@ -1244,7 +1245,7 @@ vga_port_handler(UNUSED int vcpu, int in, int port, int bytes,
 		break;
 	case 2:
 		if (in) {
-			*eax &= ~0xffff;
+			*eax &= (uint32_t)~0xffff;
 			error = vga_port_in_handler(in, port, 1,
 						    &val, arg);
 			if (!error) {
@@ -1253,7 +1254,7 @@ vga_port_handler(UNUSED int vcpu, int in, int port, int bytes,
 			error = vga_port_in_handler(in, port + 1, 1,
 						    &val, arg);
 			if (!error) {
-				*eax |= (val & 0xff) << 8;
+				*eax |= (uint32_t)((val & 0xff) << 8);
 			}
 		} else {
 			val = *eax & 0xff;
@@ -1324,13 +1325,13 @@ vga_init(int io_only)
 		memcpy(sc->vga_dac.dac_palette, palette, 16 * 3 * sizeof (uint8_t));
 		for (i = 0; i < 16; i++) {
 			sc->vga_dac.dac_palette_rgb[i] =
-				((((sc->vga_dac.dac_palette[3*i + 0] << 2) |
+				((uint32_t)(((sc->vga_dac.dac_palette[3*i + 0] << 2) |
 				   ((sc->vga_dac.dac_palette[3*i + 0] & 0x1) << 1) |
 				   (sc->vga_dac.dac_palette[3*i + 0] & 0x1)) << 16) |
-				 (((sc->vga_dac.dac_palette[3*i + 1] << 2) |
+				 (uint32_t)(((sc->vga_dac.dac_palette[3*i + 1] << 2) |
 				   ((sc->vga_dac.dac_palette[3*i + 1] & 0x1) << 1) |
 				   (sc->vga_dac.dac_palette[3*i + 1] & 0x1)) << 8) |
-				 (((sc->vga_dac.dac_palette[3*i + 2] << 2) |
+				 (uint32_t)(((sc->vga_dac.dac_palette[3*i + 2] << 2) |
 				   ((sc->vga_dac.dac_palette[3*i + 2] & 0x1) << 1) |
 				   (sc->vga_dac.dac_palette[3*i + 2] & 0x1)) << 0));
 		}

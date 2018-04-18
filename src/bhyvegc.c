@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#pragma clang diagnostic ignored "-Wint-conversion"
 #pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wsign-conversion"
 

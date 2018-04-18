@@ -36,7 +36,6 @@
 #include <strings.h>
 #include <pthread.h>
 
-#pragma clang diagnostic ignored "-Wconversion"
 #pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wunused-macros"
 
@@ -187,14 +186,14 @@ movement_get(struct ps2mouse_softc *sc)
 			val0 |= PS2M_DATA_X_OFLOW;
 			val1 = 255;
 		} else
-			val1 = sc->delta_x;
+			val1 = (uint8_t)sc->delta_x;
 	} else {
 		val0 |= PS2M_DATA_X_SIGN;
 		if (sc->delta_x < -255) {
 			val0 |= PS2M_DATA_X_OFLOW;
 			val1 = 255;
 		} else
-			val1 = sc->delta_x;
+			val1 = (uint8_t)sc->delta_x;
 	}
 	sc->delta_x = 0;
 
@@ -203,14 +202,14 @@ movement_get(struct ps2mouse_softc *sc)
 			val0 |= PS2M_DATA_Y_OFLOW;
 			val2 = 255;
 		} else
-			val2 = sc->delta_y;
+			val2 = (uint8_t)sc->delta_y;
 	} else {
 		val0 |= PS2M_DATA_Y_SIGN;
 		if (sc->delta_y < -255) {
 			val0 |= PS2M_DATA_Y_OFLOW;
 			val2 = 255;
 		} else
-			val2 = sc->delta_y;
+			val2 = (uint8_t)sc->delta_y;
 	}
 	sc->delta_y = 0;
 

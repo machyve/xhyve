@@ -38,7 +38,6 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#pragma clang diagnostic ignored "-Wconversion"
 #pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wunused-macros"
 
@@ -327,24 +326,24 @@ atkbdc_data_handler(UNUSED int vcpu, int in, UNUSED int port, int bytes,
 		 */
 		switch (sc->curcmd) {
 		case KBDC_SET_COMMAND_BYTE:
-			sc->ram[0] = *eax;
+			sc->ram[0] = (uint8_t)*eax;
 			if (sc->ram[0] & KBD_SYS_FLAG_BIT)
 				sc->status |= KBDS_SYS_FLAG;
 			else
 				sc->status &= ~KBDS_SYS_FLAG;
 			break;
 		case KBDC_WRITE_OUTPORT:
-			sc->outport = *eax;
+			sc->outport = (uint8_t)*eax;
 			break;
 		case KBDC_WRITE_TO_AUX:
-			ps2mouse_write(sc->ps2mouse_sc, *eax, 0);
+			ps2mouse_write(sc->ps2mouse_sc, (uint8_t)*eax, 0);
 			atkbdc_poll(sc);
 			break;
 		case KBDC_WRITE_KBD_OUTBUF:
-			atkbdc_kbd_queue_data(sc, *eax);
+			atkbdc_kbd_queue_data(sc, (uint8_t)*eax);
 			break;
 		case KBDC_WRITE_AUX_OUTBUF:
-			ps2mouse_write(sc->ps2mouse_sc, *eax, 1);
+			ps2mouse_write(sc->ps2mouse_sc, (uint8_t)*eax, 1);
 			sc->status |= (KBDS_AUX_BUFFER_FULL | KBDS_KBD_BUFFER_FULL);
 			atkbdc_aux_poll(sc);
 			break;
@@ -369,7 +368,7 @@ atkbdc_data_handler(UNUSED int vcpu, int in, UNUSED int port, int bytes,
 	/*
 	 * Data byte for the device.
 	 */
-	ps2kbd_write(sc->ps2kbd_sc, *eax);
+	ps2kbd_write(sc->ps2kbd_sc, (uint8_t)*eax);
 	atkbdc_poll(sc);
 
 	pthread_mutex_unlock(&sc->mtx);

@@ -50,7 +50,6 @@
 #include <dispatch/dispatch.h>
 #include <vmnet/vmnet.h>
 
-#pragma clang diagnostic ignored "-Wcast-align"
 #pragma clang diagnostic ignored "-Wconversion"
 #pragma clang diagnostic ignored "-Wformat"
 #pragma clang diagnostic ignored "-Wgnu-case-range"
@@ -1168,7 +1167,7 @@ e82545_buf_checksum(uint8_t *buf, int len)
 
 	/* Checksum all the pairs of bytes first... */
 	for (i = 0; i < (len & ~1U); i += 2)
-		sum += *((u_int16_t *)(buf + i));
+		sum += read_uint16_unaligned(buf + i);
 
 	/*
 	 * If there's a single byte left over, checksum it, too.
@@ -1236,7 +1235,7 @@ e82545_transmit_checksum(struct iovec *iov, int iovcnt, struct ck_info *ck)
 	    iovcnt, ck->ck_start, ck->ck_off, ck->ck_len);
 	cklen = ck->ck_len ? ck->ck_len - ck->ck_start + 1 : INT_MAX;
 	cksum = e82545_iov_checksum(iov, iovcnt, ck->ck_start, cklen);
-	*(uint16_t *)((uint8_t *)iov[0].iov_base + ck->ck_off) = ~cksum;
+    write_uint16_unaligned((uint8_t *)iov[0].iov_base + ck->ck_off, ~cksum);
 }
 
 static void
@@ -1481,12 +1480,12 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 	paylen = (sc->esc_txctx.cmd_and_length & 0x000fffff);
 	DPRINTF("tx %s segmentation offload %d+%d/%d bytes %d iovs\r\n",
 	    tcp ? "TCP" : "UDP", hdrlen, paylen, mss, iovcnt);
-	ipid = ntohs(*(uint16_t *)&hdr[ckinfo[0].ck_start + 4]);
-	tcpseq = ntohl(*(uint32_t *)&hdr[ckinfo[1].ck_start + 4]);
-	ipcs = *(uint16_t *)&hdr[ckinfo[0].ck_off];
+    ipid = ntohs(read_uint16_unaligned(&hdr[ckinfo[0].ck_start + 4]));
+	tcpseq = ntohl(read_uint32_unaligned(&hdr[ckinfo[1].ck_start + 4]));
+	ipcs = read_uint16_unaligned(&hdr[ckinfo[0].ck_off]);
 	tcpcs = 0;
 	if (ckinfo[1].ck_valid)	/* Save partial pseudo-header checksum. */
-		tcpcs = *(uint16_t *)&hdr[ckinfo[1].ck_off];
+		tcpcs = read_uint16_unaligned(&hdr[ckinfo[1].ck_off]);
 	pv = 1;
 	pvoff = 0;
 	for (seg = 0, left = paylen; left > 0; seg++, left -= now) {
@@ -1514,15 +1513,14 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 		/* Update IP header. */
 		if (sc->esc_txctx.cmd_and_length & E1000_TXD_CMD_IP) {
 			/* IPv4 -- set length and ID */
-			*(uint16_t *)&hdr[ckinfo[0].ck_start + 2] =
-			    htons(hdrlen - ckinfo[0].ck_start + now);
-			*(uint16_t *)&hdr[ckinfo[0].ck_start + 4] =
-			    htons(ipid + seg);
+            write_uint16_unaligned(&hdr[ckinfo[0].ck_start + 2],
+                                   htons(hdrlen - ckinfo[0].ck_start + now));
+            write_uint16_unaligned(&hdr[ckinfo[0].ck_start + 4],
+                                   htons(ipid + seg));
 		} else {
 			/* IPv6 -- set length */
-			*(uint16_t *)&hdr[ckinfo[0].ck_start + 4] =
-			    htons(hdrlen - ckinfo[0].ck_start - 40 +
-				  now);
+            write_uint16_unaligned(&hdr[ckinfo[0].ck_start + 4],
+                                   htons(hdrlen - ckinfo[0].ck_start - 40 + now));
 		}
 
 		/* Update pseudo-header checksum. */
@@ -1532,26 +1530,26 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 		/* Update TCP/UDP headers. */
 		if (tcp) {
 			/* Update sequence number and FIN/PUSH flags. */
-			*(uint32_t *)&hdr[ckinfo[1].ck_start + 4] =
-			    htonl(tcpseq + paylen - left);
+            write_uint32_unaligned(&hdr[ckinfo[1].ck_start + 4],
+                                   htonl(tcpseq + paylen - left));
 			if (now < left) {
 				hdr[ckinfo[1].ck_start + 13] &=
 				    ~(TH_FIN | TH_PUSH);
 			}
 		} else {
 			/* Update payload length. */
-			*(uint32_t *)&hdr[ckinfo[1].ck_start + 4] =
-			    hdrlen - ckinfo[1].ck_start + now;
+            write_uint32_unaligned(&hdr[ckinfo[1].ck_start + 4],
+                                   hdrlen - ckinfo[1].ck_start + now);
 		}
 
 		/* Calculate checksums and transmit. */
 		if (ckinfo[0].ck_valid) {
-			*(uint16_t *)&hdr[ckinfo[0].ck_off] = ipcs;
+            write_uint16_unaligned(&hdr[ckinfo[0].ck_off], ipcs);
 			e82545_transmit_checksum(tiov, tiovcnt, &ckinfo[0]);
 		}
 		if (ckinfo[1].ck_valid) {
-			*(uint16_t *)&hdr[ckinfo[1].ck_off] =
-			    e82545_carry(tcpsum);
+            write_uint16_unaligned(&hdr[ckinfo[1].ck_off],
+                                   e82545_carry(tcpsum));
 			e82545_transmit_checksum(tiov, tiovcnt, &ckinfo[1]);
 		}
 		e82545_transmit_backend(sc, tiov, tiovcnt);

@@ -50,7 +50,6 @@
 #include <dispatch/dispatch.h>
 #include <vmnet/vmnet.h>
 
-#pragma clang diagnostic ignored "-Wformat"
 #pragma clang diagnostic ignored "-Wgnu-case-range"
 #pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wpointer-arith"
@@ -1299,7 +1298,7 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 		if (desc == 0) {
 			switch (dtype) {
 			case E1000_TXD_TYP_C:
-				DPRINTF("tx ctxt desc idx %d: %016jx "
+                    DPRINTF("tx ctxt desc idx %d: %016llx "
 				    "%08x%08x\r\n",
 				    head, dsc->td.buffer_addr,
 				    dsc->td.upper.data, dsc->td.lower.data);
@@ -2226,33 +2225,33 @@ e82545_write(UNUSED int vcpu, struct pci_devinst *pi, int baridx,
 		switch (offset) {
 		case E82545_IOADDR:
 			if (size != 4) {
-				DPRINTF("Wrong io addr write sz:%d value:0x%lx\r\n", size, value);
+				DPRINTF("Wrong io addr write sz:%d value:0x%llx\r\n", size, value);
 			} else
 				sc->io_addr = (uint32_t)value;
 			break;
 		case E82545_IODATA:
 			if (size != 4) {
-				DPRINTF("Wrong io data write size:%d value:0x%lx\r\n", size, value);
+				DPRINTF("Wrong io data write size:%d value:0x%llx\r\n", size, value);
 			} else if (sc->io_addr > E82545_IO_REGISTER_MAX) {
-				DPRINTF("Non-register io write addr:0x%x value:0x%lx\r\n", sc->io_addr, value);
+				DPRINTF("Non-register io write addr:0x%x value:0x%llx\r\n", sc->io_addr, value);
 			} else
 				e82545_write_register(sc, sc->io_addr,
 						      (uint32_t)value);
 			break;
 		default:
-			DPRINTF("Unknown io bar write offset:0x%lx value:0x%lx size:%d\r\n", offset, value, size);
+			DPRINTF("Unknown io bar write offset:0x%llx value:0x%llx size:%d\r\n", offset, value, size);
 			break;
 		}
 		break;
 	case E82545_BAR_REGISTER:
 		if (size != 4) {
-			DPRINTF("Wrong register write size:%d offset:0x%lx value:0x%lx\r\n", size, offset, value);
+			DPRINTF("Wrong register write size:%d offset:0x%llx value:0x%llx\r\n", size, offset, value);
 		} else
 			e82545_write_register(sc, (uint32_t)offset,
 					      (uint32_t)value);
 		break;
 	default:
-		DPRINTF("Unknown write bar:%d off:0x%lx val:0x%lx size:%d\r\n",
+            DPRINTF("Unknown write bar:%d off:0x%llx val:0x%llx size:%d\r\n",
 			baridx, offset, value, size);
 	}
 
@@ -2292,20 +2291,20 @@ e82545_read(UNUSED int vcpu, struct pci_devinst *pi, int baridx,
 				retval = e82545_read_register(sc, sc->io_addr);
 			break;
 		default:
-			DPRINTF("Unknown io bar read offset:0x%lx size:%d\r\n",
+			DPRINTF("Unknown io bar read offset:0x%llx size:%d\r\n",
 				offset, size);
 			break;
 		}
 		break;
 	case E82545_BAR_REGISTER:
 		if (size != 4) {
-			DPRINTF("Wrong register read size:%d offset:0x%lx\r\n",
+			DPRINTF("Wrong register read size:%d offset:0x%llx\r\n",
 				size, offset);
 		} else
 			retval = e82545_read_register(sc, (uint32_t)offset);
 		break;
 	default:
-		DPRINTF("Unknown read bar:%d offset:0x%lx size:%d\r\n",
+		DPRINTF("Unknown read bar:%d offset:0x%llx size:%d\r\n",
 			baridx, offset, size);
 		break;
 	}

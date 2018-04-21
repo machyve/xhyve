@@ -50,7 +50,6 @@
 #include <dispatch/dispatch.h>
 #include <vmnet/vmnet.h>
 
-#pragma clang diagnostic ignored "-Wgnu-case-range"
 #pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wpointer-arith"
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
@@ -1861,17 +1860,6 @@ e82545_write_register(struct e82545_softc *sc, uint32_t offset, uint32_t value)
 	case E1000_TADV:
 		sc->esc_TADV = value & ~0xFFFF0000;
 		break;
-	case E1000_RAL(0) ... E1000_RAH(15):
-		/* convert to u32 offset */
-		ridx = (offset - E1000_RAL(0)) >> 2;
-		e82545_write_ra(sc, ridx, value);
-		break;
-	case E1000_MTA ... (E1000_MTA + (127*4)):
-		sc->esc_fmcast[(offset - E1000_MTA) >> 2] = value;
-		break;
-	case E1000_VFTA ... (E1000_VFTA + (127*4)):
-		sc->esc_fvlan[(offset - E1000_VFTA) >> 2] = value;
-		break;
 	case E1000_EECD:
 	{
 		//DPRINTF("EECD write 0x%x -> 0x%x\r\n", sc->eeprom_control, value);
@@ -1929,7 +1917,17 @@ e82545_write_register(struct e82545_softc *sc, uint32_t offset, uint32_t value)
 	case E1000_STATUS:
 		return;
 	default:
-		DPRINTF("Unknown write register: 0x%x value:%x\r\n", offset, value);
+        if ((offset >= E1000_RAL(0)) && (offset <= E1000_RAH(15))) {
+            /* convert to u32 offset */
+            ridx = (offset - E1000_RAL(0)) >> 2;
+            e82545_write_ra(sc, ridx, value);
+        } else if ((offset >= E1000_MTA) && (offset <= E1000_MTA + (127*4))) {
+            sc->esc_fmcast[(offset - E1000_MTA) >> 2] = value;
+        } else if ((offset >= E1000_VFTA) && (offset <= E1000_VFTA + (127*4))) {
+            sc->esc_fvlan[(offset - E1000_VFTA) >> 2] = value;
+        } else {
+            DPRINTF("Unknown write register: 0x%x value:%x\r\n", offset, value);
+        }
 		return;
 	}
 }
@@ -2057,17 +2055,6 @@ e82545_read_register(struct e82545_softc *sc, uint32_t offset)
 		break;
 	case E1000_TADV:
 		retval = sc->esc_TADV;
-		break;
-	case E1000_RAL(0) ... E1000_RAH(15):
-		/* convert to u32 offset */
-		ridx = (offset - E1000_RAL(0)) >> 2;
-		retval = e82545_read_ra(sc, ridx);
-		break;
-	case E1000_MTA ... (E1000_MTA + (127*4)):
-		retval = sc->esc_fmcast[(offset - E1000_MTA) >> 2];
-		break;
-	case E1000_VFTA ... (E1000_VFTA + (127*4)):
-		retval = sc->esc_fvlan[(offset - E1000_VFTA) >> 2];
 		break;
 	case E1000_EECD:
 		//DPRINTF("EECD read %x\r\n", sc->eeprom_control);
@@ -2200,8 +2187,18 @@ e82545_read_register(struct e82545_softc *sc, uint32_t offset)
 		retval = 0;
 		break;
 	default:
-		DPRINTF("Unknown read register: 0x%x\r\n", offset);
-		retval = 0;
+        if ((offset >= E1000_RAL(0)) && (offset <= E1000_RAH(15))) {
+            /* convert to u32 offset */
+            ridx = (offset - E1000_RAL(0)) >> 2;
+            retval = e82545_read_ra(sc, ridx);
+        } else if ((offset >= E1000_MTA) && (offset <= E1000_MTA + (127*4))) {
+            retval = sc->esc_fmcast[(offset - E1000_MTA) >> 2];
+        } else if ((offset >= E1000_VFTA) && (offset <= E1000_VFTA + (127*4))) {
+            retval = sc->esc_fvlan[(offset - E1000_VFTA) >> 2];
+        } else {
+            DPRINTF("Unknown read register: 0x%x\r\n", offset);
+            retval = 0;
+        }
 		break;
 	}
 

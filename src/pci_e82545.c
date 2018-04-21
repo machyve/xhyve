@@ -50,7 +50,6 @@
 #include <dispatch/dispatch.h>
 #include <vmnet/vmnet.h>
 
-#pragma clang diagnostic ignored "-Wconversion"
 #pragma clang diagnostic ignored "-Wformat"
 #pragma clang diagnostic ignored "-Wgnu-case-range"
 #pragma clang diagnostic ignored "-Wpadded"
@@ -573,12 +572,12 @@ e82545_init_eeprom(struct e82545_softc *sc)
 	uint16_t checksum, i;
 
         /* mac addr */
-	sc->eeprom_data[NVM_MAC_ADDR] = ((uint16_t)sc->vms->mac[0]) |
-		(((uint16_t)sc->vms->mac[1]) << 8);
-	sc->eeprom_data[NVM_MAC_ADDR+1] = ((uint16_t)sc->vms->mac[2]) |
-		(((uint16_t)sc->vms->mac[3]) << 8);
-	sc->eeprom_data[NVM_MAC_ADDR+2] = ((uint16_t)sc->vms->mac[4]) |
-		(((uint16_t)sc->vms->mac[5]) << 8);
+	sc->eeprom_data[NVM_MAC_ADDR] = (uint16_t)((sc->vms->mac[0]) |
+		(sc->vms->mac[1]) << 8);
+	sc->eeprom_data[NVM_MAC_ADDR+1] = (uint16_t)((sc->vms->mac[2]) |
+		(sc->vms->mac[3] << 8));
+	sc->eeprom_data[NVM_MAC_ADDR+2] = (uint16_t)((sc->vms->mac[4]) |
+		(sc->vms->mac[5] << 8));
 
 	/* pci ids */
 	sc->eeprom_data[NVM_SUB_DEV_ID] = E82545_SUBDEV_ID;
@@ -1103,14 +1102,14 @@ e82545_tap_callback(struct e82545_softc *sc)
 		/* Update all consumed descriptors. */
 		for (i = 0; i < n - 1; i++) {
 			rxd = &sc->esc_rxdesc[(head + i) % size];
-			rxd->length = bufsz;
+			rxd->length = (uint16_t)bufsz;
 			rxd->csum = 0;
 			rxd->errors = 0;
 			rxd->special = 0;
 			rxd->status = E1000_RXD_STAT_DD;
 		}
 		rxd = &sc->esc_rxdesc[(head + i) % size];
-		rxd->length = len % bufsz;
+		rxd->length = (uint16_t)(len % bufsz);
 		rxd->csum = 0;
 		rxd->errors = 0;
 		rxd->special = 0;
@@ -1126,7 +1125,7 @@ e82545_tap_callback(struct e82545_softc *sc)
 			cause |= E1000_ICR_RXT0;
 		}
 
-		head = (head + n) % size;
+		head = (uint16_t)((head + n) % size);
 		left -= n;
 	}
 
@@ -1156,7 +1155,7 @@ e82545_carry(uint32_t sum)
 	sum = (sum & 0xFFFF) + (sum >> 16);
 	if (sum > 0xFFFF)
 		sum -= 0xFFFF;
-	return (sum);
+	return (uint16_t)sum;
 }
 
 static uint16_t
@@ -1446,10 +1445,10 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 		hdr -= ETHER_VLAN_ENCAP_LEN;
 		memmove(hdr, hdr + ETHER_VLAN_ENCAP_LEN, ETHER_ADDR_LEN*2);
 		hdrlen += ETHER_VLAN_ENCAP_LEN;
-		hdr[ETHER_ADDR_LEN*2 + 0] = sc->esc_VET >> 8;
-		hdr[ETHER_ADDR_LEN*2 + 1] = sc->esc_VET & 0xff;
-		hdr[ETHER_ADDR_LEN*2 + 2] = dsc->td.upper.fields.special >> 8;
-		hdr[ETHER_ADDR_LEN*2 + 3] = dsc->td.upper.fields.special & 0xff;
+		hdr[ETHER_ADDR_LEN*2 + 0] = (uint8_t)(sc->esc_VET >> 8);
+		hdr[ETHER_ADDR_LEN*2 + 1] = (uint8_t)(sc->esc_VET & 0xff);
+		hdr[ETHER_ADDR_LEN*2 + 2] = (uint8_t)(dsc->td.upper.fields.special >> 8);
+		hdr[ETHER_ADDR_LEN*2 + 3] = (uint8_t)(dsc->td.upper.fields.special & 0xff);
 		iov->iov_base = hdr;
 		iov->iov_len += ETHER_VLAN_ENCAP_LEN;
 		/* Correct checksum offsets after VLAN tag insertion. */
@@ -1572,7 +1571,7 @@ e82545_tx_run(struct e82545_softc *sc)
 
 	head = sc->esc_TDH;
 	tail = sc->esc_TDT;
-	size = sc->esc_TDLEN / 16;
+	size = (uint16_t)(sc->esc_TDLEN / 16);
 	DPRINTF("tx_run: head %x, rhead %x, tail %x\r\n",
 	    sc->esc_TDH, sc->esc_TDHr, sc->esc_TDT);
 
@@ -1683,14 +1682,14 @@ e82545_write_ra(struct e82545_softc *sc, int reg, uint32_t wval)
 		/* RAH */
 		eu->eu_valid = ((wval & E1000_RAH_AV) == E1000_RAH_AV);
 		eu->eu_addrsel = (wval >> 16) & 0x3;
-		eu->eu_eth.octet[5] = wval >> 8;
-		eu->eu_eth.octet[4] = wval;
+		eu->eu_eth.octet[5] = (u_char)(wval >> 8);
+		eu->eu_eth.octet[4] = (u_char)wval;
 	} else {
 		/* RAL */
-		eu->eu_eth.octet[3] = wval >> 24;
-		eu->eu_eth.octet[2] = wval >> 16;
-		eu->eu_eth.octet[1] = wval >> 8;
-		eu->eu_eth.octet[0] = wval;
+		eu->eu_eth.octet[3] = (u_char)(wval >> 24);
+		eu->eu_eth.octet[2] = (u_char)(wval >> 16);
+		eu->eu_eth.octet[1] = (u_char)(wval >> 8);
+		eu->eu_eth.octet[0] = (u_char)wval;
 	}
 }
 
@@ -1793,11 +1792,11 @@ e82545_write_register(struct e82545_softc *sc, uint32_t offset, uint32_t value)
 		break;
 	case E1000_RDH(0):
 		/* XXX should only ever be zero ? Range check ? */
-		sc->esc_RDH = value;
+		sc->esc_RDH = (int16_t)value;
 		break;
 	case E1000_RDT(0):
 		/* XXX if this opens up the rx ring, do something ? */
-		sc->esc_RDT = value;
+		sc->esc_RDT = (int16_t)value;
 		break;
 	case E1000_RDTR:
 		/* ignore FPD bit 31 */
@@ -1825,7 +1824,7 @@ e82545_write_register(struct e82545_softc *sc, uint32_t offset, uint32_t value)
 		sc->esc_TIPG = value;
 		break;
 	case E1000_AIT:
-		sc->esc_AIT = value;
+		sc->esc_AIT = (int16_t)value;
 		break;
 	case E1000_TDBAL(0):
 		sc->esc_TDBAL = value & ~0xF;
@@ -1845,11 +1844,11 @@ e82545_write_register(struct e82545_softc *sc, uint32_t offset, uint32_t value)
 	case E1000_TDH(0):
 		//assert(!sc->esc_tx_enabled);
 		/* XXX should only ever be zero ? Range check ? */
-		sc->esc_TDHr = sc->esc_TDH = value;
+		sc->esc_TDHr = sc->esc_TDH = (int16_t)value;
 		break;
 	case E1000_TDT(0):
 		/* XXX range check ? */
-		sc->esc_TDT = value;
+		sc->esc_TDT = (int16_t)value;
 		if (sc->esc_tx_enabled)
 			e82545_tx_start(sc);
 		break;

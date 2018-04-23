@@ -50,8 +50,6 @@
 #include <dispatch/dispatch.h>
 #include <vmnet/vmnet.h>
 
-#pragma clang diagnostic ignored "-Wvariadic-macros"
-
 #include <xhyve/xhyve.h>
 
 #include <xhyve/support/misc.h>
@@ -233,8 +231,8 @@ struct ck_info {
  * Debug printf
  */
 static int e82545_debug = 0;
-#define DPRINTF(msg,params...) if (e82545_debug) fprintf(stderr, "e82545: " msg, params)
-#define WPRINTF(msg,params...) fprintf(stderr, "e82545: " msg, params)
+#define DPRINTF(msg,...) if (e82545_debug) fprintf(stderr, "e82545: " msg, __VA_ARGS__)
+#define WPRINTF(msg,...) fprintf(stderr, "e82545: " msg, __VA_ARGS__)
 
 #define	MIN(a,b) (((a)<(b))?(a):(b))
 #define	MAX(a,b) (((a)>(b))?(a):(b))

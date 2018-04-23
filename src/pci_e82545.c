@@ -50,7 +50,6 @@
 #include <dispatch/dispatch.h>
 #include <vmnet/vmnet.h>
 
-#pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wpointer-arith"
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
 #pragma clang diagnostic ignored "-Wsign-compare"
@@ -241,13 +240,15 @@ static int e82545_debug = 0;
 #define	MIN(a,b) (((a)<(b))?(a):(b))
 #define	MAX(a,b) (((a)>(b))?(a):(b))
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+
 /* s/w representation of the RAL/RAH regs */
 struct  eth_uni {
 	int		eu_valid;
 	int		eu_addrsel;
 	struct ether_addr eu_eth;
 };
-
 
 struct e82545_softc {
 	struct pci_devinst *esc_pi;
@@ -357,6 +358,8 @@ struct e82545_softc {
         uint16_t eeprom_data[E82545_NVM_EEPROM_SIZE];
 };
 
+#pragma clang diagnostic pop
+
 static void e82545_reset(struct e82545_softc *sc, int dev);
 static void e82545_rx_enable(struct e82545_softc *sc);
 static void e82545_rx_disable(struct e82545_softc *sc);
@@ -365,12 +368,17 @@ static void e82545_tx_start(struct e82545_softc *sc);
 static void e82545_tx_enable(struct e82545_softc *sc);
 static void e82545_tx_disable(struct e82545_softc *sc);
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+
 struct vmnet_state {
     interface_ref iface;
     uint8_t mac[6];
     unsigned int mtu;
     unsigned int max_packet_size;
 };
+
+#pragma clang diagnostic pop
 
 /*
  * Drop privileges according to the CERT Secure C Coding Standard section

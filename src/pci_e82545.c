@@ -50,7 +50,6 @@
 #include <dispatch/dispatch.h>
 #include <vmnet/vmnet.h>
 
-#pragma clang diagnostic ignored "-Wunused-function"
 #pragma clang diagnostic ignored "-Wunused-macros"
 #pragma clang diagnostic ignored "-Wvariadic-macros"
 
@@ -553,19 +552,6 @@ vmn_write(struct vmnet_state *vms, struct iovec *iov, int n) {
     r = vmnet_write(vms->iface, &v, &pktcnt);
 
     assert(r == VMNET_SUCCESS);
-}
-
-static inline int
-e82545_size_stat_index(uint32_t size)
-{
-	if (size <= 64) {
-		return 0;
-	} else if (size >= 1024) {
-		return 5;
-	} else {
-		/* should be 1-4 */
-		return (ffs((int)size) - 6);
-	}
 }
 
 static void

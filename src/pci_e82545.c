@@ -50,7 +50,6 @@
 #include <dispatch/dispatch.h>
 #include <vmnet/vmnet.h>
 
-#pragma clang diagnostic ignored "-Wunused-macros"
 #pragma clang diagnostic ignored "-Wvariadic-macros"
 
 #include <xhyve/xhyve.h>
@@ -64,9 +63,11 @@
 #include <xhyve/pci_emul.h>
 #include <xhyve/mevent.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-macros"
+
 /* FreeBSD sys/net/ethernet.h */
 #define    ETHER_VLAN_ENCAP_LEN    4    /* len of 802.1Q VLAN encapsulation */
-#define    ETHER_IS_MULTICAST(addr) (*(addr) & 0x01) /* is address mcast/bcast? */
 
 /* Hardware/register definitions XXX: move some to common code. */
 #define E82545_VENDOR_ID_INTEL			0x8086
@@ -93,13 +94,14 @@
 #define E82545_IOADDR				0x00000000
 #define E82545_IODATA				0x00000004
 #define E82545_IO_REGISTER_MAX			0x0001FFFF
-#define E82545_IO_FLASH_BASE			0x00080000
-#define E82545_IO_FLASH_MAX			0x000FFFFF
 
-#define E82545_ARRAY_ENTRY(reg, offset)		(reg + (offset<<2))
-#define E82545_RAR_MAX				15
-#define E82545_MTA_MAX				127
-#define E82545_VFTA_MAX				127
+#define E82545_IO_FLASH_BASE            0x00080000
+#define E82545_IO_FLASH_MAX            0x000FFFFF
+
+#define E82545_ARRAY_ENTRY(reg, offset)        (reg + (offset<<2))
+#define E82545_RAR_MAX                15
+#define E82545_MTA_MAX                127
+#define E82545_VFTA_MAX                127
 
 /* Slightly modified from the driver versions, hardcoded for 3 opcode bits,
  * followed by 6 address bits.
@@ -123,6 +125,8 @@
 
 /* This is an arbitrary number.  There is no hard limit on the chip. */
 #define I82545_MAX_TXSEGS	64
+
+#pragma clang diagnostic pop
 
 /* Legacy receive descriptor */
 struct e1000_rx_desc {

@@ -50,7 +50,6 @@
 #include <dispatch/dispatch.h>
 #include <vmnet/vmnet.h>
 
-#pragma clang diagnostic ignored "-Wshorten-64-to-32"
 #pragma clang diagnostic ignored "-Wsign-compare"
 #pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wunused-function"
@@ -1069,7 +1068,7 @@ e82545_tap_callback(struct e82545_softc *sc)
 			vec[i].iov_base = paddr_guest2host(rxd->buffer_addr, bufsz);
 			vec[i].iov_len = bufsz;
 		}
-        len = vmn_read(sc->vms, vec, maxpktdesc);
+        len = (int)vmn_read(sc->vms, vec, maxpktdesc);
 		if (len <= 0) {
 			DPRINTF("tap: readv() returned %d\n", len);
 			goto done;
@@ -1200,7 +1199,7 @@ e82545_iov_checksum(struct iovec *iov, int iovcnt, int off, int len)
 	/* Calculate checksum of requested range. */
 	odd = 0;
 	while (len > 0 && iovcnt > 0) {
-		now = MIN(len, iov->iov_len - off);
+		now = MIN(len, (int)(iov->iov_len - off));
 		s = e82545_buf_checksum((uint8_t *)iov->iov_base + off, now);
 		sum += odd ? (s << 8) : s;
 		odd ^= (now & 1);
@@ -1418,7 +1417,7 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 		/* Round up writable space to the first vector. */
 		if (hdrlen != 0 && iov[0].iov_len > hdrlen &&
 		    iov[0].iov_len < hdrlen + 100)
-			hdrlen = iov[0].iov_len;
+			hdrlen = (int)iov[0].iov_len;
 	} else {
 		/* In case of TSO header length provided by software. */
 		hdrlen = sc->esc_txctx.tcp_seg_setup.fields.hdr_len;
@@ -1430,7 +1429,7 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 		hdr += vlen;
 		for (left = hdrlen, hdrp = hdr; left > 0;
 		    left -= now, hdrp += now) {
-			now = MIN(left, iov->iov_len);
+			now = MIN(left, (int)(iov->iov_len));
 			memcpy(hdrp, iov->iov_base, now);
             iov->iov_base = (uint8_t *)iov->iov_base + now;
 			iov->iov_len -= now;
@@ -1502,7 +1501,7 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 		tiovcnt = 1;
 		/* Include respective part of payload IOV. */
 		for (nleft = now; pv < iovcnt && nleft > 0; nleft -= nnow) {
-			nnow = MIN(nleft, iov[pv].iov_len - pvoff);
+			nnow = MIN(nleft, (int)(iov[pv].iov_len - pvoff));
 			tiov[tiovcnt].iov_base = (uint8_t *)iov[pv].iov_base + pvoff;
 			tiov[tiovcnt++].iov_len = nnow;
 			if (pvoff + nnow == iov[pv].iov_len) {

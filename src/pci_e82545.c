@@ -50,7 +50,6 @@
 #include <dispatch/dispatch.h>
 #include <vmnet/vmnet.h>
 
-#pragma clang diagnostic ignored "-Wsign-compare"
 #pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wunused-function"
 #pragma clang diagnostic ignored "-Wunused-macros"
@@ -1122,7 +1121,7 @@ e82545_tap_callback(struct e82545_softc *sc)
 		    E1000_RXD_STAT_EOP | E1000_RXD_STAT_DD;
 
 		/* Schedule receive interrupts. */
-		if (len <= sc->esc_RSRPD) {
+		if (len <= (int)sc->esc_RSRPD) {
 			cause |= E1000_ICR_SRPD | E1000_ICR_RXT0;
 		} else {
 			/* XXX: RDRT and RADV timers should be here. */
@@ -1169,7 +1168,7 @@ e82545_buf_checksum(uint8_t *buf, int len)
 	uint32_t sum = 0;
 
 	/* Checksum all the pairs of bytes first... */
-	for (i = 0; i < (len & ~1U); i += 2)
+	for (i = 0; i < (int)(len & ~1U); i += 2)
 		sum += read_uint16_unaligned(buf + i);
 
 	/*
@@ -1190,7 +1189,7 @@ e82545_iov_checksum(struct iovec *iov, int iovcnt, int off, int len)
 	uint32_t sum = 0, s;
 
 	/* Skip completely unneeded vectors. */
-	while (iovcnt > 0 && iov->iov_len <= off && off > 0) {
+	while (iovcnt > 0 && iov->iov_len <= (size_t)off && off > 0) {
 		off -= iov->iov_len;
 		iov++;
 		iovcnt--;
@@ -1415,8 +1414,8 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 		if (ckinfo[1].ck_valid)
 			hdrlen = MAX(hdrlen, ckinfo[1].ck_off + 2);
 		/* Round up writable space to the first vector. */
-		if (hdrlen != 0 && iov[0].iov_len > hdrlen &&
-		    iov[0].iov_len < hdrlen + 100)
+		if (hdrlen != 0 && iov[0].iov_len > (size_t)hdrlen &&
+		    iov[0].iov_len < (size_t)(hdrlen + 100))
 			hdrlen = (int)iov[0].iov_len;
 	} else {
 		/* In case of TSO header length provided by software. */
@@ -1504,7 +1503,7 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 			nnow = MIN(nleft, (int)(iov[pv].iov_len - pvoff));
 			tiov[tiovcnt].iov_base = (uint8_t *)iov[pv].iov_base + pvoff;
 			tiov[tiovcnt++].iov_len = nnow;
-			if (pvoff + nnow == iov[pv].iov_len) {
+			if (pvoff + nnow == (int)iov[pv].iov_len) {
 				pv++;
 				pvoff = 0;
 			} else

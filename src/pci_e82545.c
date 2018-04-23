@@ -50,7 +50,6 @@
 #include <dispatch/dispatch.h>
 #include <vmnet/vmnet.h>
 
-#pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wunused-function"
 #pragma clang diagnostic ignored "-Wunused-macros"
 #pragma clang diagnostic ignored "-Wvariadic-macros"
@@ -565,7 +564,7 @@ e82545_size_stat_index(uint32_t size)
 		return 5;
 	} else {
 		/* should be 1-4 */
-		return (ffs(size) - 6);
+		return (ffs((int)size) - 6);
 	}
 }
 
@@ -655,7 +654,7 @@ e82545_eecd_strobe(struct e82545_softc *sc)
 		if (sc->nvm_data & 0x8000) {
 			sc->eeprom_control |= E1000_EECD_DO;
 		} else {
-			sc->eeprom_control &= ~E1000_EECD_DO;
+			sc->eeprom_control &= (uint32_t)~E1000_EECD_DO;
 		}
 		sc->nvm_data <<= 1;
 		if (sc->nvm_bits == 0) {
@@ -885,7 +884,7 @@ e82545_intr_read(struct e82545_softc *sc, uint32_t offset)
 	case E1000_ICR:
 		retval = sc->esc_ICR;
 		sc->esc_ICR = 0;
-		e82545_icr_deassert(sc, ~0);
+		e82545_icr_deassert(sc, (uint32_t)~0);
 		break;
 	case E1000_ITR:
 		retval = sc->esc_ITR;
@@ -910,7 +909,7 @@ static void
 e82545_devctl(struct e82545_softc *sc, uint32_t val)
 {
 
-	sc->esc_CTRL = val & ~E1000_CTRL_RST;
+	sc->esc_CTRL = val & (uint32_t)~E1000_CTRL_RST;
 
 	if (val & E1000_CTRL_RST) {
 		DPRINTF("e1k: s/w reset, ctl %x\n", val);
@@ -1064,8 +1063,8 @@ e82545_tap_callback(struct e82545_softc *sc)
 		/* Grab rx descriptor pointed to by the head pointer */
 		for (i = 0; i < maxpktdesc; i++) {
 			rxd = &sc->esc_rxdesc[(head + i) % size];
-			vec[i].iov_base = paddr_guest2host(rxd->buffer_addr, bufsz);
-			vec[i].iov_len = bufsz;
+			vec[i].iov_base = paddr_guest2host(rxd->buffer_addr, (size_t)bufsz);
+			vec[i].iov_len = (size_t)bufsz;
 		}
         len = (int)vmn_read(sc->vms, vec, maxpktdesc);
 		if (len <= 0) {
@@ -1164,11 +1163,12 @@ e82545_carry(uint32_t sum)
 static uint16_t
 e82545_buf_checksum(uint8_t *buf, int len)
 {
-	int i;
+	int i, limit;
 	uint32_t sum = 0;
 
 	/* Checksum all the pairs of bytes first... */
-	for (i = 0; i < (int)(len & ~1U); i += 2)
+    limit = len - (len & 1);
+	for (i = 0; i < limit; i += 2)
 		sum += read_uint16_unaligned(buf + i);
 
 	/*
@@ -1198,7 +1198,7 @@ e82545_iov_checksum(struct iovec *iov, int iovcnt, int off, int len)
 	/* Calculate checksum of requested range. */
 	odd = 0;
 	while (len > 0 && iovcnt > 0) {
-		now = MIN(len, (int)(iov->iov_len - off));
+		now = MIN(len, (int)(iov->iov_len - (size_t)off));
 		s = e82545_buf_checksum((uint8_t *)iov->iov_base + off, now);
 		sum += odd ? (s << 8) : s;
 		odd ^= (now & 1);
@@ -1343,8 +1343,8 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 				len -= 2;
 			tlen += len;
 			if (iovcnt < I82545_MAX_TXSEGS) {
-				iov[iovcnt].iov_base = paddr_guest2host(dsc->td.buffer_addr, len);
-				iov[iovcnt].iov_len = len;
+				iov[iovcnt].iov_base = paddr_guest2host(dsc->td.buffer_addr, (size_t)len);
+				iov[iovcnt].iov_len = (size_t)len;
 			}
 			iovcnt++;
 		}
@@ -1424,14 +1424,14 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 
 	/* Allocate, fill and prepend writable header vector. */
 	if (hdrlen != 0) {
-		hdr = __builtin_alloca(hdrlen + vlen);
+		hdr = __builtin_alloca((size_t)(hdrlen + vlen));
 		hdr += vlen;
 		for (left = hdrlen, hdrp = hdr; left > 0;
 		    left -= now, hdrp += now) {
 			now = MIN(left, (int)(iov->iov_len));
 			memcpy(hdrp, iov->iov_base, now);
             iov->iov_base = (uint8_t *)iov->iov_base + now;
-			iov->iov_len -= now;
+			iov->iov_len -= (size_t)now;
 			if (iov->iov_len == 0) {
 				iov++;
 				iovcnt--;
@@ -1440,7 +1440,7 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 		iov--;
 		iovcnt++;
 		iov->iov_base = hdr;
-		iov->iov_len = hdrlen;
+		iov->iov_len = (size_t)hdrlen;
 	}
 
 	/* Insert VLAN tag. */
@@ -1496,13 +1496,13 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 		/* Construct IOVs for the segment. */
 		/* Include whole original header. */
 		tiov[0].iov_base = hdr;
-		tiov[0].iov_len = hdrlen;
+		tiov[0].iov_len = (size_t)hdrlen;
 		tiovcnt = 1;
 		/* Include respective part of payload IOV. */
 		for (nleft = now; pv < iovcnt && nleft > 0; nleft -= nnow) {
-			nnow = MIN(nleft, (int)(iov[pv].iov_len - pvoff));
+			nnow = MIN(nleft, (int)iov[pv].iov_len - pvoff);
 			tiov[tiovcnt].iov_base = (uint8_t *)iov[pv].iov_base + pvoff;
-			tiov[tiovcnt++].iov_len = nnow;
+			tiov[tiovcnt++].iov_len = (size_t)nnow;
 			if (pvoff + nnow == (int)iov[pv].iov_len) {
 				pv++;
 				pvoff = 0;
@@ -1533,7 +1533,7 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 		if (tcp) {
 			/* Update sequence number and FIN/PUSH flags. */
             write_uint32_unaligned(&hdr[ckinfo[1].ck_start + 4],
-                                   htonl(tcpseq + paylen - left));
+                                   htonl((int)tcpseq + paylen - left));
 			if (now < left) {
 				hdr[ckinfo[1].ck_start + 13] &=
 				    ~(TH_FIN | TH_PUSH);
@@ -1541,7 +1541,7 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 		} else {
 			/* Update payload length. */
             write_uint32_unaligned(&hdr[ckinfo[1].ck_start + 4],
-                                   hdrlen - ckinfo[1].ck_start + now);
+                                   (uint32_t)(hdrlen - (int)ckinfo[1].ck_start + now));
 		}
 
 		/* Calculate checksums and transmit. */
@@ -1710,15 +1710,15 @@ e82545_read_ra(struct e82545_softc *sc, int reg)
 
 	if (reg & 0x1) {
 		/* RAH */
-		retval = (eu->eu_valid << 31) |
-			 (eu->eu_addrsel << 16) |
-			 (eu->eu_eth.octet[5] << 8) |
+		retval = (uint32_t)(eu->eu_valid << 31) |
+			 (uint32_t)(eu->eu_addrsel << 16) |
+             (uint32_t)(eu->eu_eth.octet[5] << 8) |
 			 eu->eu_eth.octet[4];
 	} else {
 		/* RAL */
-		retval = (eu->eu_eth.octet[3] << 24) |
-			 (eu->eu_eth.octet[2] << 16) |
-			 (eu->eu_eth.octet[1] << 8) |
+		retval = (uint32_t)(eu->eu_eth.octet[3] << 24) |
+			 (uint32_t)(eu->eu_eth.octet[2] << 16) |
+			 (uint32_t)(eu->eu_eth.octet[1] << 8) |
 			 eu->eu_eth.octet[0];
 	}
 
@@ -1757,7 +1757,7 @@ e82545_write_register(struct e82545_softc *sc, uint32_t offset, uint32_t value)
 		sc->esc_FCTTV = value & ~0xFFFF0000;
 		break;
 	case E1000_LEDCTL:
-		sc->esc_LEDCTL = value & ~0x30303000;
+		sc->esc_LEDCTL = value & (uint32_t)~0x30303000;
 		break;
 	case E1000_PBA:
 		sc->esc_PBA = value & 0x0000FF80;
@@ -1779,7 +1779,7 @@ e82545_write_register(struct e82545_softc *sc, uint32_t offset, uint32_t value)
 		sc->esc_FCRTH = value & ~0xFFFF0007;
 		break;
 	case E1000_RDBAL(0):
-		sc->esc_RDBAL = value & ~0xF;
+		sc->esc_RDBAL = value & (uint32_t)~0xF;
 		if (sc->esc_rx_enabled) {
 			/* Apparently legal: update cached address */
 			e82545_rx_update_rdba(sc);
@@ -1795,11 +1795,11 @@ e82545_write_register(struct e82545_softc *sc, uint32_t offset, uint32_t value)
 		break;
 	case E1000_RDH(0):
 		/* XXX should only ever be zero ? Range check ? */
-		sc->esc_RDH = (int16_t)value;
+		sc->esc_RDH = (uint16_t)value;
 		break;
 	case E1000_RDT(0):
 		/* XXX if this opens up the rx ring, do something ? */
-		sc->esc_RDT = (int16_t)value;
+		sc->esc_RDT = (uint16_t)value;
 		break;
 	case E1000_RDTR:
 		/* ignore FPD bit 31 */
@@ -1818,7 +1818,7 @@ e82545_write_register(struct e82545_softc *sc, uint32_t offset, uint32_t value)
 		sc->esc_RXCSUM = value & ~0xFFFFF800;
 		break;
 	case E1000_TXCW:
-		sc->esc_TXCW = value & ~0x3FFF0000;
+		sc->esc_TXCW = value & (uint32_t)~0x3FFF0000;
 		break;
 	case E1000_TCTL:
 		e82545_tx_ctl(sc, value);
@@ -1827,10 +1827,10 @@ e82545_write_register(struct e82545_softc *sc, uint32_t offset, uint32_t value)
 		sc->esc_TIPG = value;
 		break;
 	case E1000_AIT:
-		sc->esc_AIT = (int16_t)value;
+		sc->esc_AIT = (uint16_t)value;
 		break;
 	case E1000_TDBAL(0):
-		sc->esc_TDBAL = value & ~0xF;
+		sc->esc_TDBAL = value & (uint32_t)~0xF;
 		if (sc->esc_tx_enabled) {
 			/* Apparently legal */
 			e82545_tx_update_tdba(sc);
@@ -1847,11 +1847,11 @@ e82545_write_register(struct e82545_softc *sc, uint32_t offset, uint32_t value)
 	case E1000_TDH(0):
 		//assert(!sc->esc_tx_enabled);
 		/* XXX should only ever be zero ? Range check ? */
-		sc->esc_TDHr = sc->esc_TDH = (int16_t)value;
+		sc->esc_TDHr = sc->esc_TDH = (uint16_t)value;
 		break;
 	case E1000_TDT(0):
 		/* XXX range check ? */
-		sc->esc_TDT = (int16_t)value;
+		sc->esc_TDT = (uint16_t)value;
 		if (sc->esc_tx_enabled)
 			e82545_tx_start(sc);
 		break;
@@ -1860,7 +1860,7 @@ e82545_write_register(struct e82545_softc *sc, uint32_t offset, uint32_t value)
 		break;
 	case E1000_TXDCTL(0):
 		//assert(!sc->esc_tx_enabled);
-		sc->esc_TXDCTL = value & ~0xC0C0C0;
+		sc->esc_TXDCTL = value & (uint32_t)~0xC0C0C0;
 		break;
 	case E1000_TADV:
 		sc->esc_TADV = value & ~0xFFFF0000;
@@ -1879,7 +1879,7 @@ e82545_write_register(struct e82545_softc *sc, uint32_t offset, uint32_t value)
 		if (value & E1000_EECD_REQ) {
 			sc->eeprom_control |= E1000_EECD_GNT;
 		} else {
-                        sc->eeprom_control &= ~E1000_EECD_GNT;
+                        sc->eeprom_control &= (uint32_t)~E1000_EECD_GNT;
 		}
 		if (eecd_strobe && (sc->eeprom_control & E1000_EECD_CS)) {
 			e82545_eecd_strobe(sc);
@@ -1900,7 +1900,7 @@ e82545_write_register(struct e82545_softc *sc, uint32_t offset, uint32_t value)
 		}
 		switch (value & E82545_MDIC_OP_MASK) {
 		case E1000_MDIC_OP_READ:
-			sc->mdi_control &= ~E82545_MDIC_DATA_MASK;
+			sc->mdi_control &= (uint32_t)~E82545_MDIC_DATA_MASK;
 			sc->mdi_control |= e82545_read_mdi(sc, reg_addr, phy_addr);
 			break;
 		case E1000_MDIC_OP_WRITE:

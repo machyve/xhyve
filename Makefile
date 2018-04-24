@@ -39,7 +39,6 @@ XHYVE_SRC := \
 	src/dbgport.c \
 	src/inout.c \
 	src/ioapic.c \
-	src/md5c.c \
 	src/mem.c \
 	src/mevent.c \
 	src/mptbl.c \

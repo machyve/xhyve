@@ -17,7 +17,6 @@
 		3F3FFA631BF7C6A7004C89A1 /* kexec.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA271BF7C6A7004C89A1 /* kexec.c */; };
 		3F3FFA641BF7C6A7004C89A1 /* inout.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA281BF7C6A7004C89A1 /* inout.c */; };
 		3F3FFA651BF7C6A7004C89A1 /* ioapic.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA291BF7C6A7004C89A1 /* ioapic.c */; };
-		3F3FFA661BF7C6A7004C89A1 /* md5c.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA2A1BF7C6A7004C89A1 /* md5c.c */; };
 		3F3FFA671BF7C6A7004C89A1 /* mem.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA2B1BF7C6A7004C89A1 /* mem.c */; };
 		3F3FFA681BF7C6A7004C89A1 /* mevent.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA2C1BF7C6A7004C89A1 /* mevent.c */; };
 		3F3FFA6A1BF7C6A7004C89A1 /* mptbl.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA2E1BF7C6A7004C89A1 /* mptbl.c */; };
@@ -98,7 +97,6 @@
 		3F3FFA271BF7C6A7004C89A1 /* kexec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = kexec.c; sourceTree = "<group>"; };
 		3F3FFA281BF7C6A7004C89A1 /* inout.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = inout.c; sourceTree = "<group>"; };
 		3F3FFA291BF7C6A7004C89A1 /* ioapic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ioapic.c; sourceTree = "<group>"; };
-		3F3FFA2A1BF7C6A7004C89A1 /* md5c.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = md5c.c; sourceTree = "<group>"; };
 		3F3FFA2B1BF7C6A7004C89A1 /* mem.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mem.c; sourceTree = "<group>"; };
 		3F3FFA2C1BF7C6A7004C89A1 /* mevent.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mevent.c; sourceTree = "<group>"; };
 		3F3FFA2D1BF7C6A7004C89A1 /* mevent_test.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mevent_test.c; sourceTree = "<group>"; };
@@ -171,7 +169,6 @@
 		3FB651741BF7CD4500ED886F /* i8253reg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = i8253reg.h; sourceTree = "<group>"; };
 		3FB651751BF7CD4500ED886F /* i8259.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = i8259.h; sourceTree = "<group>"; };
 		3FB651761BF7CD4500ED886F /* linker_set.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = linker_set.h; sourceTree = "<group>"; };
-		3FB651771BF7CD4500ED886F /* md5.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = md5.h; sourceTree = "<group>"; };
 		3FB651781BF7CD4500ED886F /* misc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = misc.h; sourceTree = "<group>"; };
 		3FB651791BF7CD4500ED886F /* mptable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mptable.h; sourceTree = "<group>"; };
 		3FB6517A1BF7CD4500ED886F /* ns16550.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ns16550.h; sourceTree = "<group>"; };
@@ -299,7 +296,6 @@
 				3F3FFA241BF7C6A7004C89A1 /* dsdt.asl */,
 				3F3FFA281BF7C6A7004C89A1 /* inout.c */,
 				3F3FFA291BF7C6A7004C89A1 /* ioapic.c */,
-				3F3FFA2A1BF7C6A7004C89A1 /* md5c.c */,
 				3F3FFA2B1BF7C6A7004C89A1 /* mem.c */,
 				3F3FFA2C1BF7C6A7004C89A1 /* mevent.c */,
 				3F3FFA2D1BF7C6A7004C89A1 /* mevent_test.c */,
@@ -445,7 +441,6 @@
 				3FB651741BF7CD4500ED886F /* i8253reg.h */,
 				3FB651751BF7CD4500ED886F /* i8259.h */,
 				3FB651761BF7CD4500ED886F /* linker_set.h */,
-				3FB651771BF7CD4500ED886F /* md5.h */,
 				3FB651781BF7CD4500ED886F /* misc.h */,
 				3FB651791BF7CD4500ED886F /* mptable.h */,
 				3FB6517A1BF7CD4500ED886F /* ns16550.h */,
@@ -602,7 +597,6 @@
 				3F3FFA781BF7C6A7004C89A1 /* smbiostbl.c in Sources */,
 				3F3FFA621BF7C6A7004C89A1 /* fbsd.c in Sources */,
 				3F3FFA5E1BF7C6A7004C89A1 /* atkbdc.c in Sources */,
-				3F3FFA661BF7C6A7004C89A1 /* md5c.c in Sources */,
 				3F3FFA6C1BF7C6A7004C89A1 /* pci_emul.c in Sources */,
 				3F3FFA701BF7C6A7004C89A1 /* pci_uart.c in Sources */,
 				3F3FFA7E1BF7C6A7004C89A1 /* vmx_msr.c in Sources */,

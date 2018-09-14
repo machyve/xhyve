@@ -583,8 +583,9 @@
 		3F19348A1BF7C0D40099CC46 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0730;
-				ORGANIZATIONNAME = "Jeremy Sequoia";
+				DefaultBuildSystemTypeForWorkspace = Latest;
+				LastUpgradeCheck = 1000;
+				ORGANIZATIONNAME = "xhyve";
 				TargetAttributes = {
 					3F1934911BF7C0D40099CC46 = {
 						CreatedOnToolsVersion = 7.3;

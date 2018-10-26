@@ -75,7 +75,7 @@ struct rtcdev {
 	uint8_t nvram[36];
 	uint8_t century;
 	uint8_t nvram2[128 - 51];
-} __packed;
+};
 CTASSERT(sizeof(struct rtcdev) == 128);
 CTASSERT(offsetof(struct rtcdev, century) == RTC_CENTURY);
 

@@ -512,8 +512,22 @@ blockif_open(const char *optstr, UNUSED const char *ident)
 		// 	candelete = arg.value.i;
 		// if (ioctl(fd, DIOCGPROVIDERNAME, name) == 0)
 		// 	geom = 1;
-	} else
+	} else if (S_ISBLK(sbuf.st_mode)) {
+		uint64_t num_blocks;
+		uint32_t block_size;
+		if (ioctl(fd, DKIOCGETBLOCKSIZE, (void*)&block_size) < 0) {
+			perror("DKIOCGETBLOCKSIZE");
+			goto err;
+		}
+		if (ioctl(fd, DKIOCGETBLOCKCOUNT, (void*)&num_blocks) < 0) {
+			perror("DKIOCGETBLOCKCOUNT");
+			goto err;
+		}
+		size = (off_t) (num_blocks * block_size);
+		sectsz = (int) block_size;
+	} else {
 		psectsz = sbuf.st_blksize;
+	}
 
 	if (ssopt != 0) {
 		if (!powerof2(ssopt) || !powerof2(pssopt) || ssopt < 512 ||

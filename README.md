@@ -8,7 +8,7 @@ About
 
 The *xhyve hypervisor* is a port of [bhyve](http://www.bhyve.org) to macOS. It is built on top of [Hypervisor.framework](https://developer.apple.com/library/mac/documentation/DriversKernelHardware/Reference/Hypervisor/index.html) in OS X 10.10 Yosemite and higher, runs entirely in userspace, and has no other dependencies. It can run FreeBSD, some Linux distributions, and Windows 10 and may gain support for other guest operating systems in the future.
 
-License: BSD
+License: [BSD-2-Clause](LICENSE)
 
 Introduction: [http://www.pagetable.com/?p=831](http://www.pagetable.com/?p=831)
 

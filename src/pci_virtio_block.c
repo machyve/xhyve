@@ -42,9 +42,11 @@
 #include <sys/uio.h>
 #include <sys/ioctl.h>
 #include <sys/disk.h>
+
+#include <CommonCrypto/CommonDigest.h>
+
 #include <xhyve/support/misc.h>
 #include <xhyve/support/linker_set.h>
-#include <xhyve/support/md5.h>
 #include <xhyve/xhyve.h>
 #include <xhyve/pci_emul.h>
 #include <xhyve/virtio.h>
@@ -311,7 +313,6 @@ pci_vtblk_init(struct pci_devinst *pi, char *opts)
 {
 	char bident[sizeof("XX:X:X")];
 	struct blockif_ctxt *bctxt;
-	MD5_CTX mdctx;
 	u_char digest[16];
 	struct pci_vtblk_softc *sc;
 	off_t size;
@@ -359,9 +360,7 @@ pci_vtblk_init(struct pci_devinst *pi, char *opts)
 	 * Create an identifier for the backing file. Use parts of the
 	 * md5 sum of the filename
 	 */
-	MD5Init(&mdctx);
-	MD5Update(&mdctx, opts, ((unsigned) strlen(opts)));
-	MD5Final(digest, &mdctx);	
+    CC_MD5(opts, (CC_LONG)strlen(opts), digest);
 	snprintf(sc->vbsc_ident, VTBLK_BLK_ID_BYTES, "BHYVE-%02X%02X-%02X%02X-%02X%02X",
 	    digest[0], digest[1], digest[2], digest[3], digest[4], digest[5]);
 

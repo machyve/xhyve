@@ -51,6 +51,8 @@ int xh_vcpu_create(int vcpu);
 void xh_vcpu_destroy(int vcpu);
 int xh_vm_get_memory_seg(uint64_t gpa, size_t *ret_len);
 int xh_vm_setup_memory(size_t len, enum vm_mmap_style vms);
+int xh_setup_bootrom_memory(size_t len, void **addr);
+int xh_setup_video_memory(uint64_t gpa, size_t len, void **addr);
 void *xh_vm_map_gpa(uint64_t gpa, size_t len);
 int xh_vm_gla2gpa(int vcpu, struct vm_guest_paging *paging, uint64_t gla,
 	int prot, uint64_t *gpa, int *fault);

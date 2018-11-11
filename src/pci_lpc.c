@@ -33,6 +33,7 @@
 #include <string.h>
 #include <xhyve/vmm/vmm_api.h>
 #include <xhyve/acpi.h>
+#include <xhyve/bootrom.h>
 #include <xhyve/inout.h>
 #include <xhyve/dbgport.h>
 #include <xhyve/pci_emul.h>
@@ -56,6 +57,8 @@ SYSRES_IO(NMISC_PORT, 1);
 
 static struct pci_devinst *lpc_bridge;
 
+static const char *romfile;
+
 #define	LPC_UART_NUM	2
 
 #pragma clang diagnostic push
@@ -75,7 +78,7 @@ static const char *lpc_uart_names[LPC_UART_NUM] = { "COM1", "COM2" };
 /*
  * LPC device configuration is in the following form:
  * <lpc_device_name>[,<options>]
- * For e.g. "com1,stdio"
+ * For e.g. "com1,stdio" or "bootrom,/var/romfile"
  */
 int
 lpc_device_parse(const char *opts)
@@ -87,6 +90,11 @@ lpc_device_parse(const char *opts)
 	str = cpy = strdup(opts);
 	lpcdev = strsep(&str, ",");
 	if (lpcdev != NULL) {
+        if (strcasecmp(lpcdev, "bootrom") == 0) {
+            romfile = str;
+            error = 0;
+            goto done;
+        }
 		for (unit = 0; unit < LPC_UART_NUM; unit++) {
 			if (strcasecmp(lpcdev, lpc_uart_names[unit]) == 0) {
 				lpc_uart_softc[unit].opts = str;
@@ -103,6 +111,13 @@ done:
 
 	return (error);
 }
+
+const char *
+lpc_bootrom(void)
+{
+    return romfile;
+}
+
 
 static void
 lpc_uart_intr_assert(void *arg)
@@ -161,6 +176,12 @@ lpc_init(void)
 	struct lpc_uart_softc *sc;
 	struct inout_port iop;
 	int unit, error;
+
+    if (romfile != NULL) {
+        error = bootrom_init(romfile);
+        if (error)
+            return error;
+    }
 
 	/* COM1 and COM2 */
 	for (unit = 0; unit < LPC_UART_NUM; unit++) {

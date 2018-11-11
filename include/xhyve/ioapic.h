@@ -29,8 +29,10 @@
 
 #pragma once
 
+struct pci_devinst;
+
 /*
  * Allocate a PCI IRQ from the I/O APIC.
  */
 void ioapic_init(void);
-int ioapic_pci_alloc_irq(void);
+int ioapic_pci_alloc_irq(struct pci_devinst *pi);

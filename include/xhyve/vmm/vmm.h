@@ -113,7 +113,7 @@ void vm_destroy(struct vm *vm);
 void vcpu_destroy(struct vm *vm, int vcpu);
 int vm_reinit(struct vm *vm);
 const char *vm_name(struct vm *vm);
-int vm_malloc(struct vm *vm, uint64_t gpa, size_t len);
+int vm_malloc(struct vm *vm, uint64_t gpa, size_t len, uint64_t prot);
 void *vm_gpa2hva(struct vm *vm, uint64_t gpa, uint64_t len);
 int vm_gpabase2memseg(struct vm *vm, uint64_t gpabase,
 	struct vm_memory_segment *seg);

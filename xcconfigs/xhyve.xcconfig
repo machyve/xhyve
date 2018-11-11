@@ -1,0 +1,12 @@
+CODE_SIGN_ENTITLEMENTS = src/xhyve-entitlements.plist
+OTHER_CODE_SIGN_FLAGS = -o library
+
+PRODUCT_BUNDLE_IDENTIFIER = xyz.xhyve.xhyve
+
+INFOPLIST_FILE = src/xhyve-Info.plist
+CREATE_INFOPLIST_SECTION_IN_BINARY = YES
+
+OTHER_CFLAGS = $(inherited) -include xhyve-version.h -fvisibility=hidden
+
+INSTALL_PATH = $(INSTALL_PREFIX)/bin
+MAN_INSTALL_PATH = $(INSTALL_PREFIX)/share/man

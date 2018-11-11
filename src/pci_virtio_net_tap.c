@@ -37,15 +37,18 @@
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
+#include <sys/time.h>
 #include <sys/select.h>
 #include <sys/param.h>
 #include <sys/uio.h>
 #include <sys/ioctl.h>
 #include <net/ethernet.h>
+
+#include <CommonCrypto/CommonDigest.h>
+
 #include <xhyve/support/misc.h>
 #include <xhyve/support/atomic.h>
 #include <xhyve/support/linker_set.h>
-#include <xhyve/support/md5.h>
 #include <xhyve/xhyve.h>
 #include <xhyve/pci_emul.h>
 #include <xhyve/mevent.h>
@@ -569,7 +572,6 @@ pci_vtnet_parsemac(char *mac_str, uint8_t *mac_addr)
 static int
 pci_vtnet_init(struct pci_devinst *pi, char *opts)
 {
-	MD5_CTX mdctx;
 	unsigned char digest[16];
 	char nstr[80];
 	struct pci_vtnet_softc *sc;
@@ -667,9 +669,7 @@ pci_vtnet_init(struct pci_devinst *pi, char *opts)
 		snprintf(nstr, sizeof(nstr), "%d-%d-%s", pi->pi_slot,
 		    pi->pi_func, vmname);
 
-		MD5Init(&mdctx);
-		MD5Update(&mdctx, nstr, ((unsigned int) strlen(nstr)));
-		MD5Final(digest, &mdctx);
+        CC_MD5(nstr, (CC_LONG)strlen(nstr), digest);
 
 		sc->vsc_config.mac[0] = 0x00;
 		sc->vsc_config.mac[1] = 0xa0;

@@ -43,7 +43,7 @@ Otherwise:
 
 Building
 --------
-    $ git clone https://github.com/xhyve-xyz/xhyve.git
+    $ git clone https://github.com/machyve/xhyve.git
     $ cd xhyve
     $ xcodebuild
 

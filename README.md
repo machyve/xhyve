@@ -247,12 +247,12 @@ Now that *xhyve* has support for a framebuffer, EFI and the e1000 NIC, *xhyve* c
 Issues
 ------
 
-###Virtual Box
+### Virtual Box
 If you are, or were, running any version of VirtualBox, prior to 4.3.30 or 5.0, and attempt to run *xhyve*, your system will immediately crash as a kernel panic is triggered. This is due to a VirtualBox bug (that got fixed in newest VirtualBox versions) as VirtualBox wasn't playing nice with OSX's Hypervisor.framework used by *xhyve*.
 
 To get around this you either have to update to newest VirtualBox 4.3 or 5.0 or, if you for some reason are unable to update, to reboot your Mac after using VirtualBox and before attempting to use *xhyve*. (see issues [#5](https://github.com/mist64/xhyve/issues/5) and [#9](https://github.com/mist64/xhyve/issues/9) for the full context)
 
-###Code signing/Entitlements
+### Code signing/Entitlements
 macOS limits access to the networking API (vmnet) to builds that are code signed and have the appropriate entitlement. The code signing/entitlement requirement can be bypassed by running *xhyve* as root (via `sudo`). A code signed build cannot run FreeBSD via the `userboot.so` bootloader as that requires loading and executing code that is outside the code signature (even as root). Building *xhyve* via `xcodebuild` signs the build. Building *xhyve* via `make` does not.
 
 TODO

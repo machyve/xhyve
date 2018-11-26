@@ -130,9 +130,9 @@ struct rfb_pixfmt_msg {
 	struct rfb_pixfmt	pixfmt;
 };
 
-#define	RFB_ENCODING_RAW		0
-#define	RFB_ENCODING_ZLIB		6
-#define	RFB_ENCODING_RESIZE		-223
+#define	RFB_ENCODING_RAW		((uint32_t)0)
+#define	RFB_ENCODING_ZLIB		((uint32_t)6)
+#define	RFB_ENCODING_RESIZE		((uint32_t)-223)
 
 #define RFB_MAX_WIDTH			2000
 #define RFB_MAX_HEIGHT			1200

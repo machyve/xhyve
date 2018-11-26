@@ -66,7 +66,7 @@ struct loader_callbacks {
 	/* Set a guest register value */
 	void (*setreg)(void *arg, int, uint64_t);
 	/* Set a guest MSR value */
-	void (*setmsr)(void *arg, int, uint64_t);
+	void (*setmsr)(void *arg, u_int, uint64_t);
 	/* Set a guest CR value */
 	void (*setcr)(void *arg, int, uint64_t);
 	/* Set the guest GDT address */

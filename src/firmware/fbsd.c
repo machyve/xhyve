@@ -682,7 +682,7 @@ cb_setreg(UNUSED void *arg, int r, uint64_t v)
 }
 
 static void
-cb_setmsr(UNUSED void *arg, int r, uint64_t v)
+cb_setmsr(UNUSED void *arg, u_int r, uint64_t v)
 {
 	int error;
 	enum vm_reg_name vmreg;

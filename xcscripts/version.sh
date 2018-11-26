@@ -8,4 +8,5 @@ else
     VERSION="v${CURRENT_PROJECT_VERSION}"
 fi
 
+mkdir -p "${DERIVED_FILE_DIR}"
 echo "#define VERSION \"${VERSION}\"" > "${DERIVED_FILE_DIR}/xhyve-version.h"

@@ -35,6 +35,10 @@
 #define ALIGNUP(x, a) (((x - 1) & ~(a - 1)) + a)
 #endif
 
+#ifndef ALIGNDOWN
+#define ALIGNDOWN(x, a) (-(a) & (x))
+#endif
+
 #define BASE_GDT 0x2000ull
 #define BASE_ZEROPAGE 0x3000ull
 #define BASE_CMDLINE 0x4000ull
@@ -44,7 +48,7 @@
 static struct {
 	uintptr_t base;
 	size_t size;
-} memory, kernel, ramdisk;
+} lowmem, kernel, ramdisk;
 
 static struct {
 	char *kernel;
@@ -59,13 +63,13 @@ kexec_load_kernel(char *path, char *cmdline) {
 	volatile struct zero_page *zp;
 	FILE *f;
 
-	if ((memory.size < (BASE_ZEROPAGE + sizeof(struct zero_page))) ||
+	if ((lowmem.size < (BASE_ZEROPAGE + sizeof(struct zero_page))) ||
 		((BASE_ZEROPAGE + sizeof(struct zero_page)) > BASE_CMDLINE))
 	{
 		return -1;
 	}
 
-	zp = ((struct zero_page *) (memory.base + ((off_t) BASE_ZEROPAGE)));
+	zp = ((struct zero_page *) (lowmem.base + ((off_t) BASE_ZEROPAGE)));
 
 	memset(((void *) ((uintptr_t) zp)), 0, sizeof(struct zero_page));
 
@@ -112,7 +116,7 @@ kexec_load_kernel(char *path, char *cmdline) {
 
 	if ((kernel_start < BASE_KERNEL) ||
 		 (kernel_size > kernel_init_size) || /* XXX: always true? */
-		 ((kernel_start + kernel_init_size) > memory.size)) /* oom */
+		 ((kernel_start + kernel_init_size) > lowmem.size)) /* oom */
 	{
 		fclose(f);
 		return -1;
@@ -120,7 +124,7 @@ kexec_load_kernel(char *path, char *cmdline) {
 
 	/* copy kernel */
 	fseek(f, ((long) kernel_offset), SEEK_SET);
-	if (!fread(((void *) (memory.base + kernel_start)), 1, kernel_size, f)) {
+	if (!fread(((void *) (lowmem.base + kernel_start)), 1, kernel_size, f)) {
 		fclose(f);
 		return -1;
 	}
@@ -135,22 +139,22 @@ kexec_load_kernel(char *path, char *cmdline) {
 		return -1;   
 	}
 
-	memcpy(((void *) (memory.base + BASE_CMDLINE)), cmdline, cmdline_len);
-	memset(((void *) (memory.base + BASE_CMDLINE + cmdline_len)), '\0', 1);
+	memcpy(((void *) (lowmem.base + BASE_CMDLINE)), cmdline, cmdline_len);
+	memset(((void *) (lowmem.base + BASE_CMDLINE + cmdline_len)), '\0', 1);
 	zp->setup_header.cmd_line_ptr = ((uint32_t) BASE_CMDLINE);
 	zp->ext_cmd_line_ptr = ((uint32_t) (BASE_CMDLINE >> 32));
 
 	zp->setup_header.hardware_subarch = 0; /* PC */
 	zp->setup_header.type_of_loader = 0xd; /* kexec */
 
-	mem_k = (memory.size - 0x100000) >> 10; /* assume memory base is at 0 */
+	mem_k = (lowmem.size - 0x100000) >> 10; /* assume lowmem base is at 0 */
 	zp->alt_mem_k = (mem_k > 0xffffffff) ? 0xffffffff : ((uint32_t) mem_k);
 
 	zp->e820_map[0].addr = 0x0000000000000000;
 	zp->e820_map[0].size = 0x000000000009fc00;
 	zp->e820_map[0].type = 1;
 	zp->e820_map[1].addr = 0x0000000000100000;
-	zp->e820_map[1].size = (memory.size - 0x0000000000100000);
+	zp->e820_map[1].size = (lowmem.size - 0x0000000000100000);
 	zp->e820_map[1].type = 1;
 	if (xh_vm_get_highmem_size() == 0) {
 		zp->e820_entries = 2;
@@ -170,11 +174,12 @@ kexec_load_kernel(char *path, char *cmdline) {
 static int
 kexec_load_ramdisk(char *path) {
 	uint64_t ramdisk_start;
+	uint32_t initrd_max;
 	volatile struct zero_page *zp;
 	size_t sz;
 	FILE *f;
 
-	zp = ((struct zero_page *) (memory.base + BASE_ZEROPAGE));
+	zp = ((struct zero_page *) (lowmem.base + BASE_ZEROPAGE));
 
 	if (!(f = fopen(path, "r"))) {;
 		return -1;
@@ -184,16 +189,27 @@ kexec_load_ramdisk(char *path) {
 	sz = (size_t) ftell(f);
 	fseek(f, 0, SEEK_SET);
 
-	ramdisk_start = ALIGNUP((kernel.base + kernel.size), 0x1000ull);
+	/* highest address for loading the initrd */
+	if (zp->setup_header.version >= 0x203) {
+		initrd_max = zp->setup_header.initrd_addr_max;
+	} else {
+		initrd_max = 0x37ffffff; /* Hardcoded value for older kernels */
+	}
 
-	if ((ramdisk_start + sz) > memory.size) {
-		/* not enough memory */
+	if (initrd_max >= lowmem.size) {
+		initrd_max = ((uint32_t) lowmem.size - 1);
+	}
+
+	ramdisk_start = ALIGNDOWN(initrd_max - sz, 0x1000ull);
+
+	if ((ramdisk_start + sz) > lowmem.size) {
+		/* not enough lowmem */
 		fclose(f);
 		return -1;
 	}
 
 	/* copy ramdisk */
-	if (!fread(((void *) (memory.base + ramdisk_start)), 1, sz, f)) {
+	if (!fread(((void *) (lowmem.base + ramdisk_start)), 1, sz, f)) {
 		fclose(f);
 		return -1;
 	}
@@ -225,8 +241,8 @@ kexec(void)
 	void *gpa_map;
 
 	gpa_map = xh_vm_map_gpa(0, xh_vm_get_lowmem_size());
-	memory.base = (uintptr_t) gpa_map;
-	memory.size = xh_vm_get_lowmem_size();
+	lowmem.base = (uintptr_t) gpa_map;
+	lowmem.size = xh_vm_get_lowmem_size();
 
 	if (kexec_load_kernel(config.kernel,
 		config.cmdline ? config.cmdline : "auto"))
@@ -240,7 +256,7 @@ kexec(void)
 		abort();
 	}
 
-	gdt_entry = ((uint64_t *) (memory.base + BASE_GDT));
+	gdt_entry = ((uint64_t *) (lowmem.base + BASE_GDT));
 	gdt_entry[0] = 0x0000000000000000; /* null */
 	gdt_entry[1] = 0x0000000000000000; /* null */
 	gdt_entry[2] = 0x00cf9a000000ffff; /* code */

@@ -49,15 +49,8 @@
 #include <xhyve/block_if.h>
 
 #define BLOCKIF_SIG 0xb109b109
-/* xhyve: FIXME
- *
- * // #define BLOCKIF_NUMTHR 8
- *
- * OS X does not support preadv/pwritev, we need to serialize reads and writes
- * for the time being until we find a better solution.
- */
-#define BLOCKIF_NUMTHR 1
 
+#define BLOCKIF_NUMTHR 8
 #define BLOCKIF_MAXREQ (64 + BLOCKIF_NUMTHR)
 
 enum blockop {
@@ -100,6 +93,7 @@ struct blockif_ctxt {
 	int bc_closing;
 	pthread_t bc_btid[BLOCKIF_NUMTHR];
 	pthread_mutex_t bc_mtx;
+	pthread_mutex_t bcs_mtx;
 	pthread_cond_t bc_cond;
 	/* Request elements and free/pending/busy queues */
 	TAILQ_HEAD(, blockif_elem) bc_freeq;
@@ -239,11 +233,21 @@ blockif_proc(struct blockif_ctxt *bc, struct blockif_elem *be, uint8_t *buf)
 	switch (be->be_op) {
 	case BOP_READ:
 		if (buf == NULL) {
-			if ((len = preadv(bc->bc_fd, br->br_iov, br->br_iovcnt,
-				   br->br_offset)) < 0)
-				err = errno;
-			else
-				br->br_resid -= len;
+			if (br->br_iovcnt == 1) {
+				if ((len = pread(bc->bc_fd, br->br_iov[0].iov_base,
+					    br->br_iov[0].iov_len, br->br_offset)) < 0)
+					err = errno;
+				else
+					br->br_resid -= len;
+			} else {
+				pthread_mutex_lock(&bc->bcs_mtx);
+				if ((len = preadv(bc->bc_fd, br->br_iov, br->br_iovcnt,
+					    br->br_offset)) < 0)
+					err = errno;
+				else
+					br->br_resid -= len;
+				pthread_mutex_unlock(&bc->bcs_mtx);
+			}
 			break;
 		}
 		i = 0;
@@ -279,11 +283,21 @@ blockif_proc(struct blockif_ctxt *bc, struct blockif_elem *be, uint8_t *buf)
 			break;
 		}
 		if (buf == NULL) {
-			if ((len = pwritev(bc->bc_fd, br->br_iov, br->br_iovcnt,
-				    br->br_offset)) < 0)
-				err = errno;
-			else
-				br->br_resid -= len;
+			if (br->br_iovcnt == 1) {
+				if ((len = pwrite(bc->bc_fd, br->br_iov[0].iov_base,
+					    br->br_iov[0].iov_len, br->br_offset)) < 0)
+					err = errno;
+				else
+					br->br_resid -= len;
+			} else {
+				pthread_mutex_lock(&bc->bcs_mtx);
+				if ((len = pwritev(bc->bc_fd, br->br_iov, br->br_iovcnt,
+					    br->br_offset)) < 0)
+					err = errno;
+				else
+					br->br_resid -= len;
+				pthread_mutex_unlock(&bc->bcs_mtx);
+			}
 			break;
 		}
 		i = 0;
@@ -575,6 +589,7 @@ blockif_open(const char *optstr, UNUSED const char *ident)
 	bc->bc_psectsz = (int) psectsz;
 	bc->bc_psectoff = (int) psectoff;
 	pthread_mutex_init(&bc->bc_mtx, NULL);
+	pthread_mutex_init(&bc->bcs_mtx, NULL);
 	pthread_cond_init(&bc->bc_cond, NULL);
 	TAILQ_INIT(&bc->bc_freeq);
 	TAILQ_INIT(&bc->bc_pendq);

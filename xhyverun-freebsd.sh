@@ -3,7 +3,9 @@
 BOOTVOLUME="<path of FreeBSD iso>"
 IMG="<path of disk image for FreeBSD>"
 
-build/xhyve \
+PATH="build/Release:build:$PATH"
+
+xhyve \
     -A \
     -m 2G \
     -c 2 \

@@ -4,7 +4,9 @@ BOOTVOLUME="<path of Windows iso>"
 IMG="<path of disk image for Windows>"
 FIRMWARE="<path of BHYVE_UEFI.fd>"
 
-build/xhyve \
+PATH="build/Release:build:$PATH"
+
+xhyve \
     -w \
     -m 4G \
     -c 2 \

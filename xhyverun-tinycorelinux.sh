@@ -1,6 +1,6 @@
 #!/bin/sh
 
-build/Release/xhyve \
+build/xhyve \
     -A \
     -m 1G \
     -s 0:0,hostbridge \

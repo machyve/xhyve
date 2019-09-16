@@ -72,6 +72,7 @@
 #define	PROCBASED2_PAUSE_LOOP_EXITING		(1u << 10)
 #define	PROCBASED2_RDRAND_EXITING		(1u << 11)
 #define	PROCBASED2_ENABLE_INVPCID		(1u << 12)
+#define	PROCBASED2_VMCS_SHADOW			(1u << 14)
 #define	PROCBASED2_RDSEED_EXITING		(1u << 16)
 
 /* VM Exit Controls */

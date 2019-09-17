@@ -244,7 +244,7 @@ vie_read_register(void *vm, int vcpuid, enum vm_reg_name reg, uint64_t *rval)
 {
 	int error;
 
-	error = vm_get_register(vm, vcpuid, reg, rval);
+	error = vm_get_register(vm, vcpuid, (int) reg, rval);
 
 	return (error);
 }
@@ -283,7 +283,7 @@ vie_read_bytereg(void *vm, int vcpuid, struct vie *vie, uint8_t *rval)
 	enum vm_reg_name reg;
 
 	vie_calc_bytereg(vie, &reg, &lhbr);
-	error = vm_get_register(vm, vcpuid, reg, &val);
+	error = vm_get_register(vm, vcpuid, (int) reg, &val);
 
 	/*
 	 * To obtain the value of a legacy high byte register shift the
@@ -304,7 +304,7 @@ vie_write_bytereg(void *vm, int vcpuid, struct vie *vie, uint8_t byte)
 	enum vm_reg_name reg;
 
 	vie_calc_bytereg(vie, &reg, &lhbr);
-	error = vm_get_register(vm, vcpuid, reg, &origval);
+	error = vm_get_register(vm, vcpuid, (int) reg, &origval);
 	if (error == 0) {
 		val = byte;
 		mask = 0xff;
@@ -317,7 +317,7 @@ vie_write_bytereg(void *vm, int vcpuid, struct vie *vie, uint8_t byte)
 			mask <<= 8;
 		}
 		val |= origval & ~mask;
-		error = vm_set_register(vm, vcpuid, reg, val);
+		error = vm_set_register(vm, vcpuid, (int) reg, val);
 	}
 	return (error);
 }
@@ -347,7 +347,7 @@ vie_update_register(void *vm, int vcpuid, enum vm_reg_name reg,
 		return (EINVAL);
 	}
 
-	error = vm_set_register(vm, vcpuid, reg, val);
+	error = vm_set_register(vm, vcpuid, (int) reg, val);
 	return (error);
 }
 
@@ -607,7 +607,7 @@ get_gla(void *vm, int vcpuid, UNUSED struct vie *vie,
 	error = vie_read_register(vm, vcpuid, VM_REG_GUEST_RFLAGS, &rflags);
 	KASSERT(error == 0, ("%s: error %d getting rflags", __func__, error));
 
-	error = vm_get_seg_desc(vm, vcpuid, seg, &desc);
+	error = vm_get_seg_desc(vm, vcpuid, (int) seg, &desc);
 	KASSERT(error == 0, ("%s: error %d getting segment descriptor %d",
 	    __func__, error, seg));
 
@@ -2063,7 +2063,7 @@ decode_modrm(struct vie *vie, enum vm_cpu_mode cpu_mode)
 	if (vie->mod != VIE_MOD_DIRECT && vie->rm == VIE_RM_SIB)
 		goto done;
 
-	vie->base_register = gpr_map[vie->rm];
+	vie->base_register = (int) gpr_map[vie->rm];
 
 	switch (vie->mod) {
 	case VIE_MOD_INDIRECT_DISP8:
@@ -2138,7 +2138,7 @@ decode_sib(struct vie *vie)
 		 */
 		vie->disp_bytes = 4;
 	} else {
-		vie->base_register = gpr_map[vie->base];
+		vie->base_register = (int) gpr_map[vie->base];
 	}
 
 	/*
@@ -2149,7 +2149,7 @@ decode_sib(struct vie *vie)
 	 * Table 2-5: Special Cases of REX Encodings
 	 */
 	if (vie->index != 4)
-		vie->index_register = gpr_map[vie->index];
+		vie->index_register = (int) gpr_map[vie->index];
 
 	/* 'scale' makes sense only in the context of an index register */
 	if (vie->index_register < VM_REG_LAST)

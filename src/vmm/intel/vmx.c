@@ -1344,7 +1344,7 @@ inout_str_index(struct vmx *vmx, int vcpuid, int in)
 	enum vm_reg_name reg;
 
 	reg = in ? VM_REG_GUEST_RDI : VM_REG_GUEST_RSI;
-	error = vmx_getreg(vmx, vcpuid, reg, &val);
+	error = vmx_getreg(vmx, vcpuid, (int) reg, &val);
 	KASSERT(error == 0, ("%s: vmx_getreg error %d", __func__, error));
 	return (val);
 }
@@ -1395,7 +1395,7 @@ inout_str_seginfo(struct vmx *vmx, int vcpuid, uint32_t inst_info, int in,
 		vis->seg_name = vm_segment_name(s);
 	}
 
-	error = vmx_getdesc(vmx, vcpuid, vis->seg_name, &vis->seg_desc);
+	error = vmx_getdesc(vmx, vcpuid, (int) vis->seg_name, &vis->seg_desc);
 	KASSERT(error == 0, ("%s: vmx_getdesc error %d", __func__, error));
 }
 

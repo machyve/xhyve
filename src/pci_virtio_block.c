@@ -313,7 +313,7 @@ pci_vtblk_init(struct pci_devinst *pi, char *opts)
 {
 	char bident[sizeof("XX:X:X")];
 	struct blockif_ctxt *bctxt;
-	u_char digest[16];
+	u_char digest[CC_SHA256_DIGEST_LENGTH];
 	struct pci_vtblk_softc *sc;
 	off_t size;
 	int i, sectsz, sts, sto;
@@ -360,7 +360,7 @@ pci_vtblk_init(struct pci_devinst *pi, char *opts)
 	 * Create an identifier for the backing file. Use parts of the
 	 * md5 sum of the filename
 	 */
-    CC_MD5(opts, (CC_LONG)strlen(opts), digest);
+    CC_SHA256(opts, (CC_LONG)strlen(opts), digest);
 	snprintf(sc->vbsc_ident, VTBLK_BLK_ID_BYTES, "BHYVE-%02X%02X-%02X%02X-%02X%02X",
 	    digest[0], digest[1], digest[2], digest[3], digest[4], digest[5]);
 

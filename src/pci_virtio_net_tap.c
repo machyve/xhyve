@@ -572,7 +572,7 @@ pci_vtnet_parsemac(char *mac_str, uint8_t *mac_addr)
 static int
 pci_vtnet_init(struct pci_devinst *pi, char *opts)
 {
-	unsigned char digest[16];
+	unsigned char digest[CC_SHA256_DIGEST_LENGTH];
 	char nstr[80];
 	struct pci_vtnet_softc *sc;
 	char *devname;
@@ -669,7 +669,7 @@ pci_vtnet_init(struct pci_devinst *pi, char *opts)
 		snprintf(nstr, sizeof(nstr), "%d-%d-%s", pi->pi_slot,
 		    pi->pi_func, vmname);
 
-        CC_MD5(nstr, (CC_LONG)strlen(nstr), digest);
+        CC_SHA256(nstr, (CC_LONG)strlen(nstr), digest);
 
 		sc->vsc_config.mac[0] = 0x00;
 		sc->vsc_config.mac[1] = 0xa0;

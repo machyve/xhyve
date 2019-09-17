@@ -2278,7 +2278,7 @@ pci_ahci_init(struct pci_devinst *pi, char *opts, int atapi)
 	struct blockif_ctxt *bctxt;
 	struct pci_ahci_softc *sc;
 	int ret, slots;
-	u_char digest[16];
+	u_char digest[CC_SHA256_DIGEST_LENGTH];
 
 	ret = 0;
 
@@ -2319,7 +2319,7 @@ pci_ahci_init(struct pci_devinst *pi, char *opts, int atapi)
 	 * Create an identifier for the backing file. Use parts of the
 	 * md5 sum of the filename
 	 */
-    CC_MD5(opts, (CC_LONG)strlen(opts), digest);
+    CC_SHA256(opts, (CC_LONG)strlen(opts), digest);
     snprintf(sc->port[0].ident, AHCI_PORT_IDENT, "BHYVE-%02X%02X-%02X%02X-%02X%02X",
 	    digest[0], digest[1], digest[2], digest[3], digest[4], digest[5]);
 

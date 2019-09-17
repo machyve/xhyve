@@ -598,8 +598,8 @@ smbios_type1_initializer(struct smbios_structure *template_entry,
 
 		uuid_enc_le(&type1->uuid, &uuid);
 	} else {
-		CC_MD5_CTX	mdctx;
-		u_char		digest[16];
+		CC_SHA256_CTX	mdctx;
+		u_char		digest[CC_SHA256_DIGEST_LENGTH];
 		char		hostname[MAXHOSTNAMELEN];
 
 		/*
@@ -610,10 +610,10 @@ smbios_type1_initializer(struct smbios_structure *template_entry,
 		if (gethostname(hostname, sizeof(hostname)))
 			return (-1);
 
-		CC_MD5_Init(&mdctx);
-		CC_MD5_Update(&mdctx, vmname, ((unsigned) strlen(vmname)));
-		CC_MD5_Update(&mdctx, hostname, ((unsigned) sizeof(hostname)));
-		CC_MD5_Final(digest, &mdctx);
+		CC_SHA256_Init(&mdctx);
+		CC_SHA256_Update(&mdctx, vmname, ((unsigned) strlen(vmname)));
+		CC_SHA256_Update(&mdctx, hostname, ((unsigned) sizeof(hostname)));
+		CC_SHA256_Final(digest, &mdctx);
 
 		/*
 		 * Set the variant and version number.

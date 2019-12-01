@@ -65,7 +65,6 @@ uint64_t tevbuf[TEVSZ];
 static __inline uint64_t rdtsc(void)
 {
 	unsigned a, d;
-	__asm__ __volatile__ ("cpuid");
 	__asm__ __volatile__ ("rdtsc" : "=a" (a), "=d" (d));
 
 	return (((uint64_t) a) | (((uint64_t) d) << 32));

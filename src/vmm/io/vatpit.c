@@ -423,9 +423,9 @@ vatpit_init(struct vm *vm)
 	bzero(vatpit, sizeof(struct vatpit));
 	vatpit->vm = vm;
 
-	VATPIT_LOCK_INIT(vatpit)
+	VATPIT_LOCK_INIT(vatpit);
 
-	FREQ2BT(PIT_8254_FREQ, &bt);
+	FREQ2BT(PIT_8254_FREQ, &bt)
 	vatpit->freq_sbt = bttosbt(bt);
 
 	for (i = 0; i < 3; i++) {

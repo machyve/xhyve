@@ -1412,8 +1412,11 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 
 	/* Allocate, fill and prepend writable header vector. */
 	if (hdrlen != 0) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Walloca"
 		hdr = __builtin_alloca((size_t)(hdrlen + vlen));
-		hdr += vlen;
+#pragma clang diagnostic push
+        hdr += vlen;
 		for (left = hdrlen, hdrp = hdr; left > 0;
 		    left -= now, hdrp += now) {
 			now = MIN(left, (int)(iov->iov_len));

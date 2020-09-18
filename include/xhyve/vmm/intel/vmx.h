@@ -46,6 +46,7 @@ struct vmxstate {
 	uint64_t nextrip;	/* next instruction to be executed by guest */
 	int	lastcpu;	/* host cpu that this 'vcpu' last ran on */
 	uint16_t vpid;
+    uint32_t entry_ctls;
 };
 #pragma clang diagnostic pop
 

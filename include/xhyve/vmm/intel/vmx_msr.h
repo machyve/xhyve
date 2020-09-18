@@ -41,5 +41,5 @@ void vmx_msr_guest_init(struct vmx *vmx, int vcpuid);
 int vmx_rdmsr(struct vmx *, int vcpuid, u_int num, uint64_t *val);
 int vmx_wrmsr(struct vmx *, int vcpuid, u_int num, uint64_t val);
 
-int vmx_set_ctlreg(hv_vmx_capability_t cap_field, uint32_t ones_mask,
+int vmx_set_ctlreg(int vcpu_id, uint32_t field, hv_vmx_capability_t cap_field, uint32_t ones_mask,
 				   uint32_t zeros_mask, uint32_t *retval);

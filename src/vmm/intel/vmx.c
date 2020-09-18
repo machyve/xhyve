@@ -118,8 +118,6 @@
 #define	HANDLED		1
 #define	UNHANDLED	0
 
-static uint32_t pinbased_ctls, procbased_ctls, procbased_ctls2;
-static uint32_t exit_ctls, entry_ctls;
 static uint64_t cr0_ones_mask, cr0_zeros_mask;
 static uint64_t cr4_ones_mask, cr4_zeros_mask;
 
@@ -476,60 +474,6 @@ vmx_init(void)
 			xhyve_abort("hv_vm_create failed\n");
 	}
 
-	/* Check support for primary processor-based VM-execution controls */
-	error = vmx_set_ctlreg(HV_VMX_CAP_PROCBASED,
-			       PROCBASED_CTLS_ONE_SETTING,
-			       PROCBASED_CTLS_ZERO_SETTING, &procbased_ctls);
-	if (error) {
-		printf("vmx_init: processor does not support desired primary "
-		       "processor-based controls\n");
-		return (error);
-	}
-
-	/* Clear the processor-based ctl bits that are set on demand */
-	procbased_ctls &= ~PROCBASED_CTLS_WINDOW_SETTING;
-
-	/* Check support for secondary processor-based VM-execution controls */
-	error = vmx_set_ctlreg(HV_VMX_CAP_PROCBASED2,
-			       PROCBASED_CTLS2_ONE_SETTING,
-			       PROCBASED_CTLS2_ZERO_SETTING, &procbased_ctls2);
-	if (error) {
-		printf("vmx_init: processor does not support desired secondary "
-		       "processor-based controls\n");
-		return (error);
-	}
-
-	/* Check support for pin-based VM-execution controls */
-	error = vmx_set_ctlreg(HV_VMX_CAP_PINBASED,
-			       PINBASED_CTLS_ONE_SETTING,
-			       PINBASED_CTLS_ZERO_SETTING, &pinbased_ctls);
-	if (error) {
-		printf("vmx_init: processor does not support desired "
-		       "pin-based controls\n");
-		return (error);
-	}
-
-	/* Check support for VM-exit controls */
-	error = vmx_set_ctlreg(HV_VMX_CAP_EXIT,
-			       VM_EXIT_CTLS_ONE_SETTING,
-			       VM_EXIT_CTLS_ZERO_SETTING,
-			       &exit_ctls);
-	if (error) {
-		printf("vmx_init: processor does not support desired "
-		    "exit controls\n");
-		return (error);
-	}
-
-	/* Check support for VM-entry controls */
-	error = vmx_set_ctlreg(HV_VMX_CAP_ENTRY,
-	    VM_ENTRY_CTLS_ONE_SETTING, VM_ENTRY_CTLS_ZERO_SETTING,
-	    &entry_ctls);
-	if (error) {
-		printf("vmx_init: processor does not support desired "
-		    "entry controls\n");
-		return (error);
-	}
-
 	/*
 	 * Check support for optional features by testing them
 	 * as individual bits
@@ -629,11 +573,72 @@ vmx_vcpu_init(void *arg, int vcpuid) {
 
 	vmx_msr_guest_init(vmx, vcpuid);
 
+	uint32_t pinbased_ctls = 0;
+	uint32_t procbased_ctls = 0;
+	uint32_t procbased_ctls2 = 0;
+	uint32_t exit_ctls = 0;
+	vmx->state[vcpuid].entry_ctls = 0;
+	
+	/* Check support for primary processor-based VM-execution controls */
+	error = vmx_set_ctlreg(vcpuid, VMCS_PRI_PROC_BASED_CTLS,
+						   HV_VMX_CAP_PROCBASED,
+						   PROCBASED_CTLS_ONE_SETTING,
+						   PROCBASED_CTLS_ZERO_SETTING, &procbased_ctls);
+	if (error) {
+		printf("vmx_init: processor does not support desired primary "
+			   "processor-based controls\n");
+		return (error);
+	}
+	
+	/* Clear the processor-based ctl bits that are set on demand */
+	procbased_ctls &= ~PROCBASED_CTLS_WINDOW_SETTING;
+	
+	/* Check support for secondary processor-based VM-execution controls */
+	error = vmx_set_ctlreg(vcpuid, VMCS_SEC_PROC_BASED_CTLS, HV_VMX_CAP_PROCBASED2,
+						   PROCBASED_CTLS2_ONE_SETTING,
+						   PROCBASED_CTLS2_ZERO_SETTING, &procbased_ctls2);
+	if (error) {
+		printf("vmx_init: processor does not support desired secondary "
+			   "processor-based controls\n");
+		return (error);
+	}
+	
+	/* Check support for pin-based VM-execution controls */
+	error = vmx_set_ctlreg(vcpuid, VMCS_PIN_BASED_CTLS, HV_VMX_CAP_PINBASED,
+						   PINBASED_CTLS_ONE_SETTING,
+						   PINBASED_CTLS_ZERO_SETTING, &pinbased_ctls);
+	if (error) {
+		printf("vmx_init: processor does not support desired "
+			   "pin-based controls\n");
+		return (error);
+	}
+	
+	/* Check support for VM-exit controls */
+	error = vmx_set_ctlreg(vcpuid, VMCS_EXIT_CTLS, HV_VMX_CAP_EXIT,
+						   VM_EXIT_CTLS_ONE_SETTING,
+						   VM_EXIT_CTLS_ZERO_SETTING,
+						   &exit_ctls);
+	if (error) {
+		printf("vmx_init: processor does not support desired "
+			   "exit controls\n");
+		return (error);
+	}
+	
+	/* Check support for VM-entry controls */
+	error = vmx_set_ctlreg(vcpuid, VMCS_ENTRY_CTLS, HV_VMX_CAP_ENTRY,
+						   VM_ENTRY_CTLS_ONE_SETTING, VM_ENTRY_CTLS_ZERO_SETTING,
+						   &vmx->state[vcpuid].entry_ctls);
+	if (error) {
+		printf("vmx_init: processor does not support desired "
+			   "entry controls\n");
+		return (error);
+	}
+	
 	vmcs_write(vcpuid, VMCS_PIN_BASED_CTLS, pinbased_ctls);
 	vmcs_write(vcpuid, VMCS_PRI_PROC_BASED_CTLS, procbased_ctls);
 	vmcs_write(vcpuid, VMCS_SEC_PROC_BASED_CTLS, procbased_ctls2);
 	vmcs_write(vcpuid, VMCS_EXIT_CTLS, exit_ctls);
-	vmcs_write(vcpuid, VMCS_ENTRY_CTLS, entry_ctls);
+	vmcs_write(vcpuid, VMCS_ENTRY_CTLS, vmx->state[vcpuid].entry_ctls);
 
 	/* exception bitmap */
 	if (vcpu_trace_exceptions())
@@ -2380,8 +2385,8 @@ vmx_setreg(void *arg, int vcpu, int reg, uint64_t val)
 		 * value of EFER.LMA must be identical to "IA-32e mode guest"
 		 * bit in the VM-entry control.
 		 */
-		if ((entry_ctls & VM_ENTRY_LOAD_EFER) != 0 &&
-		    (reg == VM_REG_GUEST_EFER)) {
+		if ((vmx->state[vcpu].entry_ctls & VM_ENTRY_LOAD_EFER) != 0 &&
+			(reg == VM_REG_GUEST_EFER)) {
 			vmcs_getreg(vcpu, VMCS_IDENT(VMCS_ENTRY_CTLS), &ctls);
 			if (val & EFER_LMA)
 				ctls |= VM_ENTRY_GUEST_LMA;

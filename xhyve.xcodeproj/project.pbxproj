@@ -264,6 +264,7 @@
 				3F1934931BF7C0D40099CC46 /* Products */,
 			);
 			sourceTree = "<group>";
+			usesTabs = 1;
 		};
 		3F1934931BF7C0D40099CC46 /* Products */ = {
 			isa = PBXGroup;

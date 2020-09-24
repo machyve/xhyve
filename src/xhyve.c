@@ -92,6 +92,7 @@ static int strictio;
 static int strictmsr = 1;
 
 static int acpi;
+char* asl_compiler_path;
 
 static char *progname;
 static const int BSP = 0;
@@ -129,8 +130,9 @@ usage(int code)
 
         fprintf(stderr,
                 "Usage: %s [-behuwxMACHPWY] [-c vcpus] [-F <pidfile>] [-g <gdb port>] [-l <lpc>]\n"
-		"       %*s [-m mem] [-p vcpu:hostcpu] [-s <pci>] [-U uuid] -f <fw>\n"
+		"       %*s [-m mem] [-p vcpu:hostcpu] [-s <pci>] [-U uuid] -f <fw> [-A [-a <asl/compiler/path>]]\n"
 		"       -A: create ACPI tables\n"
+		"       -a: path to asl compiler\n"
 		"       -c: # cpus (default 1)\n"
 		"       -C: include guest memory in core file\n"
 		"       -e: exit on unhandled I/O access\n"
@@ -858,10 +860,13 @@ main(int argc, char *argv[])
 	rtc_localtime = 1;
 	fw = 0;
 
-	while ((c = getopt(argc, argv, "behvuwxMACHPWY:f:F:g:c:s:m:l:U:")) != -1) {
+	while ((c = getopt(argc, argv, "behvuwxMACHPWY:f:F:g:c:s:m:l:U:a:")) != -1) {
 		switch (c) {
 		case 'A':
 			acpi = 1;
+			break;
+		case 'a':
+			asl_compiler_path = optarg;
 			break;
 		case 'b':
 			bvmcons = 1;

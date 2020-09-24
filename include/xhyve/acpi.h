@@ -45,6 +45,8 @@
 
 #define IO_PMTMR 0x408 /* 4-byte i/o port for the timer */
 
+extern char* asl_compiler_path;
+
 int acpi_build(int ncpu);
 void dsdt_line(const char *fmt, ...);
 void dsdt_fixed_ioport(uint16_t iobase, uint16_t length);

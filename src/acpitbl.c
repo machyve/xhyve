@@ -65,14 +65,14 @@
 
 #define XHYVE_ACPI_BASE 0xf2400
 #define XHYVE_ACPI_SIZE 0xdc00
-#define RSDT_OFFSET 0x040
-#define XSDT_OFFSET 0x080
-#define MADT_OFFSET 0x100
-#define FADT_OFFSET 0x200
-#define HPET_OFFSET 0x340
-#define MCFG_OFFSET 0x380
-#define FACS_OFFSET 0x3C0
-#define DSDT_OFFSET 0x400
+#define XHYVE_AML_RSDT_OFFSET 0x040
+#define XHYVE_AML_XSDT_OFFSET 0x080
+#define XHYVE_AML_MADT_OFFSET 0x100
+#define XHYVE_AML_FADT_OFFSET 0x200
+#define XHYVE_AML_HPET_OFFSET 0x340
+#define XHYVE_AML_MCFG_OFFSET 0x380
+#define XHYVE_AML_FACS_OFFSET 0x3C0
+#define XHYVE_AML_DSDT_OFFSET 0x400
 
 /* ACPI table base in guest memory */
 static void *tb;
@@ -167,8 +167,8 @@ acpitbl_build_rdsp(void) {
 	/* copy RDSP template to guest memory */
 	memcpy(rdsp, rdsp_tmpl, 36);
 	/* fixup table */
-	acpitbl_write32(rdsp, 0x10, ((uint32_t) (XHYVE_ACPI_BASE + RSDT_OFFSET)));
-	acpitbl_write64(rdsp, 0x18, ((uint64_t) (XHYVE_ACPI_BASE + XSDT_OFFSET)));
+	acpitbl_write32(rdsp, 0x10, ((uint32_t) (XHYVE_ACPI_BASE + XHYVE_AML_RSDT_OFFSET)));
+	acpitbl_write64(rdsp, 0x18, ((uint64_t) (XHYVE_ACPI_BASE + XHYVE_AML_XSDT_OFFSET)));
 	/* write checksum */
 	acpitbl_write8(rdsp, 0x8, acpitbl_checksum(rdsp, 20));
 	/* write extended checksum */
@@ -203,14 +203,14 @@ acpitbl_build_rsdt(void) {
 		0x00, 0x00, 0x00, 0x00
 	};
 
-	rsdt = (void *) (((uintptr_t) tb) + RSDT_OFFSET);
+	rsdt = (void *) (((uintptr_t) tb) + XHYVE_AML_RSDT_OFFSET);
 	/* copy RSDT template to guest memory */
 	memcpy(rsdt, rsdt_tmpl, 52);
 	/* fixup table */
-	acpitbl_write32(rsdt, 0x24, ((uint32_t) (XHYVE_ACPI_BASE + MADT_OFFSET)));
-	acpitbl_write32(rsdt, 0x28, ((uint32_t) (XHYVE_ACPI_BASE + FADT_OFFSET)));
-	acpitbl_write32(rsdt, 0x2c, ((uint32_t) (XHYVE_ACPI_BASE + HPET_OFFSET)));
-	acpitbl_write32(rsdt, 0x30, ((uint32_t) (XHYVE_ACPI_BASE + MCFG_OFFSET)));
+	acpitbl_write32(rsdt, 0x24, ((uint32_t) (XHYVE_ACPI_BASE + XHYVE_AML_MADT_OFFSET)));
+	acpitbl_write32(rsdt, 0x28, ((uint32_t) (XHYVE_ACPI_BASE + XHYVE_AML_FADT_OFFSET)));
+	acpitbl_write32(rsdt, 0x2c, ((uint32_t) (XHYVE_ACPI_BASE + XHYVE_AML_HPET_OFFSET)));
+	acpitbl_write32(rsdt, 0x30, ((uint32_t) (XHYVE_ACPI_BASE + XHYVE_AML_MCFG_OFFSET)));
 	/* write checksum */
 	acpitbl_write8(rsdt, 0x9, acpitbl_checksum(rsdt, 52));
 }
@@ -245,14 +245,14 @@ acpitbl_build_xsdt(void) {
   		0x00, 0x00, 0x00, 0x00
 	};
 
-	xsdt = (void *) (((uintptr_t) tb) + XSDT_OFFSET);
+	xsdt = (void *) (((uintptr_t) tb) + XHYVE_AML_XSDT_OFFSET);
 	/* copy XSDT template to guest memory */
 	memcpy(xsdt, xsdt_tmpl, 68);
 	/* fixup table */
-	acpitbl_write64(xsdt, 0x24, ((uint64_t) (XHYVE_ACPI_BASE + MADT_OFFSET)));
-	acpitbl_write64(xsdt, 0x2c, ((uint64_t) (XHYVE_ACPI_BASE + FADT_OFFSET)));
-	acpitbl_write64(xsdt, 0x34, ((uint64_t) (XHYVE_ACPI_BASE + HPET_OFFSET)));
-	acpitbl_write64(xsdt, 0x3c, ((uint64_t) (XHYVE_ACPI_BASE + MCFG_OFFSET)));
+	acpitbl_write64(xsdt, 0x24, ((uint64_t) (XHYVE_ACPI_BASE + XHYVE_AML_MADT_OFFSET)));
+	acpitbl_write64(xsdt, 0x2c, ((uint64_t) (XHYVE_ACPI_BASE + XHYVE_AML_FADT_OFFSET)));
+	acpitbl_write64(xsdt, 0x34, ((uint64_t) (XHYVE_ACPI_BASE + XHYVE_AML_HPET_OFFSET)));
+	acpitbl_write64(xsdt, 0x3c, ((uint64_t) (XHYVE_ACPI_BASE + XHYVE_AML_MCFG_OFFSET)));
 	/* write checksum */
 	acpitbl_write8(xsdt, 0x9, acpitbl_checksum(xsdt, 68));
 }
@@ -333,13 +333,13 @@ acpitbl_build_madt(void) {
 		0x04, 0x06, 0xFF, 0x05, 0x00, 0x01
 	};
 
-	madt_head = (void *) (((uintptr_t) tb) + MADT_OFFSET);
+	madt_head = (void *) (((uintptr_t) tb) + XHYVE_AML_MADT_OFFSET);
 	/* copy MADT head template to guest memory */
 	memcpy(madt_head, madt_head_tmpl, 44);
 
 	for (i = 0; i < acpi_ncpu; i++) {
 		madt_apic = (void *) (((uintptr_t) tb)
-			+ ((size_t) ((MADT_OFFSET + 44) + (8 * i))));
+			+ ((size_t) ((XHYVE_AML_MADT_OFFSET + 44) + (8 * i))));
 		/* copy MADT APIC template to guest memory */
 		memcpy(madt_apic, madt_apic_tmpl, 8);
 		/* fixup table */
@@ -348,7 +348,7 @@ acpitbl_build_madt(void) {
 	}
 
 	madt_tail = (void *) (((uintptr_t) tb)
-		+ ((size_t) ((MADT_OFFSET + 44) + (8 * acpi_ncpu))));
+		+ ((size_t) ((XHYVE_AML_MADT_OFFSET + 44) + (8 * acpi_ncpu))));
 	/* copy MADT tail template to guest memory */
 	memcpy(madt_tail, madt_tail_tmpl, 38);
 	/* fixup table */
@@ -545,12 +545,12 @@ acpitbl_build_fadt(void) {
 		0x00, 0x00, 0x00, 0x00
 	};
 
-	fadt = (void *) (((uintptr_t) tb) + FADT_OFFSET);
+	fadt = (void *) (((uintptr_t) tb) + XHYVE_AML_FADT_OFFSET);
 	/* copy FADT template to guest memory */
 	memcpy(fadt, fadt_tmpl, 268);
 	/* fixup table */
-	acpitbl_write32(fadt, 0x24, ((uint32_t) (XHYVE_ACPI_BASE + FACS_OFFSET)));
-	acpitbl_write32(fadt, 0x28, ((uint32_t) (XHYVE_ACPI_BASE + DSDT_OFFSET)));
+	acpitbl_write32(fadt, 0x24, ((uint32_t) (XHYVE_ACPI_BASE + XHYVE_AML_FACS_OFFSET)));
+	acpitbl_write32(fadt, 0x28, ((uint32_t) (XHYVE_ACPI_BASE + XHYVE_AML_DSDT_OFFSET)));
 	acpitbl_write16(fadt, 0x2e, SCI_INT);
 	acpitbl_write32(fadt, 0x30, SMI_CMD);
 	acpitbl_write8(fadt, 0x34, BHYVE_ACPI_ENABLE);
@@ -558,8 +558,8 @@ acpitbl_build_fadt(void) {
 	acpitbl_write32(fadt, 0x38, PM1A_EVT_ADDR);
 	acpitbl_write32(fadt, 0x40, PM1A_CNT_ADDR);
 	acpitbl_write32(fadt, 0x4c, IO_PMTMR);
-	acpitbl_write64(fadt, 0x84, ((uint64_t) (XHYVE_ACPI_BASE + FACS_OFFSET)));
-	acpitbl_write64(fadt, 0x8c, ((uint64_t) (XHYVE_ACPI_BASE + DSDT_OFFSET)));
+	acpitbl_write64(fadt, 0x84, ((uint64_t) (XHYVE_ACPI_BASE + XHYVE_AML_FACS_OFFSET)));
+	acpitbl_write64(fadt, 0x8c, ((uint64_t) (XHYVE_ACPI_BASE + XHYVE_AML_DSDT_OFFSET)));
 	acpitbl_write64(fadt, 0x98, ((uint64_t) PM1A_EVT_ADDR));
 	acpitbl_write64(fadt, 0xb0, ((uint64_t) PM1A_CNT_ADDR));
 	acpitbl_write64(fadt, 0xd4, ((uint64_t) IO_PMTMR));
@@ -603,7 +603,7 @@ acpitbl_build_hpet(void) {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
 	};
 
-	hpet = (void *) (((uintptr_t) tb) + HPET_OFFSET);
+	hpet = (void *) (((uintptr_t) tb) + XHYVE_AML_HPET_OFFSET);
 	/* copy HPET template to guest memory */
 	memcpy(hpet, hpet_tmpl, 56);
 	/* fixup table */
@@ -643,7 +643,7 @@ acpitbl_build_mcfg(void) {
 		0x00, 0x00, 0x00, 0x00
 	};
 
-	mcfg = (void *) (((uintptr_t) tb) + MCFG_OFFSET);
+	mcfg = (void *) (((uintptr_t) tb) + XHYVE_AML_MCFG_OFFSET);
 	/* copy MCFG template to guest memory */
 	memcpy(mcfg, mcfg_tmpl, 60);
 	/* fixup table */
@@ -681,7 +681,7 @@ acpitbl_build_facs(void) {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	};
 
-	facs = (void *) (((uintptr_t) tb) + FACS_OFFSET);
+	facs = (void *) (((uintptr_t) tb) + XHYVE_AML_FACS_OFFSET);
 	/* copy MCFG template to guest memory */
 	memcpy(facs, facs_tmpl, 64);
 }
@@ -1036,7 +1036,7 @@ acpitbl_build_dsdt(void) {
 		0x04, 0x00, 0x00, 0x79
 	};
 
-	dsdt = (void *) (((uintptr_t) tb) + DSDT_OFFSET);
+	dsdt = (void *) (((uintptr_t) tb) + XHYVE_AML_DSDT_OFFSET);
 	/* copy DSDT template to guest memory */
 	memcpy(dsdt, dsdt_tmpl, 2604);
 

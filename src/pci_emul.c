@@ -1213,15 +1213,9 @@ pci_pirq_prt_entry(UNUSED int bus, int slot, int pin, int pirq_pin,
 	free(name);
 }
 
-/*
- * A bhyve virtual machine has a flat PCI hierarchy with a root port
- * corresponding to each PCI bus.
- */
-#if ACPITBL_AML
 static void
-pci_bus_write_dsdt(int bus)
-{
-	struct businfo *bi;
+pci_bus_write_dsdt_precompiled(int bus) {
+    struct businfo *bi;
 
 	/*
 	 * If there are no devices on this 'bus' then just return.
@@ -1242,9 +1236,10 @@ pci_bus_write_dsdt(int bus)
 	(void) pci_pirq_prt_entry;
 	(void) pci_apic_prt_entry;
 }
-#else
+
+
 static void
-pci_bus_write_dsdt(int bus)
+pci_bus_write_dsdt_compile(int bus)
 {
 	struct businfo *bi;
 	struct slotinfo *si;
@@ -1391,11 +1386,23 @@ pci_bus_write_dsdt(int bus)
 done:
 	dsdt_line("  }");
 }
-#endif
 
-#if ACPITBL_AML
+/*
+ * A bhyve virtual machine has a flat PCI hierarchy with a root port
+ * corresponding to each PCI bus.
+ */
+static void
+pci_bus_write_dsdt(int bus)
+{
+	if (asl_compiler_path == NULL) {
+        pci_bus_write_dsdt_precompiled(bus);
+	} else {
+        pci_bus_write_dsdt_compile(bus);
+	}
+}
+
 void
-pci_write_dsdt(void)
+pci_write_dsdt_precompiled(void)
 {
 	int bus;
 
@@ -1403,9 +1410,8 @@ pci_write_dsdt(void)
 		pci_bus_write_dsdt(bus);
 	}
 }
-#else
 void
-pci_write_dsdt(void)
+pci_write_dsdt_compile(void)
 {
 	int bus;
 
@@ -1423,7 +1429,15 @@ pci_write_dsdt(void)
 	dsdt_line("}");
 	dsdt_unindent(1);
 }
-#endif
+
+void
+pci_write_dsdt(void) {
+	if (asl_compiler_path == NULL) {
+		pci_write_dsdt_precompiled();
+	} else {
+		pci_write_dsdt_compile();
+	}
+}
 
 int
 pci_bus_configured(int bus)

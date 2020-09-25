@@ -30,9 +30,6 @@
 
 #include <stdint.h>
 
-/* if set, create AML instead of ASL and calling out to iasl */
-#define ACPITBL_AML 1
-
 #define SCI_INT 9
 
 #define SMI_CMD 0xb2

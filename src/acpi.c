@@ -82,7 +82,6 @@
 
 #define	BHYVE_ASL_TEMPLATE	"bhyve.XXXXXXX"
 #define BHYVE_ASL_SUFFIX	".aml"
-#define BHYVE_ASL_COMPILER	"/usr/sbin/iasl"
 
 static int basl_keep_temps;
 static int basl_verbose_iasl;
@@ -892,7 +891,7 @@ basl_compile(int (*fwrite_section)(FILE *), uint64_t offset)
 
 			snprintf(iaslbuf, sizeof(iaslbuf),
 				 fmt,
-				 BHYVE_ASL_COMPILER,
+				 asl_compiler_path,
 				 io[1].f_name, io[0].f_name);
 			err = system(iaslbuf);
 

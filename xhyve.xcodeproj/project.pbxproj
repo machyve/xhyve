@@ -71,6 +71,7 @@
 		3F3FFA911BF7C6A7004C89A1 /* xhyve.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA5A1BF7C6A7004C89A1 /* xhyve.c */; };
 		3F3FFA921BF7C6A7004C89A1 /* xmsr.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA5B1BF7C6A7004C89A1 /* xmsr.c */; };
 		3F3FFA971BF7CC0E004C89A1 /* xhyve.1 in Install Man Pages */ = {isa = PBXBuildFile; fileRef = 3F3FF9E41BF7C5DC004C89A1 /* xhyve.1 */; };
+		FF94BAD46505AD8294DFEE50 /* acpi.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA1E1BF7C6A7004C89A1 /* acpi.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -693,6 +694,7 @@
 				00D3D5B3207C82AB00DDCDF6 /* rfb.c in Sources */,
 				3F3FFA711BF7C6A7004C89A1 /* pci_virtio_block.c in Sources */,
 				3F3FFA871BF7C6A7004C89A1 /* vmm_api.c in Sources */,
+				FF94BAD46505AD8294DFEE50 /* acpi.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1185,13 +1185,13 @@ pci_apic_prt_entry(UNUSED int bus, int slot, int pin, UNUSED int pirq_pin,
 	int ioapic_irq, UNUSED void *arg)
 {
 
-	dsdt_line("  Package ()");
-	dsdt_line("  {");
-	dsdt_line("    0x%X,", slot << 16 | 0xffff);
-	dsdt_line("    0x%02X,", pin - 1);
-	dsdt_line("    Zero,");
-	dsdt_line("    0x%X", ioapic_irq);
-	dsdt_line("  },");
+	acpi_ops.dsdt_line("  Package ()");
+	acpi_ops.dsdt_line("  {");
+	acpi_ops.dsdt_line("    0x%X,", slot << 16 | 0xffff);
+	acpi_ops.dsdt_line("    0x%02X,", pin - 1);
+	acpi_ops.dsdt_line("    Zero,");
+	acpi_ops.dsdt_line("    0x%X", ioapic_irq);
+	acpi_ops.dsdt_line("  },");
 }
 
 static void
@@ -1203,13 +1203,13 @@ pci_pirq_prt_entry(UNUSED int bus, int slot, int pin, int pirq_pin,
 	name = lpc_pirq_name(pirq_pin);
 	if (name == NULL)
 		return;
-	dsdt_line("  Package ()");
-	dsdt_line("  {");
-	dsdt_line("    0x%X,", slot << 16 | 0xffff);
-	dsdt_line("    0x%02X,", pin - 1);
-	dsdt_line("    %s,", name);
-	dsdt_line("    0x00");
-	dsdt_line("  },");
+	acpi_ops.dsdt_line("  Package ()");
+	acpi_ops.dsdt_line("  {");
+	acpi_ops.dsdt_line("    0x%X,", slot << 16 | 0xffff);
+	acpi_ops.dsdt_line("    0x%02X,", pin - 1);
+	acpi_ops.dsdt_line("    %s,", name);
+	acpi_ops.dsdt_line("    0x00");
+	acpi_ops.dsdt_line("  },");
 	free(name);
 }
 
@@ -1230,7 +1230,7 @@ pci_bus_write_dsdt_precompiled(int bus) {
 			return;
 	}
 
-	dsdt_fixup(bus, bi->iobase, bi->iolimit, bi->membase32, bi->memlimit32,
+	acpi_ops.dsdt_fixup(bus, bi->iobase, bi->iolimit, bi->membase32, bi->memlimit32,
 		bi->membase64, bi->memlimit64);
 
 	(void) pci_pirq_prt_entry;
@@ -1259,121 +1259,121 @@ pci_bus_write_dsdt_compile(int bus)
 			return;
 	}
 
-	dsdt_line("  Device (PC%02X)", bus);
-	dsdt_line("  {");
-	dsdt_line("    Name (_HID, EisaId (\"PNP0A03\"))");
-	dsdt_line("    Name (_ADR, Zero)");
+	acpi_ops.dsdt_line("  Device (PC%02X)", bus);
+	acpi_ops.dsdt_line("  {");
+	acpi_ops.dsdt_line("    Name (_HID, EisaId (\"PNP0A03\"))");
+	acpi_ops.dsdt_line("    Name (_ADR, Zero)");
 
-	dsdt_line("    Method (_BBN, 0, NotSerialized)");
-	dsdt_line("    {");
-	dsdt_line("        Return (0x%08X)", bus);
-	dsdt_line("    }");
-	dsdt_line("    Name (_CRS, ResourceTemplate ()");
-	dsdt_line("    {");
-	dsdt_line("      WordBusNumber (ResourceProducer, MinFixed, "
+	acpi_ops.dsdt_line("    Method (_BBN, 0, NotSerialized)");
+	acpi_ops.dsdt_line("    {");
+	acpi_ops.dsdt_line("        Return (0x%08X)", bus);
+	acpi_ops.dsdt_line("    }");
+	acpi_ops.dsdt_line("    Name (_CRS, ResourceTemplate ()");
+	acpi_ops.dsdt_line("    {");
+	acpi_ops.dsdt_line("      WordBusNumber (ResourceProducer, MinFixed, "
 	    "MaxFixed, PosDecode,");
-	dsdt_line("        0x0000,             // Granularity");
-	dsdt_line("        0x%04X,             // Range Minimum", bus);
-	dsdt_line("        0x%04X,             // Range Maximum", bus);
-	dsdt_line("        0x0000,             // Translation Offset");
-	dsdt_line("        0x0001,             // Length");
-	dsdt_line("        ,, )");
+	acpi_ops.dsdt_line("        0x0000,             // Granularity");
+	acpi_ops.dsdt_line("        0x%04X,             // Range Minimum", bus);
+	acpi_ops.dsdt_line("        0x%04X,             // Range Maximum", bus);
+	acpi_ops.dsdt_line("        0x0000,             // Translation Offset");
+	acpi_ops.dsdt_line("        0x0001,             // Length");
+	acpi_ops.dsdt_line("        ,, )");
 
 	if (bus == 0) {
-		dsdt_indent(3);
-		dsdt_fixed_ioport(0xCF8, 8);
-		dsdt_unindent(3);
+		acpi_ops.dsdt_indent(3);
+		acpi_ops.dsdt_fixed_ioport(0xCF8, 8);
+		acpi_ops.dsdt_unindent(3);
 
-		dsdt_line("      WordIO (ResourceProducer, MinFixed, MaxFixed, "
+		acpi_ops.dsdt_line("      WordIO (ResourceProducer, MinFixed, MaxFixed, "
 		    "PosDecode, EntireRange,");
-		dsdt_line("        0x0000,             // Granularity");
-		dsdt_line("        0x0000,             // Range Minimum");
-		dsdt_line("        0x0CF7,             // Range Maximum");
-		dsdt_line("        0x0000,             // Translation Offset");
-		dsdt_line("        0x0CF8,             // Length");
-		dsdt_line("        ,, , TypeStatic)");
+		acpi_ops.dsdt_line("        0x0000,             // Granularity");
+		acpi_ops.dsdt_line("        0x0000,             // Range Minimum");
+		acpi_ops.dsdt_line("        0x0CF7,             // Range Maximum");
+		acpi_ops.dsdt_line("        0x0000,             // Translation Offset");
+		acpi_ops.dsdt_line("        0x0CF8,             // Length");
+		acpi_ops.dsdt_line("        ,, , TypeStatic)");
 
-		dsdt_line("      WordIO (ResourceProducer, MinFixed, MaxFixed, "
+		acpi_ops.dsdt_line("      WordIO (ResourceProducer, MinFixed, MaxFixed, "
 		    "PosDecode, EntireRange,");
-		dsdt_line("        0x0000,             // Granularity");
-		dsdt_line("        0x0D00,             // Range Minimum");
-		dsdt_line("        0x%04X,             // Range Maximum",
+		acpi_ops.dsdt_line("        0x0000,             // Granularity");
+		acpi_ops.dsdt_line("        0x0D00,             // Range Minimum");
+		acpi_ops.dsdt_line("        0x%04X,             // Range Maximum",
 		    PCI_EMUL_IOBASE - 1);
-		dsdt_line("        0x0000,             // Translation Offset");
-		dsdt_line("        0x%04X,             // Length",
+		acpi_ops.dsdt_line("        0x0000,             // Translation Offset");
+		acpi_ops.dsdt_line("        0x%04X,             // Length",
 		    PCI_EMUL_IOBASE - 0x0D00);
-		dsdt_line("        ,, , TypeStatic)");
+		acpi_ops.dsdt_line("        ,, , TypeStatic)");
 
 		if (bi == NULL) {
-			dsdt_line("    })");
+			acpi_ops.dsdt_line("    })");
 			goto done;
 		}
 	}
 	assert(bi != NULL);
 
 	/* i/o window */
-	dsdt_line("      WordIO (ResourceProducer, MinFixed, MaxFixed, "
+	acpi_ops.dsdt_line("      WordIO (ResourceProducer, MinFixed, MaxFixed, "
 	    "PosDecode, EntireRange,");
-	dsdt_line("        0x0000,             // Granularity");
-	dsdt_line("        0x%04X,             // Range Minimum", bi->iobase);
-	dsdt_line("        0x%04X,             // Range Maximum",
+	acpi_ops.dsdt_line("        0x0000,             // Granularity");
+	acpi_ops.dsdt_line("        0x%04X,             // Range Minimum", bi->iobase);
+	acpi_ops.dsdt_line("        0x%04X,             // Range Maximum",
 	    bi->iolimit - 1);
-	dsdt_line("        0x0000,             // Translation Offset");
-	dsdt_line("        0x%04X,             // Length",
+	acpi_ops.dsdt_line("        0x0000,             // Translation Offset");
+	acpi_ops.dsdt_line("        0x%04X,             // Length",
 	    bi->iolimit - bi->iobase);
-	dsdt_line("        ,, , TypeStatic)");
+	acpi_ops.dsdt_line("        ,, , TypeStatic)");
 
 	/* mmio window (32-bit) */
-	dsdt_line("      DWordMemory (ResourceProducer, PosDecode, "
+	acpi_ops.dsdt_line("      DWordMemory (ResourceProducer, PosDecode, "
 	    "MinFixed, MaxFixed, NonCacheable, ReadWrite,");
-	dsdt_line("        0x00000000,         // Granularity");
-	dsdt_line("        0x%08X,         // Range Minimum\n", bi->membase32);
-	dsdt_line("        0x%08X,         // Range Maximum\n",
+	acpi_ops.dsdt_line("        0x00000000,         // Granularity");
+	acpi_ops.dsdt_line("        0x%08X,         // Range Minimum\n", bi->membase32);
+	acpi_ops.dsdt_line("        0x%08X,         // Range Maximum\n",
 	    bi->memlimit32 - 1);
-	dsdt_line("        0x00000000,         // Translation Offset");
-	dsdt_line("        0x%08X,         // Length\n",
+	acpi_ops.dsdt_line("        0x00000000,         // Translation Offset");
+	acpi_ops.dsdt_line("        0x%08X,         // Length\n",
 	    bi->memlimit32 - bi->membase32);
-	dsdt_line("        ,, , AddressRangeMemory, TypeStatic)");
+	acpi_ops.dsdt_line("        ,, , AddressRangeMemory, TypeStatic)");
 
 	/* mmio window (64-bit) */
-	dsdt_line("      QWordMemory (ResourceProducer, PosDecode, "
+	acpi_ops.dsdt_line("      QWordMemory (ResourceProducer, PosDecode, "
 	    "MinFixed, MaxFixed, NonCacheable, ReadWrite,");
-	dsdt_line("        0x0000000000000000, // Granularity");
-	dsdt_line("        0x%016lX, // Range Minimum\n", bi->membase64);
-	dsdt_line("        0x%016lX, // Range Maximum\n",
+	acpi_ops.dsdt_line("        0x0000000000000000, // Granularity");
+	acpi_ops.dsdt_line("        0x%016lX, // Range Minimum\n", bi->membase64);
+	acpi_ops.dsdt_line("        0x%016lX, // Range Maximum\n",
 	    bi->memlimit64 - 1);
-	dsdt_line("        0x0000000000000000, // Translation Offset");
-	dsdt_line("        0x%016lX, // Length\n",
+	acpi_ops.dsdt_line("        0x0000000000000000, // Translation Offset");
+	acpi_ops.dsdt_line("        0x%016lX, // Length\n",
 	    bi->memlimit64 - bi->membase64);
-	dsdt_line("        ,, , AddressRangeMemory, TypeStatic)");
-	dsdt_line("    })");
+	acpi_ops.dsdt_line("        ,, , AddressRangeMemory, TypeStatic)");
+	acpi_ops.dsdt_line("    })");
 
 	count = pci_count_lintr(bus);
 	if (count != 0) {
-		dsdt_indent(2);
-		dsdt_line("Name (PPRT, Package ()");
-		dsdt_line("{");
+		acpi_ops.dsdt_indent(2);
+		acpi_ops.dsdt_line("Name (PPRT, Package ()");
+		acpi_ops.dsdt_line("{");
 		pci_walk_lintr(bus, pci_pirq_prt_entry, NULL);
- 		dsdt_line("})");
-		dsdt_line("Name (APRT, Package ()");
-		dsdt_line("{");
+ 		acpi_ops.dsdt_line("})");
+		acpi_ops.dsdt_line("Name (APRT, Package ()");
+		acpi_ops.dsdt_line("{");
 		pci_walk_lintr(bus, pci_apic_prt_entry, NULL);
- 		dsdt_line("})");
-		dsdt_line("Method (_PRT, 0, NotSerialized)");
-		dsdt_line("{");
-		dsdt_line("  If (PICM)");
-		dsdt_line("  {");
-		dsdt_line("    Return (APRT)");
-		dsdt_line("  }");
-		dsdt_line("  Else");
-		dsdt_line("  {");
-		dsdt_line("    Return (PPRT)");
-		dsdt_line("  }");
-		dsdt_line("}");
-		dsdt_unindent(2);
+ 		acpi_ops.dsdt_line("})");
+		acpi_ops.dsdt_line("Method (_PRT, 0, NotSerialized)");
+		acpi_ops.dsdt_line("{");
+		acpi_ops.dsdt_line("  If (PICM)");
+		acpi_ops.dsdt_line("  {");
+		acpi_ops.dsdt_line("    Return (APRT)");
+		acpi_ops.dsdt_line("  }");
+		acpi_ops.dsdt_line("  Else");
+		acpi_ops.dsdt_line("  {");
+		acpi_ops.dsdt_line("    Return (PPRT)");
+		acpi_ops.dsdt_line("  }");
+		acpi_ops.dsdt_line("}");
+		acpi_ops.dsdt_unindent(2);
 	}
 
-	dsdt_indent(2);
+	acpi_ops.dsdt_indent(2);
 	for (slot = 0; slot < MAXSLOTS; slot++) {
 		si = &bi->slotinfo[slot];
 		for (func = 0; func < MAXFUNCS; func++) {
@@ -1382,9 +1382,9 @@ pci_bus_write_dsdt_compile(int bus)
 				pi->pi_d->pe_write_dsdt(pi);
 		}
 	}
-	dsdt_unindent(2);
+	acpi_ops.dsdt_unindent(2);
 done:
-	dsdt_line("  }");
+	acpi_ops.dsdt_line("  }");
 }
 
 /*
@@ -1415,19 +1415,19 @@ pci_write_dsdt_compile(void)
 {
 	int bus;
 
-	dsdt_indent(1);
-	dsdt_line("Name (PICM, 0x00)");
-	dsdt_line("Method (_PIC, 1, NotSerialized)");
-	dsdt_line("{");
-	dsdt_line("  Store (Arg0, PICM)");
-	dsdt_line("}");
-	dsdt_line("");
-	dsdt_line("Scope (_SB)");
-	dsdt_line("{");
+	acpi_ops.dsdt_indent(1);
+	acpi_ops.dsdt_line("Name (PICM, 0x00)");
+	acpi_ops.dsdt_line("Method (_PIC, 1, NotSerialized)");
+	acpi_ops.dsdt_line("{");
+	acpi_ops.dsdt_line("  Store (Arg0, PICM)");
+	acpi_ops.dsdt_line("}");
+	acpi_ops.dsdt_line("");
+	acpi_ops.dsdt_line("Scope (_SB)");
+	acpi_ops.dsdt_line("{");
 	for (bus = 0; bus < MAXBUSES; bus++)
 		pci_bus_write_dsdt(bus);
-	dsdt_line("}");
-	dsdt_unindent(1);
+	acpi_ops.dsdt_line("}");
+	acpi_ops.dsdt_unindent(1);
 }
 
 void

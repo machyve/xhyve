@@ -660,7 +660,7 @@ err_exit:
 /*
  * Helper routines for writing to the DSDT from other modules.
  */
-void
+static void
 dsdt_line(const char *fmt, ...)
 {
 	va_list ap;
@@ -687,7 +687,7 @@ err_exit:
 }
 #pragma clang diagnostic pop
 
-void
+static void
 dsdt_indent(int levels)
 {
 
@@ -695,7 +695,7 @@ dsdt_indent(int levels)
 	assert(dsdt_indent_level >= 0);
 }
 
-void
+static void
 dsdt_unindent(int levels)
 {
 
@@ -703,7 +703,7 @@ dsdt_unindent(int levels)
 	dsdt_indent_level -= levels;
 }
 
-void
+static void
 dsdt_fixed_ioport(uint16_t iobase, uint16_t length)
 {
 
@@ -715,7 +715,7 @@ dsdt_fixed_ioport(uint16_t iobase, uint16_t length)
 	dsdt_line("  )");
 }
 
-void
+static void
 dsdt_fixed_irq(uint8_t irq)
 {
 
@@ -723,7 +723,7 @@ dsdt_fixed_irq(uint8_t irq)
 	dsdt_line("  {%d}", irq);
 }
 
-void
+static void
 dsdt_fixed_mem32(uint32_t base, uint32_t length)
 {
 
@@ -911,6 +911,11 @@ basl_compile(int (*fwrite_section)(FILE *), uint64_t offset)
 }
 #pragma clang diagnostic pop
 
+static void dsdt_fixup(UNUSED int bus, UNUSED uint16_t iobase, UNUSED uint16_t iolimit, UNUSED uint32_t membase32,
+		UNUSED uint32_t memlimit32, UNUSED uint64_t membase64, UNUSED uint64_t memlimit64) {
+
+}
+
 static int
 basl_make_templates(void)
 {
@@ -974,7 +979,7 @@ static struct {
 	{ NULL , 0}
 };
 
-int
+static int
 acpi_build(int ncpu)
 {
 	int err;
@@ -1014,4 +1019,26 @@ acpi_build(int ncpu)
 	}
 
 	return (err);
+}
+
+struct acpi_ops_t acpi_ops;
+
+struct acpi_ops_t acpi_ops_compile = {
+        acpi_build,
+        dsdt_line,
+        dsdt_fixed_ioport,
+        dsdt_fixed_irq,
+        dsdt_fixed_mem32,
+        dsdt_indent,
+        dsdt_unindent,
+        dsdt_fixup
+};
+
+void acpi_init(void)
+{
+    if (asl_compiler_path != NULL) {
+        acpi_ops = acpi_ops_compile;
+    } else {
+        acpi_ops = acpi_ops_prebuilt_aml;
+    }
 }

@@ -98,18 +98,18 @@ rtc_init(int use_localtime)
 static void
 rtc_dsdt(void)
 {
-	dsdt_line("");
-	dsdt_line("Device (RTC)");
-	dsdt_line("{");
-	dsdt_line("  Name (_HID, EisaId (\"PNP0B00\"))");
-	dsdt_line("  Name (_CRS, ResourceTemplate ()");
-	dsdt_line("  {");
-	dsdt_indent(2);
-	dsdt_fixed_ioport(IO_RTC, 2);
-	dsdt_fixed_irq(8);
-	dsdt_unindent(2);
-	dsdt_line("  })");
-	dsdt_line("}");
+	acpi_ops.dsdt_line("");
+	acpi_ops.dsdt_line("Device (RTC)");
+	acpi_ops.dsdt_line("{");
+	acpi_ops.dsdt_line("  Name (_HID, EisaId (\"PNP0B00\"))");
+	acpi_ops.dsdt_line("  Name (_CRS, ResourceTemplate ()");
+	acpi_ops.dsdt_line("  {");
+	acpi_ops.dsdt_indent(2);
+	acpi_ops.dsdt_fixed_ioport(IO_RTC, 2);
+	acpi_ops.dsdt_fixed_irq(8);
+	acpi_ops.dsdt_unindent(2);
+	acpi_ops.dsdt_line("  })");
+	acpi_ops.dsdt_line("}");
 }
 LPC_DSDT(rtc_dsdt);
 

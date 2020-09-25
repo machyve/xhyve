@@ -1018,7 +1018,8 @@ main(int argc, char *argv[])
 	assert(error == 0);
 
 	if (acpi) {
-		error = acpi_build(guest_ncpus);
+		acpi_init();
+		error = acpi_ops.acpi_build(guest_ncpus);
 		assert(error == 0);
 	}
 

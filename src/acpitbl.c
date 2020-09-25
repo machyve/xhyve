@@ -80,32 +80,32 @@ static int acpi_ncpu;
 static uint32_t hpet_capabilities;
 static void *dsdt;
 
-void
+static void
 dsdt_line(UNUSED const char *fmt, ...)
 {
 }
 
-void
+static void
 dsdt_fixed_ioport(UNUSED uint16_t iobase, UNUSED uint16_t length)
 {
 }
 
-void
+static void
 dsdt_fixed_irq(UNUSED uint8_t irq)
 {
 }
 
-void
+static void
 dsdt_fixed_mem32(UNUSED uint32_t base, UNUSED uint32_t length)
 {
 }
 
-void
+static void
 dsdt_indent(UNUSED int levels)
 {
 }
 
-void dsdt_unindent(UNUSED int levels)
+static void dsdt_unindent(UNUSED int levels)
 {
 }
 
@@ -686,7 +686,7 @@ acpitbl_build_facs(void) {
 	memcpy(facs, facs_tmpl, 64);
 }
 
-void dsdt_fixup(int bus, uint16_t iobase, uint16_t iolimit, uint32_t membase32,
+static void dsdt_fixup(int bus, uint16_t iobase, uint16_t iolimit, uint32_t membase32,
 	uint32_t memlimit32, uint64_t membase64, uint64_t memlimit64)
 {
 	if (bus != 0) {
@@ -1046,7 +1046,7 @@ acpitbl_build_dsdt(void) {
 	acpitbl_write8(dsdt, 0x9, acpitbl_checksum(dsdt, 2604));
 }
 
-int
+static int
 acpi_build(int ncpu)
 {
 	int err;
@@ -1074,3 +1074,14 @@ acpi_build(int ncpu)
 
 	return 0;
 }
+
+struct acpi_ops_t acpi_ops_prebuilt_aml = {
+		acpi_build,
+		dsdt_line,
+		dsdt_fixed_ioport,
+		dsdt_fixed_irq,
+		dsdt_fixed_mem32,
+		dsdt_indent,
+		dsdt_unindent,
+		dsdt_fixup
+};

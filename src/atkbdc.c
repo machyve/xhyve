@@ -550,33 +550,33 @@ static void
 atkbdc_dsdt(void)
 {
 
-	dsdt_line("");
-	dsdt_line("Device (KBD)");
-	dsdt_line("{");
-	dsdt_line("  Name (_HID, EisaId (\"PNP0303\"))");
-	dsdt_line("  Name (_CRS, ResourceTemplate ()");
-	dsdt_line("  {");
-	dsdt_indent(2);
-	dsdt_fixed_ioport(KBD_DATA_PORT, 1);
-	dsdt_fixed_ioport(KBD_STS_CTL_PORT, 1);
-	dsdt_fixed_irq(1);
-	dsdt_unindent(2);
-	dsdt_line("  })");
-	dsdt_line("}");
+	acpi_ops.dsdt_line("");
+	acpi_ops.dsdt_line("Device (KBD)");
+	acpi_ops.dsdt_line("{");
+	acpi_ops.dsdt_line("  Name (_HID, EisaId (\"PNP0303\"))");
+	acpi_ops.dsdt_line("  Name (_CRS, ResourceTemplate ()");
+	acpi_ops.dsdt_line("  {");
+	acpi_ops.dsdt_indent(2);
+	acpi_ops.dsdt_fixed_ioport(KBD_DATA_PORT, 1);
+	acpi_ops.dsdt_fixed_ioport(KBD_STS_CTL_PORT, 1);
+	acpi_ops.dsdt_fixed_irq(1);
+	acpi_ops.dsdt_unindent(2);
+	acpi_ops.dsdt_line("  })");
+	acpi_ops.dsdt_line("}");
 
-	dsdt_line("");
-	dsdt_line("Device (MOU)");
-	dsdt_line("{");
-	dsdt_line("  Name (_HID, EisaId (\"PNP0F13\"))");
-	dsdt_line("  Name (_CRS, ResourceTemplate ()");
-	dsdt_line("  {");
-	dsdt_indent(2);
-	dsdt_fixed_ioport(KBD_DATA_PORT, 1);
-	dsdt_fixed_ioport(KBD_STS_CTL_PORT, 1);
-	dsdt_fixed_irq(12);
-	dsdt_unindent(2);
-	dsdt_line("  })");
-	dsdt_line("}");
+	acpi_ops.dsdt_line("");
+	acpi_ops.dsdt_line("Device (MOU)");
+	acpi_ops.dsdt_line("{");
+	acpi_ops.dsdt_line("  Name (_HID, EisaId (\"PNP0F13\"))");
+	acpi_ops.dsdt_line("  Name (_CRS, ResourceTemplate ()");
+	acpi_ops.dsdt_line("  {");
+	acpi_ops.dsdt_indent(2);
+	acpi_ops.dsdt_fixed_ioport(KBD_DATA_PORT, 1);
+	acpi_ops.dsdt_fixed_ioport(KBD_STS_CTL_PORT, 1);
+	acpi_ops.dsdt_fixed_irq(12);
+	acpi_ops.dsdt_unindent(2);
+	acpi_ops.dsdt_line("  })");
+	acpi_ops.dsdt_line("}");
 }
 LPC_DSDT(atkbdc_dsdt);
 

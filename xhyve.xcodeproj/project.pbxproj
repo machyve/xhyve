@@ -585,7 +585,7 @@
 			attributes = {
 				DefaultBuildSystemTypeForWorkspace = Latest;
 				LastUpgradeCheck = 1000;
-				ORGANIZATIONNAME = "xhyve";
+				ORGANIZATIONNAME = xhyve;
 				TargetAttributes = {
 					3F1934911BF7C0D40099CC46 = {
 						CreatedOnToolsVersion = 7.3;
@@ -597,6 +597,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 3F1934891BF7C0D40099CC46;

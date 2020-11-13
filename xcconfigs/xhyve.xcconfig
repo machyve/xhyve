@@ -1,3 +1,5 @@
+ARCHS = x86_64;
+
 CODE_SIGN_ENTITLEMENTS = src/xhyve-entitlements.plist
 OTHER_CODE_SIGN_FLAGS = -o library
 

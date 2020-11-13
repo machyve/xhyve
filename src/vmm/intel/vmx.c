@@ -466,14 +466,31 @@ static int
 vmx_init(void)
 {
 	int error = hv_vm_create(HV_VM_DEFAULT);
-	if (error) {
-		if (error == HV_NO_DEVICE) {
+	switch (error) {
+		case HV_SUCCESS:
+			break;
+		case HV_ERROR:
+			/* Don't know if this can happen, report to us */
+			xhyve_abort("hv_vm_create HV_ERROR\n");
+		case HV_BUSY:
+			/* Should never happen, report to us (perhaps we need to retry) */
+			xhyve_abort("hv_vm_create HV_BUSY\n");
+		case HV_BAD_ARGUMENT:
+			/* Should never happen, report to Apple */
+			xhyve_abort("hv_vm_create HV_BAD_ARGUMENT\n");
+		case HV_NO_RESOURCES:
+			/* Don't know if this can happen, report to us */
+			xhyve_abort("hv_vm_create HV_NO_RESOURCES\n");
+		case HV_NO_DEVICE:
 			printf("vmx_init: processor not supported by "
 			       "Hypervisor.framework\n");
 			return (error);
-		}
-		else
-			xhyve_abort("hv_vm_create failed\n");
+		case HV_UNSUPPORTED:
+			/* Don't know if this can happen, report to us */
+			xhyve_abort("hv_vm_create HV_UNSUPPORTED\n");
+		default:
+			/* Should never happen, report to Apple */
+			xhyve_abort("hv_vm_create unknown error %d\n", error);
 	}
 
 	/* Check support for primary processor-based VM-execution controls */

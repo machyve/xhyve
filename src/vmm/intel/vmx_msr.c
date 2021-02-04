@@ -57,8 +57,9 @@ vmx_ctl_allows_zero_setting(uint64_t msr_val, int bitpos)
 		return (FALSE);
 }
 
-int vmx_set_ctlreg(hv_vmx_capability_t cap_field, uint32_t ones_mask,
-	uint32_t zeros_mask, uint32_t *retval)
+int vmx_set_ctlreg(int vcpu_id, uint32_t field,
+				   hv_vmx_capability_t cap_field, uint32_t ones_mask,
+				   uint32_t zeros_mask, uint32_t *retval)
 {
 	int i;
 	uint64_t cap;
@@ -72,6 +73,8 @@ int vmx_set_ctlreg(hv_vmx_capability_t cap_field, uint32_t ones_mask,
 	if (hv_vmx_read_capability(cap_field, &cap)) {
 		return EINVAL;
 	}
+
+	uint64_t current = vmcs_read(vcpu_id, field);
 
 	for (i = 0; i < 32; i++) {
 		one_allowed = vmx_ctl_allows_one_setting(cap, i);
@@ -102,11 +105,8 @@ int vmx_set_ctlreg(hv_vmx_capability_t cap_field, uint32_t ones_mask,
 			} else if (ones_mask & (1 << i)) {
 				*retval |= 1 << i;
 			} else {
-				/* XXX: don't allow unspecified don't cares */
-				fprintf(stderr,
-					"vmx_set_ctlreg: cap_field: %d bit: %d unspecified "
-					"don't care\n", cap_field, i);
-				return (EINVAL);
+				// Unknown: keep existing value.
+				*retval = (*retval & ~(1 << i)) | (current & (1 << i));
 			}
 		}
 	}

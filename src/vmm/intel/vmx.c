@@ -1194,11 +1194,29 @@ vmx_emulate_cr0_access(UNUSED struct vm *vm, int vcpu, uint64_t exitqual)
 	uint64_t crval, efer, entryctls, regval;
 	// *pt;
 
-	/* We only handle mov to %cr0 at this time */
-	if ((exitqual & 0xf0) != 0x00)
-		return (UNHANDLED);
+	if ((exitqual & 0x0030) == 0x0030) { // LMSW
+		// ----------------------------------------------------------------
+		//                 Exit qualification for CR access
+		// ----------------------------------------------------------------
+		// [03:00] | Number of CR register (CR0, CR3, CR4, CR8)
+		// [05:04] | CR access type (0 - MOV to CR, 1 - MOV from CR, 2 - CLTS, 3 - LMSW)
+		// [06:06] | LMSW operand reg/mem (cleared for CR access and CLTS)
+		// [07:07] | reserved
+		// [11:08] | Source Operand Register for CR access (cleared for CLTS and LMSW)
+		// [15:12] | reserved
+		// [31:16] | LMSW source data (cleared for CR access and CLTS)
+		// [63:32] | reserved
 
-	regval = vmx_get_guest_reg(vcpu, (exitqual >> 8) & 0xf);
+		regval = (exitqual >> 16);
+
+	} else {
+
+		/* We only handle mov to %cr0 at this time */
+		if ((exitqual & 0xf0) != 0x00)
+			return (UNHANDLED);
+
+		regval = vmx_get_guest_reg(vcpu, (exitqual >> 8) & 0xf);
+	}
 
 	vmcs_write(vcpu, VMCS_CR0_SHADOW, regval);
 

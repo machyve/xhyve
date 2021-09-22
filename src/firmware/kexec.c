@@ -181,7 +181,7 @@ kexec_load_ramdisk(char *path) {
 
 	zp = ((struct zero_page *) (lowmem.base + BASE_ZEROPAGE));
 
-	if (!(f = fopen(path, "r"))) {;
+	if (!(f = fopen(path, "r"))) {
 		return -1;
 	}
 	

@@ -232,7 +232,7 @@ vlapic_dcr_write_handler(struct vlapic *vlapic)
 	 * XXX changes to the frequency divider will not take effect until
 	 * the timer is reloaded.
 	 */
-	FREQ2BT(((unsigned) (VLAPIC_BUS_FREQ / divisor)), &vlapic->timer_freq_bt);
+	FREQ2BT(((unsigned) (VLAPIC_BUS_FREQ / divisor)), &vlapic->timer_freq_bt)
 	vlapic->timer_period_bt = vlapic->timer_freq_bt;
 	bintime_mul(&vlapic->timer_period_bt, lapic->icr_timer);
 
@@ -312,7 +312,7 @@ vlapic_get_lvtptr(struct vlapic *vlapic, uint32_t offset)
 	case APIC_OFFSET_LINT1_LVT:
 	case APIC_OFFSET_ERROR_LVT:
 		i = (offset - APIC_OFFSET_TIMER_LVT) >> 2;
-		return ((&lapic->lvt_timer) + i);;
+		return ((&lapic->lvt_timer) + i);
 	default:
 		xhyve_abort("vlapic_get_lvt: invalid LVT\n");
 	}

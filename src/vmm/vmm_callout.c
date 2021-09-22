@@ -165,7 +165,7 @@ static void *callout_thread_func(UNUSED void *arg) {
     /* wait for work */
     while (!callout_queue) {
       pthread_cond_wait(&callout_cnd, &callout_mtx);
-    };
+    }
 
     /* get the callout with the nearest timout */
     c = callout_queue;
@@ -187,7 +187,7 @@ static void *callout_thread_func(UNUSED void *arg) {
       delta = c->timeout - mat;
       mat_to_ts(delta, &ts);
       ret = pthread_cond_timedwait_relative_np(&callout_cnd, &callout_mtx, &ts);
-    };
+    }
 
     work = false;
 

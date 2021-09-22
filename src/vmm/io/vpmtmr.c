@@ -63,7 +63,7 @@ vpmtmr_init(UNUSED struct vm *vm)
 	vpmtmr->baseuptime = sbinuptime();
 	vpmtmr->baseval = 0;
 
-	FREQ2BT(PMTMR_FREQ, &bt);
+	FREQ2BT(PMTMR_FREQ, &bt)
 	vpmtmr->freq_sbt = bttosbt(bt);
 
 	return (vpmtmr);

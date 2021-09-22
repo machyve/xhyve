@@ -29,13 +29,13 @@
 #if defined(__MAC_OS_X_VERSION_MIN_REQUIRED) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101200 /* __MAC_10_12 */
 	#include <os/lock.h>
 	#define xhyve_lock_t os_unfair_lock
-	#define XHYVE_LOCK_INIT(V, LOCK) (V)->LOCK = OS_UNFAIR_LOCK_INIT;
+	#define XHYVE_LOCK_INIT(V, LOCK) (V)->LOCK = OS_UNFAIR_LOCK_INIT
 	#define XHYVE_LOCK(V, LOCK) os_unfair_lock_lock(&(V)->LOCK)
 	#define XHYVE_UNLOCK(V, LOCK) os_unfair_lock_unlock(&(V)->LOCK)
 #else
 	#include <libkern/OSAtomic.h>
 	#define xhyve_lock_t OSSpinLock
-	#define XHYVE_LOCK_INIT(V, LOCK) (V)->LOCK = OS_SPINLOCK_INIT;
+	#define XHYVE_LOCK_INIT(V, LOCK) (V)->LOCK = OS_SPINLOCK_INIT
 	#define XHYVE_LOCK(V, LOCK) OSSpinLockLock(&(V)->LOCK)
 	#define XHYVE_UNLOCK(V, LOCK) OSSpinLockUnlock(&(V)->LOCK)
 #endif

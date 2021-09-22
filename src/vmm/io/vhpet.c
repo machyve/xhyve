@@ -705,7 +705,7 @@ vhpet_init(struct vm *vm)
 
 	pthread_mutex_init(&vhpet->mtx, NULL);
 
-	FREQ2BT(HPET_FREQ, &bt);
+	FREQ2BT(HPET_FREQ, &bt)
 	vhpet->freq_sbt = bttosbt(bt);
 
 	pincount = vioapic_pincount(vm);

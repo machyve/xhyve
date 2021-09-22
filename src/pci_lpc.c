@@ -224,61 +224,61 @@ pci_lpc_write_dsdt(struct pci_devinst *pi)
 {
 	struct lpc_dsdt **ldpp, *ldp;
 
-	dsdt_line("");
-	dsdt_line("Device (ISA)");
-	dsdt_line("{");
-	dsdt_line("  Name (_ADR, 0x%04X%04X)", pi->pi_slot, pi->pi_func);
-	dsdt_line("  OperationRegion (LPCR, PCI_Config, 0x00, 0x100)");
-	dsdt_line("  Field (LPCR, AnyAcc, NoLock, Preserve)");
-	dsdt_line("  {");
-	dsdt_line("    Offset (0x60),");
-	dsdt_line("    PIRA,   8,");
-	dsdt_line("    PIRB,   8,");
-	dsdt_line("    PIRC,   8,");
-	dsdt_line("    PIRD,   8,");
-	dsdt_line("    Offset (0x68),");
-	dsdt_line("    PIRE,   8,");
-	dsdt_line("    PIRF,   8,");
-	dsdt_line("    PIRG,   8,");
-	dsdt_line("    PIRH,   8");
-	dsdt_line("  }");
-	dsdt_line("");
+	acpi_ops.dsdt_line("");
+	acpi_ops.dsdt_line("Device (ISA)");
+	acpi_ops.dsdt_line("{");
+	acpi_ops.dsdt_line("  Name (_ADR, 0x%04X%04X)", pi->pi_slot, pi->pi_func);
+	acpi_ops.dsdt_line("  OperationRegion (LPCR, PCI_Config, 0x00, 0x100)");
+	acpi_ops.dsdt_line("  Field (LPCR, AnyAcc, NoLock, Preserve)");
+	acpi_ops.dsdt_line("  {");
+	acpi_ops.dsdt_line("    Offset (0x60),");
+	acpi_ops.dsdt_line("    PIRA,   8,");
+	acpi_ops.dsdt_line("    PIRB,   8,");
+	acpi_ops.dsdt_line("    PIRC,   8,");
+	acpi_ops.dsdt_line("    PIRD,   8,");
+	acpi_ops.dsdt_line("    Offset (0x68),");
+	acpi_ops.dsdt_line("    PIRE,   8,");
+	acpi_ops.dsdt_line("    PIRF,   8,");
+	acpi_ops.dsdt_line("    PIRG,   8,");
+	acpi_ops.dsdt_line("    PIRH,   8");
+	acpi_ops.dsdt_line("  }");
+	acpi_ops.dsdt_line("");
 
-	dsdt_indent(1);
+	acpi_ops.dsdt_indent(1);
 	SET_FOREACH(ldpp, lpc_dsdt_set) {
 		ldp = *ldpp;
 		ldp->handler();
 	}
 
-	dsdt_line("");
-	dsdt_line("Device (PIC)");
-	dsdt_line("{");
-	dsdt_line("  Name (_HID, EisaId (\"PNP0000\"))");
-	dsdt_line("  Name (_CRS, ResourceTemplate ()");
-	dsdt_line("  {");
-	dsdt_indent(2);
-	dsdt_fixed_ioport(IO_ICU1, 2);
-	dsdt_fixed_ioport(IO_ICU2, 2);
-	dsdt_fixed_irq(2);
-	dsdt_unindent(2);
-	dsdt_line("  })");
-	dsdt_line("}");
+	acpi_ops.dsdt_line("");
+	acpi_ops.dsdt_line("Device (PIC)");
+	acpi_ops.dsdt_line("{");
+	acpi_ops.dsdt_line("  Name (_HID, EisaId (\"PNP0000\"))");
+	acpi_ops.dsdt_line("  Name (_CRS, ResourceTemplate ()");
+	acpi_ops.dsdt_line("  {");
+	acpi_ops.dsdt_indent(2);
+	acpi_ops.dsdt_fixed_ioport(IO_ICU1, 2);
+	acpi_ops.dsdt_fixed_ioport(IO_ICU2, 2);
+	acpi_ops.dsdt_fixed_irq(2);
+	acpi_ops.dsdt_unindent(2);
+	acpi_ops.dsdt_line("  })");
+	acpi_ops.dsdt_line("}");
 
-	dsdt_line("");
-	dsdt_line("Device (TIMR)");
-	dsdt_line("{");
-	dsdt_line("  Name (_HID, EisaId (\"PNP0100\"))");
-	dsdt_line("  Name (_CRS, ResourceTemplate ()");
-	dsdt_line("  {");
-	dsdt_indent(2);
-	dsdt_fixed_ioport(IO_TIMER1_PORT, 4);
-	dsdt_fixed_irq(0);
-	dsdt_unindent(2);
-	dsdt_line("  })");
-	dsdt_line("}");
-	dsdt_unindent(1);
+	acpi_ops.dsdt_line("");
+	acpi_ops.dsdt_line("Device (TIMR)");
+	acpi_ops.dsdt_line("{");
+	acpi_ops.dsdt_line("  Name (_HID, EisaId (\"PNP0100\"))");
+	acpi_ops.dsdt_line("  Name (_CRS, ResourceTemplate ()");
+	acpi_ops.dsdt_line("  {");
+	acpi_ops.dsdt_indent(2);
+	acpi_ops.dsdt_fixed_ioport(IO_TIMER1_PORT, 4);
+	acpi_ops.dsdt_fixed_irq(0);
+	acpi_ops.dsdt_unindent(2);
+	acpi_ops.dsdt_line("  })");
+	acpi_ops.dsdt_line("}");
+	acpi_ops.dsdt_unindent(1);
 
-	dsdt_line("}");
+	acpi_ops.dsdt_line("}");
 }
 
 static void
@@ -286,29 +286,29 @@ pci_lpc_sysres_dsdt(void)
 {
 	struct lpc_sysres **lspp, *lsp;
 
-	dsdt_line("");
-	dsdt_line("Device (SIO)");
-	dsdt_line("{");
-	dsdt_line("  Name (_HID, EisaId (\"PNP0C02\"))");
-	dsdt_line("  Name (_CRS, ResourceTemplate ()");
-	dsdt_line("  {");
+	acpi_ops.dsdt_line("");
+	acpi_ops.dsdt_line("Device (SIO)");
+	acpi_ops.dsdt_line("{");
+	acpi_ops.dsdt_line("  Name (_HID, EisaId (\"PNP0C02\"))");
+	acpi_ops.dsdt_line("  Name (_CRS, ResourceTemplate ()");
+	acpi_ops.dsdt_line("  {");
 
-	dsdt_indent(2);
+	acpi_ops.dsdt_indent(2);
 	SET_FOREACH(lspp, lpc_sysres_set) {
 		lsp = *lspp;
 		switch (lsp->type) {
 		case LPC_SYSRES_IO:
-			dsdt_fixed_ioport(((uint16_t) lsp->base), ((uint16_t) lsp->length));
+			acpi_ops.dsdt_fixed_ioport(((uint16_t) lsp->base), ((uint16_t) lsp->length));
 			break;
 		case LPC_SYSRES_MEM:
-			dsdt_fixed_mem32(lsp->base, lsp->length);
+			acpi_ops.dsdt_fixed_mem32(lsp->base, lsp->length);
 			break;
 		}
 	}
-	dsdt_unindent(2);
+	acpi_ops.dsdt_unindent(2);
 
-	dsdt_line("  })");
-	dsdt_line("}");
+	acpi_ops.dsdt_line("  })");
+	acpi_ops.dsdt_line("}");
 }
 LPC_DSDT(pci_lpc_sysres_dsdt);
 
@@ -322,19 +322,19 @@ pci_lpc_uart_dsdt(void)
 		sc = &lpc_uart_softc[unit];
 		if (!sc->enabled)
 			continue;
-		dsdt_line("");
-		dsdt_line("Device (%s)", lpc_uart_names[unit]);
-		dsdt_line("{");
-		dsdt_line("  Name (_HID, EisaId (\"PNP0501\"))");
-		dsdt_line("  Name (_UID, %d)", unit + 1);
-		dsdt_line("  Name (_CRS, ResourceTemplate ()");
-		dsdt_line("  {");
-		dsdt_indent(2);
-		dsdt_fixed_ioport(((uint16_t) sc->iobase), UART_IO_BAR_SIZE);
-		dsdt_fixed_irq(((uint8_t) sc->irq));
-		dsdt_unindent(2);
-		dsdt_line("  })");
-		dsdt_line("}");
+		acpi_ops.dsdt_line("");
+		acpi_ops.dsdt_line("Device (%s)", lpc_uart_names[unit]);
+		acpi_ops.dsdt_line("{");
+		acpi_ops.dsdt_line("  Name (_HID, EisaId (\"PNP0501\"))");
+		acpi_ops.dsdt_line("  Name (_UID, %d)", unit + 1);
+		acpi_ops.dsdt_line("  Name (_CRS, ResourceTemplate ()");
+		acpi_ops.dsdt_line("  {");
+		acpi_ops.dsdt_indent(2);
+		acpi_ops.dsdt_fixed_ioport(((uint16_t) sc->iobase), UART_IO_BAR_SIZE);
+		acpi_ops.dsdt_fixed_irq(((uint8_t) sc->irq));
+		acpi_ops.dsdt_unindent(2);
+		acpi_ops.dsdt_line("  })");
+		acpi_ops.dsdt_line("}");
 	}
 }
 LPC_DSDT(pci_lpc_uart_dsdt);

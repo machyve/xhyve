@@ -30,9 +30,6 @@
 
 #include <stdint.h>
 
-/* if set, create AML instead of ASL and calling out to iasl */
-#define ACPITBL_AML 1
-
 #define SCI_INT 9
 
 #define SMI_CMD 0xb2
@@ -45,13 +42,32 @@
 
 #define IO_PMTMR 0x408 /* 4-byte i/o port for the timer */
 
-int acpi_build(int ncpu);
-void dsdt_line(const char *fmt, ...);
-void dsdt_fixed_ioport(uint16_t iobase, uint16_t length);
-void dsdt_fixed_irq(uint8_t irq);
-void dsdt_fixed_mem32(uint32_t base, uint32_t length);
-void dsdt_indent(int levels);
-void dsdt_unindent(int levels);
-void dsdt_fixup(int bus, uint16_t iobase, uint16_t iolimit, uint32_t membase32,
-	uint32_t memlimit32, uint64_t membase64, uint64_t memlimit64);
+extern char* asl_compiler_path;
+
+typedef int (*acpi_build_func_t)(int ncpu);
+typedef void (*dsdt_line_func_t)(const char *fmt, ...);
+typedef void (*dsdt_fixed_ioport_func_t)(uint16_t iobase, uint16_t length);
+typedef void (*dsdt_fixed_irq_func_t)(uint8_t irq);
+typedef void (*dsdt_fixed_mem32_func_t)(uint32_t base, uint32_t length);
+typedef void (*dsdt_indent_func_t)(int levels);
+typedef void (*dsdt_unindent_func_t)(int levels);
+typedef void (*dsdt_fixup_func_t)(int bus, uint16_t iobase, uint16_t iolimit, uint32_t membase32, uint32_t memlimit32,
+		uint64_t membase64, uint64_t memlimit64);
+
+struct acpi_ops_t {
+	acpi_build_func_t acpi_build;
+	dsdt_line_func_t dsdt_line;
+	dsdt_fixed_ioport_func_t dsdt_fixed_ioport;
+	dsdt_fixed_irq_func_t dsdt_fixed_irq;
+	dsdt_fixed_mem32_func_t dsdt_fixed_mem32;
+	dsdt_indent_func_t dsdt_indent;
+	dsdt_unindent_func_t dsdt_unindent;
+	dsdt_fixup_func_t dsdt_fixup;
+};
+
+extern struct acpi_ops_t acpi_ops;
+extern struct acpi_ops_t acpi_ops_compile;
+extern struct acpi_ops_t acpi_ops_prebuilt_aml;
+
+void acpi_init(void);
 void sci_init(void);

@@ -1413,6 +1413,7 @@ e82545_transmit(struct e82545_softc *sc, uint16_t head, uint16_t tail,
 	/* Allocate, fill and prepend writable header vector. */
 	if (hdrlen != 0) {
 #pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-pragmas"
 #pragma clang diagnostic ignored "-Walloca"
 		hdr = __builtin_alloca((size_t)(hdrlen + vlen));
 #pragma clang diagnostic push

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -71,6 +71,7 @@
 		3F3FFA911BF7C6A7004C89A1 /* xhyve.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA5A1BF7C6A7004C89A1 /* xhyve.c */; };
 		3F3FFA921BF7C6A7004C89A1 /* xmsr.c in Sources */ = {isa = PBXBuildFile; fileRef = 3F3FFA5B1BF7C6A7004C89A1 /* xmsr.c */; };
 		3F3FFA971BF7CC0E004C89A1 /* xhyve.1 in Install Man Pages */ = {isa = PBXBuildFile; fileRef = 3F3FF9E41BF7C5DC004C89A1 /* xhyve.1 */; };
+		BEDAABE626FE9642003ACEFC /* libz.1.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = BE076A1426FE962A00C43411 /* libz.1.tbd */; platformFilter = maccatalyst; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -240,6 +241,7 @@
 		3FB651A01BF7CD4500ED886F /* x86.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = x86.h; sourceTree = "<group>"; };
 		3FB651A11BF7CD4500ED886F /* xhyve.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = xhyve.h; sourceTree = "<group>"; };
 		3FB651A21BF7CD4500ED886F /* xmsr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = xmsr.h; sourceTree = "<group>"; };
+		BE076A1426FE962A00C43411 /* libz.1.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.1.tbd; path = usr/lib/libz.1.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -247,6 +249,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BEDAABE626FE9642003ACEFC /* libz.1.tbd in Frameworks */,
 				3F3FF9E91BF7C63A004C89A1 /* Hypervisor.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -262,6 +265,7 @@
 				3F3FF9E51BF7C5ED004C89A1 /* Documentation */,
 				3F3FF9E71BF7C5FF004C89A1 /* Build Support */,
 				3F1934931BF7C0D40099CC46 /* Products */,
+				BE076A1326FE962A00C43411 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 			usesTabs = 1;
@@ -555,6 +559,14 @@
 				3FB651931BF7CD4500ED886F /* vrtc.h */,
 			);
 			path = io;
+			sourceTree = "<group>";
+		};
+		BE076A1326FE962A00C43411 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				BE076A1426FE962A00C43411 /* libz.1.tbd */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

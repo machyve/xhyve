@@ -1,9 +1,9 @@
 #pragma once
 
 #include <stdint.h>
-#include <pthread.h>
 #include <time.h>
 #include <sys/time.h>
+#include <dispatch/dispatch.h>
 
 #define SBT_1S  ((sbintime_t)1 << 32)
 #define SBT_1M  (SBT_1S * 60)
@@ -70,6 +70,7 @@ static inline void bintime_sub(struct bintime *_bt, const struct bintime *_bt2)
     ((a)->frac cmp (b)->frac) : \
     ((a)->sec cmp (b)->sec))
 
+extern int tc_precexp;
 
 void binuptime(struct bintime *bt);
 void getmicrotime(struct timeval *tv);
@@ -82,10 +83,10 @@ static inline sbintime_t sbinuptime(void) {
 }
 
 struct callout {
-  pthread_cond_t wait;
-  struct callout *prev;
-  struct callout *next;
+  dispatch_group_t group;
+  dispatch_source_t timer;
   uint64_t timeout;
+  uint64_t precision;
   void *argument;
   void (*callout)(void *);
   int flags;
@@ -95,7 +96,6 @@ struct callout {
 #define C_ABSOLUTE 0x0200 /* event time is absolute */
 #define CALLOUT_ACTIVE 0x0002 /* callout is currently active */
 #define CALLOUT_PENDING 0x0004 /* callout is waiting for timeout */
-#define CALLOUT_MPSAFE 0x0008 /* callout handler is mp safe */
 #define CALLOUT_RETURNUNLOCKED 0x0010 /* handler returns with mtx unlocked */
 #define CALLOUT_COMPLETED 0x0020 /* callout thread finished */
 #define CALLOUT_WAITING 0x0040 /* thread waiting for callout to finish */

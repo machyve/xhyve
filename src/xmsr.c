@@ -66,6 +66,7 @@ emulate_rdmsr(UNUSED int vcpu, uint32_t num, uint64_t *val)
 	case MSR_PP0_ENERGY_STATUS:
 	case MSR_PP1_ENERGY_STATUS:
 	case MSR_DRAM_ENERGY_STATUS:
+	case MSR_IA32_DEBUG_INTERFACE:
 		*val = 0;
 		break;
 	case MSR_RAPL_POWER_UNIT:

@@ -422,7 +422,7 @@ blockif_open(const char *optstr, UNUSED const char *ident)
 	struct blockif_ctxt *bc;
 	struct stat sbuf;
 	// struct diocgattr_arg arg;
-	off_t size, psectsz, psectoff;
+	off_t size, psectsz, psectoff, blocks;
 	int extra, fd, i, sectsz;
 	int nocache, sync, ro, candelete, geom, ssopt, pssopt;
 
@@ -493,17 +493,18 @@ blockif_open(const char *optstr, UNUSED const char *ident)
 	sectsz = DEV_BSIZE;
 	psectsz = psectoff = 0;
 	candelete = geom = 0;
+	blocks = 0;
 	if (S_ISCHR(sbuf.st_mode)) {
-		perror("xhyve: raw device support unimplemented");
-		goto err;		
-		// if (ioctl(fd, DIOCGMEDIASIZE, &size) < 0 ||
-		// 	ioctl(fd, DIOCGSECTORSIZE, &sectsz))
-		// {
-		// 	perror("Could not fetch dev blk/sector size");
-		// 	goto err;
-		// }
-		// assert(size != 0);
-		// assert(sectsz != 0);
+		if (ioctl(fd, DKIOCGETBLOCKCOUNT, &blocks) < 0 ||
+			ioctl(fd, DKIOCGETBLOCKSIZE, &sectsz))
+		{
+			perror("Could not fetch dev blk/sector size");
+			goto err;
+		}
+		assert(blocks != 0);
+		assert(sectsz != 0);
+
+		size = blocks * sectsz;
 		// if (ioctl(fd, DIOCGSTRIPESIZE, &psectsz) == 0 && psectsz > 0)
 		// 	ioctl(fd, DIOCGSTRIPEOFFSET, &psectoff);
 		// strlcpy(arg.name, "GEOM::candelete", sizeof(arg.name));
@@ -537,21 +538,21 @@ blockif_open(const char *optstr, UNUSED const char *ident)
 			goto err;
 		}
 
-		// /*
-		//  * Some backend drivers (e.g. cd0, ada0) require that the I/O
-		//  * size be a multiple of the device's sector size.
-		//  *
-		//  * Validate that the emulated sector size complies with this
-		//  * requirement.
-		//  */
-		// if (S_ISCHR(sbuf.st_mode)) {
-		// 	if (ssopt < sectsz || (ssopt % sectsz) != 0) {
-		// 		fprintf(stderr, "Sector size %d incompatible "
-		// 		    "with underlying device sector size %d\n",
-		// 		    ssopt, sectsz);
-		// 		goto err;
-		// 	}
-		// }
+		/*
+		 * Some backend drivers (e.g. cd0, ada0) require that the I/O
+		 * size be a multiple of the device's sector size.
+		 *
+		 * Validate that the emulated sector size complies with this
+		 * requirement.
+		 */
+		if (S_ISCHR(sbuf.st_mode)) {
+			if (ssopt < sectsz || (ssopt % sectsz) != 0) {
+				fprintf(stderr, "Sector size %d incompatible "
+				    "with underlying device sector size %d\n",
+				    ssopt, sectsz);
+				goto err;
+			}
+		}
 
 		sectsz = ssopt;
 		psectsz = pssopt;

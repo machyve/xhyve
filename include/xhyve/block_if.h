@@ -38,7 +38,7 @@
 #include <sys/uio.h>
 #include <sys/unistd.h>
 
-#define BLOCKIF_IOV_MAX 33 /* not practical to be IOV_MAX */
+#define BLOCKIF_IOV_MAX 128 /* not practical to be IOV_MAX */
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpadded"

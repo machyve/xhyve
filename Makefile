@@ -116,3 +116,6 @@ $(TARGET): $(TARGET).sym
 
 clean:
 	@rm -rf build
+
+install:
+	$(TARGET)

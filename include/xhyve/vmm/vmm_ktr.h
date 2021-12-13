@@ -41,32 +41,32 @@ struct vm;
 extern const char *vm_name(struct vm *vm);
 
 #define	VCPU_CTR0(vm, vcpuid, format)					\
-vmmtrace("vm %s[%d]: " format "\n", vm_name((vm)), (vcpuid))
+vmmtrace("vm %s[%d]: " format "\r\n", vm_name((vm)), (vcpuid))
 
 #define	VCPU_CTR1(vm, vcpuid, format, p1)				\
-vmmtrace("vm %s[%d]: " format "\n", vm_name((vm)), (vcpuid), (p1))
+vmmtrace("vm %s[%d]: " format "\r\n", vm_name((vm)), (vcpuid), (p1))
 
 #define	VCPU_CTR2(vm, vcpuid, format, p1, p2)				\
-vmmtrace("vm %s[%d]: " format "\n", vm_name((vm)), (vcpuid), (p1), (p2))
+vmmtrace("vm %s[%d]: " format "\r\n", vm_name((vm)), (vcpuid), (p1), (p2))
 
 #define	VCPU_CTR3(vm, vcpuid, format, p1, p2, p3)			\
-vmmtrace("vm %s[%d]: " format "\n", vm_name((vm)), (vcpuid), (p1), (p2), (p3))
+vmmtrace("vm %s[%d]: " format "\r\n", vm_name((vm)), (vcpuid), (p1), (p2), (p3))
 
 #define	VCPU_CTR4(vm, vcpuid, format, p1, p2, p3, p4)			\
-vmmtrace("vm %s[%d]: " format "\n", vm_name((vm)), (vcpuid),		\
+vmmtrace("vm %s[%d]: " format "\r\n", vm_name((vm)), (vcpuid),		\
     (p1), (p2), (p3), (p4))
 
 #define	VM_CTR0(vm, format)						\
-vmmtrace("vm %s: " format "\n", vm_name((vm)))
+vmmtrace("vm %s: " format "\r\n", vm_name((vm)))
 
 #define	VM_CTR1(vm, format, p1)						\
-vmmtrace("vm %s: " format "\n", vm_name((vm)), (p1))
+vmmtrace("vm %s: " format "\r\n", vm_name((vm)), (p1))
 
 #define	VM_CTR2(vm, format, p1, p2)					\
-vmmtrace("vm %s: " format "\n", vm_name((vm)), (p1), (p2))
+vmmtrace("vm %s: " format "\r\n", vm_name((vm)), (p1), (p2))
 
 #define	VM_CTR3(vm, format, p1, p2, p3)					\
-vmmtrace("vm %s: " format "\n", vm_name((vm)), (p1), (p2), (p3))
+vmmtrace("vm %s: " format "\r\n", vm_name((vm)), (p1), (p2), (p3))
 
 #define	VM_CTR4(vm, format, p1, p2, p3, p4)				\
-vmmtrace("vm %s: " format "\n", vm_name((vm)), (p1), (p2), (p3), (p4))
+vmmtrace("vm %s: " format "\r\n", vm_name((vm)), (p1), (p2), (p3), (p4))

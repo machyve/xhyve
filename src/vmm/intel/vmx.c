@@ -483,6 +483,11 @@ vmx_init(void)
 		case HV_NO_RESOURCES:
 			/* Don't know if this can happen, report to us */
 			xhyve_abort("hv_vm_create HV_NO_RESOURCES\n");
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 111000
+		case HV_DENIED:
+			/* This does happen on Big Sur, can't tell the reason */
+			xhyve_abort("hv_vm_create HV_DENIED\n");
+#endif
 		case HV_NO_DEVICE:
 			printf("vmx_init: processor not supported by "
 			       "Hypervisor.framework\n");
@@ -492,7 +497,7 @@ vmx_init(void)
 			xhyve_abort("hv_vm_create HV_UNSUPPORTED\n");
 		default:
 			/* Should never happen, report to Apple */
-			xhyve_abort("hv_vm_create unknown error %d\n", error);
+			xhyve_abort("hv_vm_create unknown error %x\n", error);
 	}
 
 	/*
